@@ -15,6 +15,7 @@ public class Patient {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
 	private String name;
+	
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "animal_type_id", referencedColumnName = "id")
 	private AnimalType animalType;
@@ -22,9 +23,16 @@ public class Patient {
 	private String ownerName;
 	private String ownerEmail;
 	
+	public Patient() {
+	}
+	
 	public Patient(String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
 		this.name = name;
+		
+		// will it work correctly?
 		this.animalType = animalType;
+		animalType.enrollPatient(this);
+		
 		this.age = age;
 		this.ownerName = ownerName;
 		this.ownerEmail = ownerEmail;
