@@ -13,6 +13,9 @@ public class MedSpecialty {
 	private Long id;
 	private String name;
 	
+	public MedSpecialty() {
+	}
+	
 	public MedSpecialty(String name) {
 		this.name = name;
 	}
