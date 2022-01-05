@@ -26,4 +26,8 @@ public class AnimalTypeService {
 		return animalTypeRepo.saveAndFlush(animalType);
 	}
 
+	public AnimalType findByName(String name) {
+		return animalTypeRepo.findByName(name).get(0);
+	}
+
 }
