@@ -22,6 +22,9 @@ public class Patient {
 	private String ownerName;
 	private String ownerEmail;
 	
+	public Patient() {
+	}
+	
 	public Patient(String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
 		this.name = name;
 		this.animalType = animalType;

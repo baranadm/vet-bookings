@@ -14,7 +14,7 @@ import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 @RestController
-@RequestMapping("/animalTypes")
+@RequestMapping("/animalType")
 public class AnimalTypeController {
 
 	@Autowired
