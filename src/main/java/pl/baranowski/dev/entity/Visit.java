@@ -6,6 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Visit {
@@ -13,10 +15,20 @@ public class Visit {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
+	
+	@ManyToOne
+	@JoinColumn(name = "vet_id")
 	private Vet vet;
+	
+	@ManyToOne
+	@JoinColumn(name = "patient_id")
 	private Patient patient;
+	
 	private OffsetDateTime dateTime;
 	private Boolean confirmed;
+	
+	public Visit() {
+	}
 	
 	public Visit(Vet vet, Patient patient, OffsetDateTime dateTime) {
 		this.vet = vet;

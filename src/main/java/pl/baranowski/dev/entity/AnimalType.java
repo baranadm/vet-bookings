@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -22,7 +23,11 @@ public class AnimalType {
 	
 	@JsonIgnore
 	@OneToMany(mappedBy = "animalType")
-	private Set<Patient> patientsAsOwners = new HashSet();
+	private Set<Patient> patientsAsOwners = new HashSet<>();
+	
+	@JsonIgnore
+	@ManyToMany(mappedBy="animalTypes")
+	private Set<Vet> matchingVets = new HashSet<>();
 
 	public AnimalType() {
 	}
@@ -43,9 +48,15 @@ public class AnimalType {
 		return patientsAsOwners;
 	}
 	
-	// will it update the correct entity, or create a new one?
 	public boolean enrollPatient(Patient patient) {
 		return patientsAsOwners.add(patient);
 	}
 	
+	public boolean delistPatient(Patient patient) {
+		return patientsAsOwners.remove(patient);
+	}
+	
+	public Set<Vet> getMatchingVets() {
+		return matchingVets;
+	}
 }
