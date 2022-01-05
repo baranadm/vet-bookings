@@ -1,12 +1,15 @@
 package pl.baranowski.dev.entity;
 
-import javax.persistence.CascadeType;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 @Entity
 public class Patient {
@@ -16,9 +19,13 @@ public class Patient {
 	private Long id;
 	private String name;
 	
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "animal_type_id", referencedColumnName = "id")
+	@ManyToOne
+	@JoinColumn(name = "animal_type_id")
 	private AnimalType animalType;
+	
+	@OneToMany(mappedBy="patient")
+	private Set<Visit> visits = new HashSet<>();
+	
 	private int age;
 	private String ownerName;
 	private String ownerEmail;
@@ -77,5 +84,10 @@ public class Patient {
 	public AnimalType getAnimalType() {
 		return animalType;
 	}
+
+	public Set<Visit> getVisits() {
+		return visits;
+	}
+
 	
 }
