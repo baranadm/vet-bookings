@@ -12,6 +12,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 public class Vet {
 
@@ -37,6 +39,7 @@ public class Vet {
 	)
 	private Set<AnimalType> animalTypes = new HashSet<>();
 	
+	@JsonIgnore
 	@OneToMany(mappedBy = "vet")
 	private Set<Visit> visits = new HashSet<>();
 

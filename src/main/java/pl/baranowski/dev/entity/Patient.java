@@ -11,6 +11,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 public class Patient {
 
@@ -22,7 +24,8 @@ public class Patient {
 	@ManyToOne
 	@JoinColumn(name = "animal_type_id")
 	private AnimalType animalType;
-	
+
+	@JsonIgnore
 	@OneToMany(mappedBy="patient")
 	private Set<Visit> visits = new HashSet<>();
 	
