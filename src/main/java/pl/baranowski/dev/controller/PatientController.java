@@ -20,14 +20,7 @@ import pl.baranowski.dev.service.PatientService;
 public class PatientController {
 	
 	@Autowired
-	private final PatientService patientService;
-	@Autowired
-	private final AnimalTypeService animalTypeService;
-	
-	public PatientController(PatientService patientService, AnimalTypeService animalTypeService) {
-		this.patientService = patientService;
-		this.animalTypeService = animalTypeService;
-	}
+	PatientService patientService;
 	
 	@GetMapping("/all")
 	public @ResponseBody List<Patient> findAll() {
@@ -35,8 +28,7 @@ public class PatientController {
 	}
 	
 	@PostMapping("/new")
-	public @ResponseBody Patient put(@RequestParam("name") String name, @RequestParam("animalTypeName") String animalTypeName, @RequestParam("age") int age, @RequestParam("ownerName") String ownerName, @RequestParam("ownerEmail") String ownerEmail) {
-		AnimalType animalType = animalTypeService.findByName(animalTypeName);
-		return patientService.put(new Patient(name, animalType, age, ownerName, ownerEmail));
+	public @ResponseBody Patient put(@RequestParam("name") String name, @RequestParam("animalTypeName") String animalTypeName, @RequestParam("age") Integer age, @RequestParam("ownerName") String ownerName, @RequestParam("ownerEmail") String ownerEmail) {
+		return patientService.put(name, animalTypeName, age, ownerName, ownerEmail);
 	}
 }
