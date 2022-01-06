@@ -27,7 +27,7 @@ public class Vet {
 			joinColumns = @JoinColumn(name="vet_id"),
 			inverseJoinColumns = @JoinColumn(name="med_speciality_id")
 	)
-	private Set<MedSpecialty> medSpecialties;
+	private Set<MedSpecialty> medSpecialties = new HashSet<>();
 	
 	@ManyToMany
 	@JoinTable(
@@ -35,7 +35,7 @@ public class Vet {
 			joinColumns = @JoinColumn(name="vet_id"),
 			inverseJoinColumns = @JoinColumn(name="animal_type_id")
 	)
-	private Set<AnimalType> animalTypes;
+	private Set<AnimalType> animalTypes = new HashSet<>();
 	
 	@OneToMany(mappedBy = "vet")
 	private Set<Visit> visits = new HashSet<>();
