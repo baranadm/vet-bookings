@@ -6,23 +6,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.entity.Patient;
+import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 
 @Service
 public class PatientService {
 	
 	@Autowired
-	private final PatientRepository patientRepo;
-
-	public PatientService(PatientRepository patientRepo) {
-		this.patientRepo = patientRepo;
-	}
+	PatientRepository patientRepo;
+	@Autowired
+	AnimalTypeRepository animalTypeRepo;
 	
 	public List<Patient> findAll() {
 		return patientRepo.findAll();
 	}
 	
-	public Patient put(Patient patient) {
+	public Patient put(String name, String animalTypeName, Integer age, String ownerName, String ownerEmail) {
+		Patient patient = new Patient(
+				name, 
+				animalTypeRepo.findByName(animalTypeName).get(0), 
+				age, 
+				ownerName, 
+				ownerEmail);
 		return patientRepo.saveAndFlush(patient);
 	}
 	
