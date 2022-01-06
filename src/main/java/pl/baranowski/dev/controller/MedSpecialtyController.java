@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -34,7 +34,7 @@ public class MedSpecialtyController {
 		return medSpecialtyService.findByName(specialty);
 	}
 	
-	@PutMapping("/new")
+	@PostMapping("/new")
 	public @ResponseBody MedSpecialty put(@RequestParam("specialty") String specialty) {
 		return medSpecialtyService.put(new MedSpecialty(specialty));
 	}
