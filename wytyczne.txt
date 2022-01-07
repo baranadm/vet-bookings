@@ -1,0 +1,86 @@
+Napisz API restowe do umawiania wizyt dla pacjentów przychodni weterynaryjnej.
+W przychodni powinno byc API dla lekarzy:
+- dodanie lekarza
+- pobranie jednego lekarza po id
+- pobranie wszystkich lekarzy (z paginacja)
+- lekarza mozna tez zwolnic, ale to nie jest usuniecie go z systemu - tylko raczej cos w trybie soft delete.
+ 
+dla kazdego lekarza pamietamy: imie, nazwisko, specjalizacja medyczna, specjalizacja zwierzaka, jego stawke za godzine, nip.
+ 
+W przychodni powinno byc API dla pacjentow
+- dodanie pacjenta
+- pobranie danych pacjenta po id
+- pobranie wszystkich pacjentow (z paginacja)
+ 
+dla kazdego pacjenta pamietamy:
+imie zwierzecia, gatunek, rase, wiek, imie i nazwisko wlasciciela, email.
+ 
+w przychodni powinno byc API do rejestracji wizyt, dla uproszczenia mozemy przyjac ze wizyty trwaja dokladnie 1h
+i nie bedziemy rozpartywali ze moga byc 15-30 minutowe itp itd, kazda wizyta to 1h.
+- mozemy zarezerwowac wizyte
+- mozemy potwierdzic wizyte
+- mozemy anulowac wizyte
+- mozemy sprawdzic dostepnosc lekarza o podanej specjalizacji medycznej lub zwierzakowej (np: chcemy laryngologa, albo speca od pieskow, albo kardiologa od myszek itp)
+ 
+Wizyta posiada:
+lekarza, pacjenta, date - oraz moze inne atrybuty ktore wynikaja z tresci zadania.
+ 
+Szczegoly implementacyjne:
+API dla lekarzy
+root path: /doctor
+@POST - should add doctor
+example body: {"name": "xx", "surname": "xx", "type": "xxx", "animalType": "yyy", "salary": 000, "nip": "xxx"}
+response: 201 Created
+response: 400 BAD request. Error handling: duplicated nip, all fields must be not empty, salary cannot be negative.
+ 
+@GET /{id}
+response: 200 ok. body: {"name": "xx", "surname": "xx", "type": "xxx", "animalType": "yyy", "salary": 000, "nip": "xxx"}
+response: 404 not found - if given id not exists in db.
+ 
+@GET 
+request parameters: page/size - optional, with default values. Default spring boot pagination expected.
+response: 200 ok: body: page with doctors body content. (nie chce mi sie pisac tutaj:D)
+ 
+@PUT /fire/{id}
+no body
+response: 200 OK. changed status of given doctor, this doctor will not be able to handle any visits.
+response: 404 NOT FOUND - if given id not exists in db.
+ 
+API dla pacjentow
+root path: /patient
+metody takie same jak w doctor tylko body zrob aby pasowalo,
+rany te zadanie takie dlugie ze pomysle czy Ci FV nie wystawic za pisanie tego zadania xd - taki zart;p
+ 
+API dla wizyt:
+root path: /visit
+@POST
+example body: {"doctorId": xxx, "patientId": yyy, "date": "2021-01-05 15:00:00"}
+response: 201 created. body: { "id": xxx }
+response: 400 bad request, potential errors: doctor id not found, patient id not found, or doctor/patient already has visit that date.
+ 
+Przy tworzeniu wizyty musisz wyslac maila do pacjenta (stworz sobie jakies tmp konto na gmailu ktorego uzyjesz jako smtp)
+z unikalnym one-time-tokenem przypisanym do wizyty.
+ 
+@GET
+/confirm/{token}
+response: 200ok body: {"message": "Wizyta potwierdzona!"}
+response: 400bad request: {"message": "za pozno aby potwierdzic/zly token/inne bledy? wymysl"}
+ 
+@GET
+/cancel/{token}
+response: 200ok body: {"message": "Wizyta Anulowana"} - usuwa permanentnie wizyte z systemu.
+response: 400bad request: {"message": "zly token/inne bledy? wymysl"}
+ 
+@POST
+/check 
+should find top few (configurable parameter) nearest visits for given parameters
+example body: { "type": "kardiolog", "animal": "pies", "from": "date_from", "to": "date_to" }
+response: 200OK body: [{"doctor":{"id": 3, "name": "Jan Kowalski"} "date": "2021-05-01 15:00:00"}, ...]
+response: 400badRequest, no type, no animal support, invalid dates etc.
+ 
+- jakiegos swaggera - pogooglaj i zobacz do czego jest
+- mnostwo testow integracyjnych
+- mozesz testy jednostkowe tez zeby pokazac ze rozumiesz zasade dzialania ale nastaw sie na integracyjne
+- zrobisz swaggera mozesz jeszcze wrzucic to na heroku i udostepnic mi api do poklikania
+heroku ma domyslnie postgresa wiec moznesz zrobic profilowanie aplikacji dev/prod.
+dev na jakism h2/mysql z lokalnym polaczeniem, dockerem czy cos, a prod to juz dane na h2.
