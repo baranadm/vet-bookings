@@ -44,6 +44,14 @@ public class AnimalType {
 		return name;
 	}
 	
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	public Set<Patient> getPatientsAsOwners() {
 		return patientsAsOwners;
 	}
