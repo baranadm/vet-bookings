@@ -21,20 +21,33 @@ import pl.baranowski.dev.service.AnimalTypeService;
 public class AnimalTypeController {
 
 	@Autowired
-	private final AnimalTypeService service;
+	private final AnimalTypeService animalTypeService;
 
 	public AnimalTypeController(AnimalTypeService service) {
-		this.service = service;
+		this.animalTypeService = service;
 	}
 	
+	/** Unit tests:
+	 * should return all AnimalType type data if data exists
+	 * should return AnimalType empty list if no data exists
+	 * should throw exception if service is null or blank
+	 */
 	@GetMapping("/all")
 	public @ResponseBody List<AnimalType> findAll() {
-		return service.findAll();
+		return animalTypeService.findAll();
 	}
 	
 	@PostMapping("/new")
-	public @ResponseBody AnimalType put(@Valid @RequestBody AnimalTypeDTO animalType) {
-		return service.addNew(animalType);
+	public @ResponseBody AnimalType addNew(@Valid @RequestBody AnimalTypeDTO animalType) {
+		return animalTypeService.addNew(animalType);
+	}
+
+	public AnimalType findById(long id) {
+		return animalTypeService.findById(id);
+	}
+
+	public AnimalType findByName(String name) {
+		return animalTypeService.findByName(name);
 	}
 	
 }

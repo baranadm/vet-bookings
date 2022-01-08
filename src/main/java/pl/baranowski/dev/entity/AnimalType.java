@@ -36,6 +36,11 @@ public class AnimalType {
 		this.name = name;
 	}
 
+	public AnimalType(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
 	public Long getId() {
 		return id;
 	}
