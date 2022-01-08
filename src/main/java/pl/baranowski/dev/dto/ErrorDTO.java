@@ -1,25 +1,25 @@
 package pl.baranowski.dev.dto;
 
-import java.time.OffsetDateTime;
-import java.util.Map;
+import org.springframework.http.HttpStatus;
 
 public class ErrorDTO {
-	private OffsetDateTime timestamp;
+	private HttpStatus httpStatus;
 	private String message;
-	private Map<String, String[]> parameters;
+
+	public ErrorDTO() {
+	}
 	
-	public ErrorDTO(String message, Map<String, String[]> parameters) {
-		this.timestamp = OffsetDateTime.now();
+	public ErrorDTO(HttpStatus httpStatus, String message) {
+		this.httpStatus = httpStatus;
 		this.message = message;
-		this.parameters = parameters;
 	}
 
-	public OffsetDateTime getTimestamp() {
-		return timestamp;
+	public HttpStatus getHttpStatus() {
+		return httpStatus;
 	}
 
-	public void setTimestamp(OffsetDateTime timestamp) {
-		this.timestamp = timestamp;
+	public void setHttpStatus(HttpStatus httpStatus) {
+		this.httpStatus = httpStatus;
 	}
 
 	public String getMessage() {
@@ -28,14 +28,6 @@ public class ErrorDTO {
 
 	public void setMessage(String message) {
 		this.message = message;
-	}
-
-	public Map<String, String[]> getParameters() {
-		return parameters;
-	}
-
-	public void setParameters(Map<String, String[]> parameters) {
-		this.parameters = parameters;
 	}
 	
 }

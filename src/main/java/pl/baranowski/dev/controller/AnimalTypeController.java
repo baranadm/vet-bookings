@@ -27,11 +27,6 @@ public class AnimalTypeController {
 		this.animalTypeService = service;
 	}
 	
-	/** Unit tests:
-	 * should return all AnimalType type data if data exists
-	 * should return AnimalType empty list if no data exists
-	 * should throw exception if service is null or blank
-	 */
 	@GetMapping("/all")
 	public @ResponseBody List<AnimalType> findAll() {
 		return animalTypeService.findAll();
