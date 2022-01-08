@@ -1,10 +1,6 @@
 Manifest-Version: 1.0
 Implementation-Title: Vet Bookings
 Implementation-Version: 0.0.1-SNAPSHOT
-Built-By: Lenovo
-Implementation-Vendor-Id: pl.baranowski.dev
-Build-Jdk: 1.8.0_311
-Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
- ot-starter-parent/vet-bookings
+Build-Jdk-Spec: 1.8
 Created-By: Maven Integration for Eclipse
 
