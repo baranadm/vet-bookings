@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
+import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.service.AnimalTypeService;
 
@@ -60,7 +61,7 @@ class AnimalTypeControllerTest {
 	void testAddNew_whenNameIsNullOrEmpty_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO emptyNameDto = new AnimalTypeDTO("");
 		AnimalTypeDTO nullNameDto = new AnimalTypeDTO(null);
-		ErrorDTO expectedError = new ErrorDTO(HttpStatus.BAD_REQUEST, "'name' must not be blank");
+		ErrorDTO expectedError = new ErrorDTO(HttpStatus.BAD_REQUEST, "name must not be null or empty");
 
 		// when name is empty
 		MvcResult emptyResult = mockMvc.perform(post("/animalType/new").contentType("application/json")
@@ -70,7 +71,7 @@ class AnimalTypeControllerTest {
 		// check for exception
 		String actualEmptyResponseBody = emptyResult.getResponse().getContentAsString();
 		String expectedEmptyResponseBody = objectMapper.writeValueAsString(expectedError);
-		assertEquals(StringUtils.trimAllWhitespace(actualEmptyResponseBody), StringUtils.trimAllWhitespace(actualEmptyResponseBody));
+		assertEquals(StringUtils.trimAllWhitespace(actualEmptyResponseBody), StringUtils.trimAllWhitespace(expectedEmptyResponseBody));
 
 		// when name is null
 		MvcResult nullResult = mockMvc.perform(post("/animalType/new").contentType("application/json")
@@ -80,7 +81,7 @@ class AnimalTypeControllerTest {
 		// check for exception
 		String actualNullResponseBody = nullResult.getResponse().getContentAsString();
 		String expectedNullResponseBody = objectMapper.writeValueAsString(expectedError);
-		assertEquals(StringUtils.trimAllWhitespace(actualNullResponseBody), StringUtils.trimAllWhitespace(actualNullResponseBody));
+		assertEquals(StringUtils.trimAllWhitespace(actualNullResponseBody), StringUtils.trimAllWhitespace(expectedNullResponseBody));
 	
 	}
 

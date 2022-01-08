@@ -5,7 +5,7 @@ import javax.validation.constraints.NotBlank;
 public class AnimalTypeDTO {
 
 	private Long id;
-	@NotBlank
+	@NotBlank(message = "name must not be null or empty")
 	private String name;
 	
 	private AnimalTypeDTO() {
