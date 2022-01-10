@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 @RestController
@@ -31,15 +32,9 @@ public class AnimalTypeController {
 	public @ResponseBody List<AnimalType> findAll() {
 		return animalTypeService.findAll();
 	}
-	/*	tests:
-	 *  verify http request matching
-	 *  verify input deserialization - when valid input: return status 200 and valid dto
-	 *  verify input validation - when null or empty: return status 400 and throw correct exception
-	 *  verify business logic calls
-	 */
 	
 	@PostMapping("/new")
-	public @ResponseBody AnimalTypeDTO addNew(@Valid @RequestBody AnimalTypeDTO animalType) {
+	public @ResponseBody AnimalTypeDTO addNew(@Valid @RequestBody AnimalTypeDTO animalType) throws AnimalTypeAllreadyExistsException {
 		return animalTypeService.addNew(animalType);
 	}
 
@@ -47,7 +42,7 @@ public class AnimalTypeController {
 		return animalTypeService.findById(id);
 	}
 
-	public AnimalType findByName(String name) {
+	public List<AnimalType> findByName(String name) {
 		return animalTypeService.findByName(name);
 	}
 	

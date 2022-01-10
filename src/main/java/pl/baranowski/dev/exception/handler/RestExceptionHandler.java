@@ -5,10 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import pl.baranowski.dev.dto.ErrorDTO;
+import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler { 
@@ -20,4 +22,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
 	}
 
+	@ExceptionHandler(AnimalTypeAllreadyExistsException.class)
+	ResponseEntity<Object> handleAnimalTypeAllreadyExists(AnimalTypeAllreadyExistsException ex, WebRequest request) {
+		ErrorDTO body = new ErrorDTO(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+	}
 }
