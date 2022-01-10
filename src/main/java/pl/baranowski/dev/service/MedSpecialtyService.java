@@ -18,15 +18,19 @@ public class MedSpecialtyService {
 		this.medSpecialtyRepository = medSpecialtyRepository;
 	}
 
+	public MedSpecialty findById(Long id) {
+		return medSpecialtyRepository.getById(id);
+	}
+	
 	public List<MedSpecialty> findAll() {
 		return medSpecialtyRepository.findAll();
 	}
 
-	public MedSpecialty findByName(String specialty) {
-		return medSpecialtyRepository.findByName(specialty).get(0);
+	public List<MedSpecialty> findByName(String specialty) {
+		return medSpecialtyRepository.findByName(specialty);
 	}
 
-	public MedSpecialty put(MedSpecialty medSpecialty) {
+	public MedSpecialty addNew(MedSpecialty medSpecialty) {
 		return medSpecialtyRepository.saveAndFlush(medSpecialty);
 	}
 	
