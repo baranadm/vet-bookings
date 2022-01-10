@@ -120,5 +120,32 @@ class AnimalTypeControllerTest {
 					assertEquals(StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected)), StringUtils.trimAllWhitespace(res));
 				});
 	}
+	
+
+	/*
+	 * another test with problem :(:(:(:
+	 * should return response with httpstatus 400, returns 200. In reality this works and returns 400 error
+	 * Maybe same problem as above, with mocked service or repository?
+	 * 
+	 */
+	@Test
+	void testAddNew_whenNameIsDuplicated_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
+		AnimalTypeDTO requestDto = new AnimalTypeDTO("Kot");
+		ErrorDTO expectedError = new ErrorDTO(HttpStatus.BAD_REQUEST, "this animal type exists in database");
+
+		// first try to add animalType "Kot" - should be successful
+		mockMvc.perform(post("/animalType/new").contentType("application/json")
+				.content(objectMapper.writeValueAsString(requestDto)));
+		
+		// second try to add "Kot" - should be unsuccessful (due to duplicated name)
+		MvcResult result = mockMvc.perform(post("/animalType/new").contentType("application/json")
+				.content(objectMapper.writeValueAsString(requestDto)))
+		.andExpect(status().isBadRequest()).andReturn();
+		
+		// check for exception
+		String actualResponseBody = result.getResponse().getContentAsString();
+		String expectedResponseBody = objectMapper.writeValueAsString(expectedError);
+		assertEquals(StringUtils.trimAllWhitespace(actualResponseBody), StringUtils.trimAllWhitespace(expectedResponseBody));
+	}
 
 }
