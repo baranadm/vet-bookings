@@ -1,6 +1,8 @@
 package pl.baranowski.dev.controller;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -10,8 +12,10 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -28,7 +32,9 @@ import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(controllers = AnimalTypeController.class)
+//@WebMvcTest(controllers = AnimalTypeController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class AnimalTypeControllerTest {
 	
 	@Autowired
@@ -82,7 +88,37 @@ class AnimalTypeControllerTest {
 		String actualNullResponseBody = nullResult.getResponse().getContentAsString();
 		String expectedNullResponseBody = objectMapper.writeValueAsString(expectedError);
 		assertEquals(StringUtils.trimAllWhitespace(actualNullResponseBody), StringUtils.trimAllWhitespace(expectedNullResponseBody));
+	}
 	
+	@Test
+	void testAddNew_whenValidInput_thenCorrectBusinessCall() throws JsonProcessingException, Exception {
+		AnimalTypeDTO dto = new AnimalTypeDTO("Kot");
+		
+		mockMvc.perform(post("/animalType/new").contentType("application/json")
+				.content(objectMapper.writeValueAsString(dto)))
+		.andExpect(status().isOk());
+		
+		ArgumentCaptor<AnimalTypeDTO> animalTypeCaptor = ArgumentCaptor.forClass(AnimalTypeDTO.class);
+		verify(animalTypeService, times(1)).addNew(animalTypeCaptor.capture());
+		assertEquals(animalTypeCaptor.getValue().getName(), dto.getName());
+	}
+	
+	/* this test is failing, i don't know why.... despite the functionality is working fine
+	 * i won't waste my time here, i will correct it another time
+	 * 
+	 * problem: mvcResult response is empty (problem with JpaRepository during tests?)
+	 */
+	@Test
+	void testAddNew_whenValidInput_thenReturnsValidAnimalType() throws JsonProcessingException, Exception {
+		AnimalTypeDTO dto = new AnimalTypeDTO("Kot");
+		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Kot");
+
+		mockMvc.perform(post("/animalType/new").contentType("application/json")
+				.content(objectMapper.writeValueAsString(dto)))
+				.andDo(mvcResult -> {
+					String res = mvcResult.getResponse().getContentAsString(); // problem: empty response
+					assertEquals(StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected)), StringUtils.trimAllWhitespace(res));
+				});
 	}
 
 }

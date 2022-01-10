@@ -27,11 +27,17 @@ public class AnimalTypeService {
 		return animalTypeRepo.findAll();
 	}
 
-	public AnimalType addNew(AnimalTypeDTO dto) {
+	public AnimalTypeDTO addNew(AnimalTypeDTO dto) {
 		AnimalType animalType = mapToEntity(dto);
-		return animalTypeRepo.saveAndFlush(animalType);
+		AnimalType result = animalTypeRepo.saveAndFlush(animalType);
+		AnimalTypeDTO resultDTO = mapToDTO(result);
+		return resultDTO;
 	}
 
+	public AnimalType findById(Long id) {
+		return animalTypeRepo.findById(id).get();
+	}
+	
 	public AnimalType findByName(String name) {
 		return animalTypeRepo.findByName(name).get(0);
 	}
@@ -39,9 +45,9 @@ public class AnimalTypeService {
 	private AnimalType mapToEntity(AnimalTypeDTO dto) {
 		return modelMapper.map(dto, AnimalType.class);
 	}
-
-	public AnimalType findById(Long id) {
-		return animalTypeRepo.findById(id).get();
+	
+	private AnimalTypeDTO mapToDTO(AnimalType result) {
+		return modelMapper.map(result, AnimalTypeDTO.class);
 	}
 
 }
