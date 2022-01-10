@@ -31,9 +31,15 @@ public class AnimalTypeController {
 	public @ResponseBody List<AnimalType> findAll() {
 		return animalTypeService.findAll();
 	}
+	/*	tests:
+	 *  verify http request matching
+	 *  verify input deserialization - when valid input: return status 200 and valid dto
+	 *  verify input validation - when null or empty: return status 400 and throw correct exception
+	 *  verify business logic calls
+	 */
 	
 	@PostMapping("/new")
-	public @ResponseBody AnimalType addNew(@Valid @RequestBody AnimalTypeDTO animalType) {
+	public @ResponseBody AnimalTypeDTO addNew(@Valid @RequestBody AnimalTypeDTO animalType) {
 		return animalTypeService.addNew(animalType);
 	}
 
