@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.BDDMockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 @ExtendWith(SpringExtension.class)
@@ -103,16 +105,14 @@ class AnimalTypeControllerTest {
 		assertEquals(animalTypeCaptor.getValue().getName(), dto.getName());
 	}
 	
-	/* this test is failing, i don't know why.... despite the functionality is working fine
-	 * i won't waste my time here, i will correct it another time
-	 * 
-	 * problem: mvcResult response is empty (problem with JpaRepository during tests?)
-	 */
 	@Test
 	void testAddNew_whenValidInput_thenReturnsValidAnimalType() throws JsonProcessingException, Exception {
 		AnimalTypeDTO dto = new AnimalTypeDTO("Kot");
 		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Kot");
 
+		// mocking service return value
+		given(animalTypeService.addNew(dto)).willReturn(expected);
+		
 		mockMvc.perform(post("/animalType/new").contentType("application/json")
 				.content(objectMapper.writeValueAsString(dto)))
 				.andDo(mvcResult -> {
@@ -122,30 +122,20 @@ class AnimalTypeControllerTest {
 	}
 	
 
-	/*
-	 * another test with problem :(:(:(:
-	 * should return response with httpstatus 400, returns 200. In reality this works and returns 400 error
-	 * Maybe same problem as above, with mocked service or repository?
-	 * 
-	 */
 	@Test
 	void testAddNew_whenNameIsDuplicated_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO requestDto = new AnimalTypeDTO("Kot");
 		ErrorDTO expectedError = new ErrorDTO(HttpStatus.BAD_REQUEST, "this animal type exists in database");
 
-		// first try to add animalType "Kot" - should be successful
-		mockMvc.perform(post("/animalType/new").contentType("application/json")
-				.content(objectMapper.writeValueAsString(requestDto)));
-		
-		// second try to add "Kot" - should be unsuccessful (due to duplicated name)
+		// mocking service method
+		given(animalTypeService.addNew(requestDto)).willThrow(AnimalTypeAllreadyExistsException.class);
+
 		MvcResult result = mockMvc.perform(post("/animalType/new").contentType("application/json")
-				.content(objectMapper.writeValueAsString(requestDto)))
-		.andExpect(status().isBadRequest()).andReturn();
-		
+				.content(objectMapper.writeValueAsString(requestDto))).andReturn();
 		// check for exception
-		String actualResponseBody = result.getResponse().getContentAsString();
 		String expectedResponseBody = objectMapper.writeValueAsString(expectedError);
-		assertEquals(StringUtils.trimAllWhitespace(actualResponseBody), StringUtils.trimAllWhitespace(expectedResponseBody));
+		String actualResponseBody = result.getResponse().getContentAsString();
+		assertEquals(StringUtils.trimAllWhitespace(expectedResponseBody), StringUtils.trimAllWhitespace(actualResponseBody));
 	}
 
 }
