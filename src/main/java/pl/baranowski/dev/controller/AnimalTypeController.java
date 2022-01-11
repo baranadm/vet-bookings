@@ -6,9 +6,11 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,28 +24,26 @@ import pl.baranowski.dev.service.AnimalTypeService;
 public class AnimalTypeController {
 
 	@Autowired
-	private final AnimalTypeService animalTypeService;
-
-	public AnimalTypeController(AnimalTypeService service) {
-		this.animalTypeService = service;
-	}
+	AnimalTypeService animalTypeService;
 	
-	@GetMapping("/all")
+	@GetMapping(value="/all", produces="application/json;charset=UTF-8")
 	public @ResponseBody List<AnimalType> findAll() {
 		return animalTypeService.findAll();
 	}
+
+	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
+	public AnimalType findById(@PathVariable String id) throws NumberFormatException {
+		return animalTypeService.findById(Long.decode(id));
+	}
+
+	@GetMapping(value="/find", produces="application/json;charset=UTF-8")
+	public List<AnimalType> findByName(@RequestParam("name") String name) {
+		return animalTypeService.findByName(name);
+	}
 	
-	@PostMapping("/new")
+	@PostMapping(value="/new", produces="application/json;charset=UTF-8")
 	public @ResponseBody AnimalTypeDTO addNew(@Valid @RequestBody AnimalTypeDTO animalType) throws AnimalTypeAllreadyExistsException {
 		return animalTypeService.addNew(animalType);
-	}
-
-	public AnimalType findById(long id) {
-		return animalTypeService.findById(id);
-	}
-
-	public List<AnimalType> findByName(String name) {
-		return animalTypeService.findByName(name);
 	}
 	
 }

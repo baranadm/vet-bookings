@@ -27,4 +27,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		ErrorDTO body = new ErrorDTO(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
 	}
+
+	@ExceptionHandler(NumberFormatException.class)
+	ResponseEntity<Object> handleNumberFormatException(NumberFormatException ex, WebRequest request) {
+		ErrorDTO body = new ErrorDTO(HttpStatus.BAD_REQUEST, "expected digit");
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+	}
 }

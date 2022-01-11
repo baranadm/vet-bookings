@@ -41,7 +41,7 @@ public class AnimalTypeService {
 	}
 
 	public AnimalType findById(Long id) {
-		return animalTypeRepo.findById(id).get();
+		return animalTypeRepo.findById(id).orElse(null);
 	}
 	
 	public List<AnimalType> findByName(String name) {
