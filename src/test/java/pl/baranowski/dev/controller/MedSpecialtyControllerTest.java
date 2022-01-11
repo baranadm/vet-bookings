@@ -48,7 +48,7 @@ class MedSpecialtyControllerTest {
 
 	// verify if controller responds for request
 	@Test
-	void findAll_respond() throws Exception {
+	void findAll_respondToRequest() throws Exception {
 		mockMvc
 			.perform(get("/medSpecialty/all"))
 			.andExpect(status().isOk());
@@ -56,7 +56,7 @@ class MedSpecialtyControllerTest {
 	
 	// verify if controller returns correct entries
 	@Test
-	void findAll_returnCorrectEntries() throws Exception {
+	void findAll_returnsEntries() throws Exception {
 		// mock service return value
 		given(medSpecialtyService.findAll()).willReturn(specialties);
 
