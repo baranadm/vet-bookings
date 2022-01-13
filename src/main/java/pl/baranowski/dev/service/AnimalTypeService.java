@@ -1,6 +1,7 @@
 package pl.baranowski.dev.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,8 @@ public class AnimalTypeService {
 		this.animalTypeRepo = animalTypeRepo;
 	}
 
-	public List<AnimalType> findAll() {
-		return animalTypeRepo.findAll();
+	public List<AnimalTypeDTO> findAll() {
+		return animalTypeRepo.findAll().stream().map(r -> modelMapper.map(r, AnimalTypeDTO.class)).collect(Collectors.toList());
 	}
 
 	public AnimalTypeDTO addNew(AnimalTypeDTO dto) throws AnimalTypeAllreadyExistsException {
@@ -40,12 +41,13 @@ public class AnimalTypeService {
 		return resultDTO;
 	}
 
-	public AnimalType findById(Long id) {
-		return animalTypeRepo.findById(id).orElse(null);
+	public AnimalTypeDTO findById(Long id) {
+		AnimalType entry = animalTypeRepo.findById(id).orElse(null);
+		return mapToDTO(entry);
 	}
 	
-	public List<AnimalType> findByName(String name) {
-		return animalTypeRepo.findByName(name);
+	public List<AnimalTypeDTO> findByName(String name) {
+		return animalTypeRepo.findByName(name).stream().map(r -> modelMapper.map(r, AnimalTypeDTO.class)).collect(Collectors.toList());
 	}
 
 	private AnimalType mapToEntity(AnimalTypeDTO dto) {

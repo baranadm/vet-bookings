@@ -8,7 +8,7 @@ public class AnimalTypeDTO {
 	@NotBlank(message = "name must not be null or empty")
 	private String name;
 	
-	private AnimalTypeDTO() {
+	public AnimalTypeDTO() {
 	}
 
 	public AnimalTypeDTO(String name) {

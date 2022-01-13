@@ -11,26 +11,44 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler { 
 
+	// soon will have to handle few arguments not valid
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		ErrorDTO body = new ErrorDTO(HttpStatus.BAD_REQUEST, ex.getFieldError().getDefaultMessage());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		// works only for one invalid argument
+		error.setMessage(ex.getFieldError().getDefaultMessage());
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 
 	@ExceptionHandler(AnimalTypeAllreadyExistsException.class)
 	ResponseEntity<Object> handleAnimalTypeAllreadyExists(AnimalTypeAllreadyExistsException ex, WebRequest request) {
-		ErrorDTO body = new ErrorDTO(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+
+	@ExceptionHandler(MedSpecialtyAllreadyExistsException.class)
+	ResponseEntity<Object> handleMedSpecialtyAllreadyExists(MedSpecialtyAllreadyExistsException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 
 	@ExceptionHandler(NumberFormatException.class)
 	ResponseEntity<Object> handleNumberFormatException(NumberFormatException ex, WebRequest request) {
-		ErrorDTO body = new ErrorDTO(HttpStatus.BAD_REQUEST, "expected digit");
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		error.setMessage("digits expected");
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
+	@ExceptionHandler(EmptyFieldException.class)
+	ResponseEntity<Object> handleEmptyFieldException(EmptyFieldException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 }
