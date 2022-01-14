@@ -1,5 +1,7 @@
 package pl.baranowski.dev.exception.handler;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +51,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(EmptyFieldException.class)
 	ResponseEntity<Object> handleEmptyFieldException(EmptyFieldException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
+	@ExceptionHandler(EntityNotFoundException.class)
+	ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 }

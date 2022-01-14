@@ -1,15 +1,20 @@
 package pl.baranowski.dev.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
+import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.service.VetService;
 
-@Controller
+@RestController
+@RequestMapping("/doctor")
 public class VetController {
 	
 	@Autowired
@@ -17,6 +22,11 @@ public class VetController {
 
 	public VetController(VetService vetService) {
 		this.vetService = vetService;
+	}
+	
+	@GetMapping("/{id}")
+	public @ResponseBody VetDTO getById(@PathVariable String id) throws NumberFormatException {
+		return vetService.getById(Long.decode(id));
 	}
 	
 	@PostMapping(value = "/doctor")

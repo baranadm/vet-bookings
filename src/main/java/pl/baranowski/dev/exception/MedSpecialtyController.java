@@ -1,4 +1,4 @@
-package pl.baranowski.dev.controller;
+package pl.baranowski.dev.exception;
 
 import java.util.List;
 
@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
-import pl.baranowski.dev.exception.EmptyFieldException;
-import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
 @RestController

@@ -108,14 +108,13 @@ class AnimalTypeControllerTest {
 		mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk());
 	}
 
-	// fails - returns json wrapped in [] (result = [{}]), expects only json ({})
 	@Test
 	void testFindByName_returnsEntries() throws Exception {
 		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Wiewiórka");
 		given(animalTypeService.findByName(expected.getName())).willReturn(Collections.singletonList(expected));
 		MvcResult result = mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk()).andReturn();
 		
-		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
+		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(Collections.singletonList(expected)));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
 
 		assertEquals(expectedTrimmed, actualTrimmed);
@@ -152,10 +151,14 @@ class AnimalTypeControllerTest {
 		given(animalTypeService.addNew(dto)).willReturn(expected);
 
 		mockMvc.perform(
-				post("/animalType/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
+				post("/animalType/new")
+				.contentType("application/json")
+				.content(objectMapper.writeValueAsString(dto)))
+		.andExpect(status().isOk())
 				.andDo(mvcResult -> {
 					String res = mvcResult.getResponse().getContentAsString();
-					assertEquals(StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected)),
+					assertEquals(StringUtils.trimAllWhitespace(
+							objectMapper.writeValueAsString(expected)),
 							StringUtils.trimAllWhitespace(res));
 				});
 	}
@@ -167,7 +170,8 @@ class AnimalTypeControllerTest {
 		
 		// when name is empty
 		MvcResult emptyResult = mockMvc
-				.perform(post("/animalType/new").contentType("application/json")
+				.perform(post("/animalType/new")
+						.contentType("application/json")
 						.content(objectMapper.writeValueAsString(emptyNameDto)))
 				.andExpect(status().isBadRequest()).andReturn();
 		

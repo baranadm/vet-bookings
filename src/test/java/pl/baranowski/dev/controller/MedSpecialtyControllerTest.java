@@ -1,10 +1,10 @@
 package pl.baranowski.dev.controller;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -19,7 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -37,7 +38,9 @@ import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(controllers = MedSpecialtyController.class)
+//@WebMvcTest(controllers = MedSpecialtyController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 class MedSpecialtyControllerTest {
 
 	@Autowired
@@ -50,12 +53,15 @@ class MedSpecialtyControllerTest {
 	MedSpecialtyService medSpecialtyService;
 	
 	private List<MedSpecialtyDTO> specialtiesDTO = new ArrayList<>();
-	@BeforeEach
-	void setUp() throws Exception {
+	
+	public MedSpecialtyControllerTest() {
 		// some data for testing purposes
 		specialtiesDTO.add(new MedSpecialtyDTO("Kardiolog"));
 		specialtiesDTO.add(new MedSpecialtyDTO("Chujolog"));
 		specialtiesDTO.add(new MedSpecialtyDTO("Pizdolog"));
+	}
+	@BeforeEach
+	void setUp() throws Exception {
 	}
 
 	// verify if controller responds for request
@@ -94,6 +100,10 @@ class MedSpecialtyControllerTest {
 		assertEquals(Long.decode(idString), captor.getValue());
 	}
 	
+	@Test
+	void getById_whenValidIdAndNoEntry_returns404AndError() {
+		assert(false);
+	}
 	@Test
 	void getById_whenValidId_returnsEntry() throws Exception {
 		MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "ĘÓŁĄĆŃŻŻ");
@@ -176,20 +186,25 @@ class MedSpecialtyControllerTest {
 	void addNew_whenValidInput_returns200AndNewEntry() throws JsonProcessingException, Exception {
 		MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ log");
 		MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "ĘŁÓ log");
+
+		// mocking service return value
+		given(medSpecialtyService.addNew(dto)).willReturn(expected);
 		
-		given(medSpecialtyService.addNew(dto))
-		.willReturn(expected);
-		
-		MvcResult result = mockMvc.perform(
+		mockMvc.perform(
 				post("/medSpecialty/new")
-				.contentType("application/json;charset=UTF-8")
+				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isOk()).andReturn();
+		.andExpect(status().isOk())
+				.andDo(mvcResult -> {
+					String res = mvcResult.getResponse().getContentAsString();
+					assertEquals(StringUtils.trimAllWhitespace(
+							objectMapper.writeValueAsString(expected)),
+							StringUtils.trimAllWhitespace(res));
+				});
 		
-		assertCorrectJSONResult(expected, result);
 	}
 	
-	
+	// fails - return 200 instead of 400 (spring @Valid validator not working)
 	@Test
 	void addNew_whenEmptyName_returns400AndError() throws JsonProcessingException, Exception {
 		MedSpecialtyDTO dto = new MedSpecialtyDTO("");
@@ -197,7 +212,7 @@ class MedSpecialtyControllerTest {
 
 		MvcResult result = mockMvc.perform(
 				post("/medSpecialty/new")
-				.contentType("application/json;charset=UTF-8")
+				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(dto)))
 		.andExpect(status().isBadRequest()).andReturn();
 		
@@ -223,11 +238,8 @@ class MedSpecialtyControllerTest {
 		assertCorrectJSONResult(expected, result);
 		
 	}
-	
-	
-	
-	
- 	private void assertCorrectJSONResult(Object expected, MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
+
+	private void assertCorrectJSONResult(Object expected, MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
 
