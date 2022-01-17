@@ -1,6 +1,5 @@
 package pl.baranowski.dev.controller;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -33,6 +32,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
+import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
+import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
@@ -208,7 +209,7 @@ class MedSpecialtyControllerTest {
 	@Test
 	void addNew_whenEmptyName_returns400AndError() throws JsonProcessingException, Exception {
 		MedSpecialtyDTO dto = new MedSpecialtyDTO("");
-		ErrorDTO expected = new ErrorDTO("MethodArgumentNotValidException", "specialty must not be null or empty", HttpStatus.BAD_REQUEST);
+		MultiFieldsErrorDTO expected = new MultiFieldsErrorDTO(new FieldValidationError("name", "specialty must not be null or empty"));
 
 		MvcResult result = mockMvc.perform(
 				post("/medSpecialty/new")

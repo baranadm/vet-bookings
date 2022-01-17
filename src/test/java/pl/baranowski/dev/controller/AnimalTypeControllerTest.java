@@ -1,6 +1,6 @@
 package pl.baranowski.dev.controller;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
+import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
+import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
@@ -166,7 +168,7 @@ class AnimalTypeControllerTest {
 	@Test
 	void testAddNew_whenNameIsEmpty_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO emptyNameDto = new AnimalTypeDTO("");
-		ErrorDTO expectedError = new ErrorDTO("MethodArgumentNotValidException", "name must not be null or empty", HttpStatus.BAD_REQUEST);
+		MultiFieldsErrorDTO expectedError = new MultiFieldsErrorDTO(new FieldValidationError("name", "namemustnotbenullorempty"));
 		
 		// when name is empty
 		MvcResult emptyResult = mockMvc
