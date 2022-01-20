@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -102,8 +104,18 @@ class MedSpecialtyControllerTest {
 	}
 	
 	@Test
-	void getById_whenValidIdAndNoEntry_returns404AndError() {
-		assert(false);
+	void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
+		EntityNotFoundException ex = new EntityNotFoundException("medical specialty has not been found");
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
+		
+		given(medSpecialtyService.getById(123L)).willThrow(ex);
+		
+		MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", "123"))
+				.andExpect(status().isNotFound())
+				.andReturn();
+		
+		assertCorrectJSONResult(expected, result);
+
 	}
 	@Test
 	void getById_whenValidId_returnsEntry() throws Exception {

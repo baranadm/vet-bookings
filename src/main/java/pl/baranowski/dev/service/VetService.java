@@ -58,7 +58,7 @@ public class VetService {
 
 	public VetDTO addNew(VetDTO validatedVetDTO) throws NIPExistsException {
 		if(!vetRepository.findByNip(validatedVetDTO.getNip()).isEmpty()) {
-			throw new NIPExistsException();
+			throw new NIPExistsException(); // NIP duplicated
 		}
 		Vet vet = mapToEntity.apply(validatedVetDTO);
 		Vet result = vetRepository.saveAndFlush(vet);
@@ -66,18 +66,18 @@ public class VetService {
 		return resultDTO;
 	}
 
-	public boolean fire(Long id) throws VetNotActiveException {
+	public void fire(Long id) throws VetNotActiveException {
 		Optional<Vet> vetOpt = vetRepository.findById(id);
 		if(vetOpt.isPresent()) {
 			Vet vet = vetOpt.get();
-			if(vet.getActive()) {
+			if(vet.getActive()) { // if Vet is active, sets active to false
 				vet.setActive(false);
-				return true;
-			} else {
-				throw new VetNotActiveException().withCustomMessage("vet id: " + vet.getId() + " not found");
+			} else { // if Vet is inactive, throws exception
+				throw new VetNotActiveException().withCustomMessage("vet id: " + vet.getId() + " is not active");
 			}
+		} else {
+			throw new EntityNotFoundException("Vet has not ben found");
 		}
-		return false;
 	}
 
 	// should throw EntityNotFoundException if no vet

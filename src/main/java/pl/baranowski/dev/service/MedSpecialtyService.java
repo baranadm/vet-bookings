@@ -1,8 +1,11 @@
 package pl.baranowski.dev.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityNotFoundException;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +31,9 @@ public class MedSpecialtyService {
 	}
 
 	public MedSpecialtyDTO getById(Long id) {
-		return mapToDTO.apply(medSpecialtyRepository.getById(id));
+		Optional<MedSpecialty> result = medSpecialtyRepository.findById(id);
+		MedSpecialty medSpecialty = result.orElseThrow(() -> new EntityNotFoundException("med specialty not found"));
+		return mapToDTO.apply(medSpecialty);
 	}
 	
 	public List<MedSpecialtyDTO> findAll() {

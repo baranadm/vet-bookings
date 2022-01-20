@@ -37,11 +37,13 @@ public class VetController {
 	}
 	
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
+	@ResponseStatus(HttpStatus.OK)
 	public @ResponseBody VetDTO getById(@PathVariable String id) throws NumberFormatException {
 		return vetService.getById(Long.decode(id));
 	}
 	
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
+	@ResponseStatus(HttpStatus.OK)
 	public @ResponseBody Page<VetDTO> findAll(@RequestParam("page") String page, @RequestParam("size") String size) throws EmptyFieldException {
 		// validation:
 		if(page.isEmpty()) throw new EmptyFieldException("page");
@@ -54,7 +56,7 @@ public class VetController {
 	@PostMapping(value = "/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
 	public @ResponseBody VetDTO addNew(@Valid @RequestBody VetDTO dto) throws NIPExistsException {
-		// TO ADD: validation of NIP
+		// NIP validation  - custom validator
 		return vetService.addNew(dto);
 	}
 	

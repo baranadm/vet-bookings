@@ -3,6 +3,8 @@ package pl.baranowski.dev.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,8 +43,8 @@ public class AnimalTypeService {
 		return resultDTO;
 	}
 
-	public AnimalTypeDTO findById(Long id) {
-		AnimalType entry = animalTypeRepo.findById(id).orElse(null);
+	public AnimalTypeDTO findById(Long id) throws EntityNotFoundException {
+		AnimalType entry = animalTypeRepo.findById(id).orElseThrow(EntityNotFoundException::new);
 		return mapToDTO(entry);
 	}
 	

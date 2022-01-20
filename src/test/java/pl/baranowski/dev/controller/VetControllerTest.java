@@ -3,6 +3,7 @@ package pl.baranowski.dev.controller;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -325,7 +326,8 @@ public class VetControllerTest {
 	void fire_whenValidId_callsFireWithCorrectId_andWhenNoEntry_Returns404AndError() throws Exception {
 		Long id = 1L;
 		String message = "Doctor with id " + id + " not found!";
-		given(vetService.fire(id)).willThrow(new EntityNotFoundException(message));
+//		given(vetService.fire(id)).willThrow(new EntityNotFoundException(message));
+		doThrow(new EntityNotFoundException(message)).when(vetService).fire(id);
 		
 		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", 1L)
 				.characterEncoding("UTF-8"))
@@ -353,8 +355,7 @@ public class VetControllerTest {
 	void fire_handlesException() throws Exception {
 		String customMessage = "vet id: " + " not found";
 		ErrorDTO expected = new ErrorDTO(new VetNotActiveException().withCustomMessage("vet id: " + " not found"), HttpStatus.FORBIDDEN);
-		given(vetService.fire(mostowiak.getId())).willThrow(new VetNotActiveException().withCustomMessage(customMessage));
-
+		doThrow(new VetNotActiveException().withCustomMessage(customMessage)).when(vetService).fire(mostowiak.getId());
 		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", "1"))
 		.andExpect(status().isForbidden())
 		.andReturn();

@@ -131,15 +131,14 @@ class VetServiceTest {
 	}
 	
 	@Test
-	void fire_ifEntryExistsAndIsActive_returnsTrue() throws VetNotActiveException {
+	void fire_ifEntryExistsAndIsActive_setsActiveToFalse() throws VetNotActiveException {
 		Vet active = mostowiak;
 		active.setActive(true);
 		
 		given(vetRepository.findById(active.getId())).willReturn(Optional.of(active));
 		
-		Boolean result = vetService.fire(active.getId());
-		
-		assert(result);
+		vetService.fire(active.getId());
+		assertFalse(vetRepository.findById(active.getId()).get().getActive());
 	}
 	
 	@Test
@@ -153,10 +152,10 @@ class VetServiceTest {
 	}
 	
 	@Test
-	void fire_ifNoEntry_returnsFalse() throws VetNotActiveException {
+	void fire_ifNoEntry_throwsEntityNotFoundException() {
 		given(vetRepository.findById(1L)).willReturn(Optional.empty());
-		Boolean result = vetService.fire(1L);
-		assertFalse(result);
+//		vetService.fire(1L);
+		assertThrows(EntityNotFoundException.class, () -> vetService.fire(1L));
 	}
 	
 	@Test

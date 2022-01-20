@@ -5,6 +5,7 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,10 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 @RestController
@@ -36,11 +39,15 @@ public class AnimalTypeController {
 	}
 
 	@GetMapping(value="/find", produces="application/json;charset=UTF-8")
-	public @ResponseBody List<AnimalTypeDTO> findByName(@RequestParam("name") String name) {
+	public @ResponseBody List<AnimalTypeDTO> findByName(@RequestParam("name") String name) throws EmptyFieldException {
+		if(name.isEmpty()) {
+			throw new EmptyFieldException("name");
+		}
 		return animalTypeService.findByName(name);
 	}
 	
 	@PostMapping(value="/new", produces="application/json;charset=UTF-8")
+	@ResponseStatus(HttpStatus.CREATED)
 	public @ResponseBody AnimalTypeDTO addNew(@Valid @RequestBody AnimalTypeDTO animalType) throws AnimalTypeAllreadyExistsException {
 		return animalTypeService.addNew(animalType);
 	}

@@ -1,10 +1,11 @@
-package pl.baranowski.dev.exception;
+package pl.baranowski.dev.controller;
 
 import java.util.List;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,9 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
+import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
 @RestController
@@ -43,9 +47,9 @@ public class MedSpecialtyController {
 	}
 	
 	@PostMapping(value="/new", consumes="application/json;charset=UTF-8", produces="application/json;charset=UTF-8")
+	@ResponseStatus(HttpStatus.CREATED)
 	public @ResponseBody MedSpecialtyDTO addNew(@Valid @RequestBody MedSpecialtyDTO dto) throws MedSpecialtyAllreadyExistsException, EmptyFieldException {
 		return medSpecialtyService.addNew(dto);
 	}
-	
 	
 }
