@@ -31,7 +31,7 @@ public class VetDTO {
 	@NipConstraint
 	private String nip;
 	
-	private Boolean active = false;
+	private Boolean active = true;
 	
 	private Set<MedSpecialty> medSpecialties = new HashSet<>();
 	private Set<AnimalType> animalTypes = new HashSet<>();
@@ -125,19 +125,17 @@ public class VetDTO {
 	public void setAnimalTypes(Set<AnimalType> animalTypes) {
 		this.animalTypes = animalTypes;
 	}
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + ((active == null) ? 0 : active.hashCode());
 		result = prime * result + ((hourlyRate == null) ? 0 : hourlyRate.hashCode());
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((nip == null) ? 0 : nip.hashCode());
 		result = prime * result + ((surname == null) ? 0 : surname.hashCode());
 		return result;
 	}
-	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -147,15 +145,15 @@ public class VetDTO {
 		if (getClass() != obj.getClass())
 			return false;
 		VetDTO other = (VetDTO) obj;
+		if (active == null) {
+			if (other.active != null)
+				return false;
+		} else if (!active.equals(other.active))
+			return false;
 		if (hourlyRate == null) {
 			if (other.hourlyRate != null)
 				return false;
 		} else if (!hourlyRate.equals(other.hourlyRate))
-			return false;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
 			return false;
 		if (name == null) {
 			if (other.name != null)
@@ -174,10 +172,11 @@ public class VetDTO {
 			return false;
 		return true;
 	}
+	
 	@Override
 	public String toString() {
 		return "VetDTO [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
-				+ nip + "]";
+				+ nip + ", active=" + active + "]";
 	}
 	
 }

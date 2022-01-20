@@ -41,6 +41,7 @@ import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.NIPExistsException;
+import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.service.VetService;
 
 //API dla lekarzy
@@ -82,7 +83,6 @@ public class VetControllerTest {
 	
 	public VetControllerTest() {
 		vetsList = new ArrayList<>();
-
 		vetsList.add(new VetDTO("Robert", "Kubica", new BigDecimal(100000), "1213141516"));
 		vetsList.add(new VetDTO("Mirosław", "Rosomak", new BigDecimal(100.0), "0987654321"));
 		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", new BigDecimal(40.), "5566557755"));
@@ -238,11 +238,11 @@ public class VetControllerTest {
 
 		assertCorrectJSONResult(expected, result);
 	}
+
 	//@POST - should add doctor
 	//example body: {"name": "xx", "surname": "xx", "type": "xxx", "animalType": "yyy", "salary": 000, "nip": "xxx"}
 	//response: 201 Created
 	//response: 400 BAD request. Error handling: duplicated nip, all fields must be not empty, salary cannot be negative.
-	
 	@Test
 	void addNew_respondsToRequest() throws Exception {
 		VetDTO expected = mostowiak;
@@ -255,8 +255,7 @@ public class VetControllerTest {
 	
 	@Test
 	void addNew_whenValidRequestBody_returns201AndEntry() throws JsonProcessingException, Exception {
-		VetDTO requestDTO = mostowiak;
-		requestDTO.setId(null);
+		VetDTO requestDTO = new VetDTO(0L, mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip());
 		VetDTO expectedDTO = mostowiak;
 		given(vetService.addNew(requestDTO)).willReturn(expectedDTO);
 		MvcResult result = mockMvc.perform(post("/doctor/")
@@ -269,7 +268,6 @@ public class VetControllerTest {
 		assertCorrectJSONResult(expectedDTO, result);
 	}
 	
-	// shouldn't it be tested in ServiceTest?
 	@Test
 	void addNew_whenValidRequestAndNIPExists_returns400AndError() throws JsonProcessingException, Exception {
 		VetDTO requestDTO = mostowiak;
@@ -285,17 +283,6 @@ public class VetControllerTest {
 		.andReturn();
 		
 		assertCorrectJSONResult(expected, result);
-	}
-	
-	// ServiceTest?
-	@Test
-	void addNew_whenValidRequestBodyAndAnimalTypeNotExists_returns400AndError() {
-		assert(false);
-	}
-	// ServiceTest?
-	@Test
-	void addNew_whenValidRequestBodyAndMedSpecialityNotExists_returns400AndError() {
-		assert(false);
 	}
 
 	@Test
@@ -333,11 +320,7 @@ public class VetControllerTest {
 		verify(vetService, times(1)).fire(captor.capture());
 		assertEquals(1L, captor.getValue());
 	}
-	
-	// service?
-	// should throw EntityNotFoundException and return 404
-	// test exception handling here
-	// test entry finding in service test
+
 	@Test
 	void fire_whenValidId_callsFireWithCorrectId_andWhenNoEntry_Returns404AndError() throws Exception {
 		Long id = 1L;
@@ -366,6 +349,20 @@ public class VetControllerTest {
 		assertCorrectJSONResult(expected, result);
 	}
 
+	@Test
+	void fire_handlesException() throws Exception {
+		String customMessage = "vet id: " + " not found";
+		ErrorDTO expected = new ErrorDTO(new VetNotActiveException().withCustomMessage("vet id: " + " not found"), HttpStatus.FORBIDDEN);
+		given(vetService.fire(mostowiak.getId())).willThrow(new VetNotActiveException().withCustomMessage(customMessage));
+
+		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", "1"))
+		.andExpect(status().isForbidden())
+		.andReturn();
+		
+		assertCorrectJSONResult(expected, result);
+		
+	}
+	
 	private void assertCorrectJSONResult(Object expected, MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());

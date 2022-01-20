@@ -1,5 +1,6 @@
 package pl.baranowski.dev.entity;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,8 +21,16 @@ public class Vet {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
+	
 	private String name;
+	
 	private String surname;
+	
+	private BigDecimal hourlyRate;
+	
+	private String nip;
+	
+	private Boolean active = true;
 	
 	@ManyToMany
 	@JoinTable(
@@ -43,13 +52,19 @@ public class Vet {
 	@OneToMany(mappedBy = "vet")
 	private Set<Visit> visits = new HashSet<>();
 
-	private Double hourlyRate;
-	private String nip;
 	
 	public Vet() {
 	}
 	
-	public Vet(String name, String surname, Double hourlyRate, String nip) {
+	public Vet(String name, String surname, BigDecimal hourlyRate, String nip) {
+		this.name = name;
+		this.surname = surname;
+		this.hourlyRate = hourlyRate;
+		this.nip = nip;
+	}
+
+	public Vet(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
+		this.id = id;
 		this.name = name;
 		this.surname = surname;
 		this.hourlyRate = hourlyRate;
@@ -72,11 +87,11 @@ public class Vet {
 		this.surname = surname;
 	}
 
-	public Double getHourlyRate() {
+	public BigDecimal getHourlyRate() {
 		return hourlyRate;
 	}
 
-	public void setHourlyRate(Double hourlyRate) {
+	public void setHourlyRate(BigDecimal hourlyRate) {
 		this.hourlyRate = hourlyRate;
 	}
 
@@ -91,12 +106,24 @@ public class Vet {
 	public Long getId() {
 		return id;
 	}
+	
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
 
 	public Set<MedSpecialty> getMedSpecialties() {
 		return medSpecialties;
 	}
 
-	public Set<AnimalType> getPetSpecialties() {
+	public Set<AnimalType> getAnimalTypes() {
 		return animalTypes;
 	}
 	
@@ -104,7 +131,7 @@ public class Vet {
 		return medSpecialties.add(ms);
 	}
 	
-	public boolean addPetSpecialty(AnimalType at) {
+	public boolean addAnimalType(AnimalType at) {
 		return animalTypes.add(at);
 	}
 
@@ -119,6 +146,62 @@ public class Vet {
 	public boolean removeVisit(Visit visit) {
 		return visits.remove(visit);
 	}
+
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((active == null) ? 0 : active.hashCode());
+		result = prime * result + ((hourlyRate == null) ? 0 : hourlyRate.hashCode());
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((nip == null) ? 0 : nip.hashCode());
+		result = prime * result + ((surname == null) ? 0 : surname.hashCode());
+		return result;
+	}
+	
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Vet other = (Vet) obj;
+		if (active == null) {
+			if (other.active != null)
+				return false;
+		} else if (!active.equals(other.active))
+			return false;
+		if (hourlyRate == null) {
+			if (other.hourlyRate != null)
+				return false;
+		} else if (!hourlyRate.equals(other.hourlyRate))
+			return false;
+		if (id == null) {
+			if (other.id != null)
+				return false;
+		} else if (!id.equals(other.id))
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		if (nip == null) {
+			if (other.nip != null)
+				return false;
+		} else if (!nip.equals(other.nip))
+			return false;
+		if (surname == null) {
+			if (other.surname != null)
+				return false;
+		} else if (!surname.equals(other.surname))
+			return false;
+		return true;
+	}
 	
 }

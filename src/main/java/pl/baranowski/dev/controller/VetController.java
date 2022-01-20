@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.NIPExistsException;
+import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.service.VetService;
 
 @RestController
@@ -59,7 +60,7 @@ public class VetController {
 	
 	@PutMapping("/fire/{id}")
 	@ResponseStatus(HttpStatus.OK)
-	public void fire(@PathVariable("id") String id) {
+	public void fire(@PathVariable("id") String id) throws NumberFormatException, VetNotActiveException {
 		vetService.fire(Long.decode(id));
 	}
 	

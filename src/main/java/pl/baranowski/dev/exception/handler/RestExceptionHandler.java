@@ -16,9 +16,11 @@ import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.exception.NIPExistsException;
+import pl.baranowski.dev.exception.VetNotActiveException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler { 
@@ -72,8 +74,20 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 	
 	@ExceptionHandler(NIPExistsException.class)
-	ResponseEntity<Object> hendleNIPExistsException(NIPExistsException ex, WebRequest request) {
+	ResponseEntity<Object> handleNIPExistsException(NIPExistsException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
+	@ExceptionHandler(DoubledSpecialtyException.class)
+	ResponseEntity<Object> handleDoubledSpecialtyException(DoubledSpecialtyException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
+	@ExceptionHandler(VetNotActiveException.class)
+	ResponseEntity<Object> handleVetNotActiveException(VetNotActiveException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 }
