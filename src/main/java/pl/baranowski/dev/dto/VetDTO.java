@@ -1,74 +1,74 @@
-package pl.baranowski.dev.entity;
+package pl.baranowski.dev.dto;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import pl.baranowski.dev.constraint.NipConstraint;
+import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.entity.MedSpecialty;
 
-@Entity
-public class Vet {
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+public class VetDTO {
+	
 	private Long id;
 	
+	@NotBlank
 	private String name;
 	
+	@NotBlank
 	private String surname;
 	
+	@NotNull
+	@DecimalMin(value="0.0", inclusive=true)
+	@Digits(integer=4, fraction=2)
 	private BigDecimal hourlyRate;
 	
+	@NipConstraint
 	private String nip;
 	
 	private Boolean active = true;
 	
-	@ManyToMany
-	@JoinTable(
-			name="vets_to_med_specialities",
-			joinColumns = @JoinColumn(name="vet_id"),
-			inverseJoinColumns = @JoinColumn(name="med_speciality_id")
-	)
 	private Set<MedSpecialty> medSpecialties = new HashSet<>();
-	
-	@ManyToMany
-	@JoinTable(
-			name="vets_to_animal_types",
-			joinColumns = @JoinColumn(name="vet_id"),
-			inverseJoinColumns = @JoinColumn(name="animal_type_id")
-	)
 	private Set<AnimalType> animalTypes = new HashSet<>();
-	
-	@JsonIgnore
-	@OneToMany(mappedBy = "vet")
-	private Set<Visit> visits = new HashSet<>();
 
-	
-	public Vet() {
+	public VetDTO() {
+		// TODO Auto-generated constructor stub
 	}
-	
-	public Vet(String name, String surname, BigDecimal hourlyRate, String nip) {
+	public VetDTO(String name, String surname, BigDecimal hourlyRate, String nip) {
 		this.name = name;
 		this.surname = surname;
 		this.hourlyRate = hourlyRate;
 		this.nip = nip;
 	}
-
-	public Vet(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
+	
+	public VetDTO(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
 		this.id = id;
 		this.name = name;
 		this.surname = surname;
 		this.hourlyRate = hourlyRate;
 		this.nip = nip;
+	}
+	
+	public VetDTO(Long id, String name, String surname, BigDecimal hourlyRate, String nip, Boolean active) {
+		this.id = id;
+		this.name = name;
+		this.surname = surname;
+		this.hourlyRate = hourlyRate;
+		this.nip = nip;
+		this.active = active;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -103,65 +103,39 @@ public class Vet {
 		this.nip = nip;
 	}
 
-	public Long getId() {
-		return id;
-	}
-	
-	public void setId(Long id) {
-		this.id = id;
-	}
-
 	public Boolean getActive() {
 		return active;
 	}
-
 	public void setActive(Boolean active) {
 		this.active = active;
 	}
-
+	
 	public Set<MedSpecialty> getMedSpecialties() {
 		return medSpecialties;
+	}
+
+	public void setMedSpecialties(Set<MedSpecialty> medSpecialties) {
+		this.medSpecialties = medSpecialties;
 	}
 
 	public Set<AnimalType> getAnimalTypes() {
 		return animalTypes;
 	}
-	
-	public boolean addMedSpecialty(MedSpecialty ms) {
-		return medSpecialties.add(ms);
-	}
-	
-	public boolean addAnimalType(AnimalType at) {
-		return animalTypes.add(at);
-	}
 
-	public Set<Visit> getVisits() {
-		return visits;
+	public void setAnimalTypes(Set<AnimalType> animalTypes) {
+		this.animalTypes = animalTypes;
 	}
-	
-	public boolean addVisit(Visit visit) {
-		return visits.add(visit);
-	}
-	
-	public boolean removeVisit(Visit visit) {
-		return visits.remove(visit);
-	}
-
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((active == null) ? 0 : active.hashCode());
 		result = prime * result + ((hourlyRate == null) ? 0 : hourlyRate.hashCode());
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((nip == null) ? 0 : nip.hashCode());
 		result = prime * result + ((surname == null) ? 0 : surname.hashCode());
 		return result;
 	}
-	
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -170,7 +144,7 @@ public class Vet {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Vet other = (Vet) obj;
+		VetDTO other = (VetDTO) obj;
 		if (active == null) {
 			if (other.active != null)
 				return false;
@@ -180,11 +154,6 @@ public class Vet {
 			if (other.hourlyRate != null)
 				return false;
 		} else if (!hourlyRate.equals(other.hourlyRate))
-			return false;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
 			return false;
 		if (name == null) {
 			if (other.name != null)
@@ -202,6 +171,12 @@ public class Vet {
 		} else if (!surname.equals(other.surname))
 			return false;
 		return true;
+	}
+	
+	@Override
+	public String toString() {
+		return "VetDTO [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
+				+ nip + ", active=" + active + "]";
 	}
 	
 }

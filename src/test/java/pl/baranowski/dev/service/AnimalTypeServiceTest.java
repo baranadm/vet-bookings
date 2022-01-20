@@ -27,6 +27,11 @@ class AnimalTypeServiceTest {
 	}
 
 	@Test
+	void testFindById() {
+		fail("Not yet implemented");
+	}
+
+	@Test
 	void testAddNew() {
 		fail("Not yet implemented");
 	}

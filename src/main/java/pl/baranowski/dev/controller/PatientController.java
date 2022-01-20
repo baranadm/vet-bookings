@@ -10,9 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.service.AnimalTypeService;
 import pl.baranowski.dev.service.PatientService;
 
 @RestController

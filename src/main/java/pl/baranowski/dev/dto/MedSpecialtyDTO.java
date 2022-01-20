@@ -2,21 +2,24 @@ package pl.baranowski.dev.dto;
 
 import javax.validation.constraints.NotBlank;
 
-public class AnimalTypeDTO {
+public class MedSpecialtyDTO {
 
 	private Long id;
 	
-	@NotBlank(message = "name must not be null or empty")
+	@NotBlank(message = "specialty must not be null or empty")
 	private String name;
-	
-	public AnimalTypeDTO() {
+
+	//	is it necessary?
+	//	private Set<Vet> entitledVets = new HashSet<>();
+
+	public MedSpecialtyDTO() {
 	}
 
-	public AnimalTypeDTO(String name) {
+	public MedSpecialtyDTO(String name) {
 		this.name = name;
 	}
-	
-	public AnimalTypeDTO(Long id, @NotBlank String name) {
+
+	public MedSpecialtyDTO(Long id, String name) {
 		this.id = id;
 		this.name = name;
 	}
@@ -25,18 +28,10 @@ public class AnimalTypeDTO {
 		return id;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -54,7 +49,7 @@ public class AnimalTypeDTO {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		AnimalTypeDTO other = (AnimalTypeDTO) obj;
+		MedSpecialtyDTO other = (MedSpecialtyDTO) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;
@@ -67,5 +62,5 @@ public class AnimalTypeDTO {
 			return false;
 		return true;
 	}
-
+	
 }

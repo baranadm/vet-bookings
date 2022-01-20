@@ -1,6 +1,6 @@
 package pl.baranowski.dev.controller;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -8,9 +8,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.persistence.EntityNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,8 +34,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
-import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
+import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 @ExtendWith(SpringExtension.class)
@@ -48,30 +53,30 @@ class AnimalTypeControllerTest {
 	@MockBean
 	AnimalTypeService animalTypeService;
 
-	private List<AnimalType> animalTypesList;
+	private List<AnimalTypeDTO> animalTypesDTOList;
 
 	@BeforeEach
 	void setUp() throws Exception {
-		animalTypesList = new ArrayList<>();
-		animalTypesList.add(new AnimalType(1L, "Kot"));
-		animalTypesList.add(new AnimalType(2L, "Wiewiórka"));
-		animalTypesList.add(new AnimalType(3L, "Pies"));
+		animalTypesDTOList = new ArrayList<>();
+		animalTypesDTOList.add(new AnimalTypeDTO(1L, "Kot"));
+		animalTypesDTOList.add(new AnimalTypeDTO(2L, "Wiewiórka"));
+		animalTypesDTOList.add(new AnimalTypeDTO(3L, "Pies"));
 	}
 
 	
 	@Test
 	void testFindAll_respondsToRequest() throws Exception {
-		given(animalTypeService.findAll()).willReturn(animalTypesList);
+		given(animalTypeService.findAll()).willReturn(animalTypesDTOList);
 		mockMvc.perform(get("/animalType/all")).andExpect(status().isOk());
 	}
 
 	@Test
 	void testFindAll_returnsEntries() throws Exception {
-		given(animalTypeService.findAll()).willReturn(animalTypesList);
+		given(animalTypeService.findAll()).willReturn(animalTypesDTOList);
 		
 		MvcResult result = mockMvc.perform(get("/animalType/all")).andExpect(status().isOk()).andReturn();
 
-		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(animalTypesList));
+		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(animalTypesDTOList));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
 
 		assertEquals(expectedTrimmed, 
@@ -81,13 +86,13 @@ class AnimalTypeControllerTest {
 	
 	@Test
 	void testFindById_whenValidId_respondsToRequest() throws Exception {
-		given(animalTypeService.findById(1L)).willReturn(new AnimalType());
+		given(animalTypeService.findById(1L)).willReturn(new AnimalTypeDTO());
 		mockMvc.perform(get("/animalType/{id}", 1L)).andExpect(status().isOk());
 	}
 	
 	@Test
 	void testFindById_whenValidId_returnsCorrectEntry() throws Exception {
-		AnimalType expected = new AnimalType(1L, "Wiewiórka");
+		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Wiewiórka");
 		given(animalTypeService.findById(1L)).willReturn(expected);
 		
 		MvcResult result = mockMvc.perform(get("/animalType/{id}", 1L)).andExpect(status().isOk()).andReturn();
@@ -103,6 +108,19 @@ class AnimalTypeControllerTest {
 		mockMvc.perform(get("/animalType/{id}", "aaa")).andExpect(status().isBadRequest()).andReturn();
 	}
 
+	@Test
+	void testFindById_whenValidIdAndNoEntry_returns404AndHandlesException() throws Exception {
+		EntityNotFoundException expectedException = new EntityNotFoundException();
+		given(animalTypeService.findById(1L)).willThrow(EntityNotFoundException.class);
+		
+		MvcResult result = mockMvc.perform(get("/animalType/{id}", 1L))
+				.andExpect(status().isNotFound())
+				.andReturn();
+		
+		ErrorDTO expected = new ErrorDTO(expectedException, HttpStatus.NOT_FOUND);
+		
+		assertCorrectJSONResult(expected, result);
+	}
 	
 	@Test
 	void testFindByName_respondsToRequest() throws Exception {
@@ -110,24 +128,41 @@ class AnimalTypeControllerTest {
 	}
 
 	@Test
-	void testFindByName_returnsEntries() throws Exception {
-		AnimalType expected = new AnimalType(1L, "Wiewiórka");
+	void testFindByName_whenNameNotEmpty_correctBusinessCalls() throws Exception {
+		mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk());
+		
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(animalTypeService, times(1)).findByName(captor.capture());
+		assertEquals("Wiewiórka", captor.getValue());
+	}
+
+	@Test
+	void testFindByName_whenNameIsNotEmpty_returnsEntries() throws Exception {
+		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Wiewiórka");
 		given(animalTypeService.findByName(expected.getName())).willReturn(Collections.singletonList(expected));
 		MvcResult result = mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk()).andReturn();
 		
-		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
+		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(Collections.singletonList(expected)));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
 
 		assertEquals(expectedTrimmed, actualTrimmed);
 	}
-	
+
+	@Test
+	void testFindByName_whenNameIsEmpty_returns400andError() throws Exception {
+		EmptyFieldException ex = new EmptyFieldException("name");
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		
+		MvcResult result = mockMvc.perform(get("/animalType/find").param("name", "")).andExpect(status().isBadRequest()).andReturn();
+		assertCorrectJSONResult(expected, result);
+	}
 	
 	@Test
-	void testAddNew_whenValidInput_thenReturns200() throws JsonProcessingException, Exception {
+	void testAddNew_respondsToRequest() throws JsonProcessingException, Exception {
 		AnimalTypeDTO dto = new AnimalTypeDTO("Wiewiórka");
 		mockMvc.perform(
 				post("/animalType/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
-				.andExpect(status().isOk());
+				.andExpect(status().isCreated());
 	}
 
 	@Test
@@ -136,7 +171,7 @@ class AnimalTypeControllerTest {
 
 		mockMvc.perform(
 				post("/animalType/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
-				.andExpect(status().isOk());
+				.andExpect(status().isCreated());
 
 		ArgumentCaptor<AnimalTypeDTO> animalTypeCaptor = ArgumentCaptor.forClass(AnimalTypeDTO.class);
 		verify(animalTypeService, times(1)).addNew(animalTypeCaptor.capture());
@@ -152,60 +187,52 @@ class AnimalTypeControllerTest {
 		given(animalTypeService.addNew(dto)).willReturn(expected);
 
 		mockMvc.perform(
-				post("/animalType/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
+				post("/animalType/new")
+				.contentType("application/json")
+				.content(objectMapper.writeValueAsString(dto)))
+		.andExpect(status().isCreated())
 				.andDo(mvcResult -> {
-					String res = mvcResult.getResponse().getContentAsString(); // problem: empty response
-					assertEquals(StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected)),
+					String res = mvcResult.getResponse().getContentAsString();
+					assertEquals(StringUtils.trimAllWhitespace(
+							objectMapper.writeValueAsString(expected)),
 							StringUtils.trimAllWhitespace(res));
 				});
 	}
 	
 	@Test
-	void testAddNew_whenNameIsNullOrEmpty_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
+	void testAddNew_whenNameIsEmpty_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO emptyNameDto = new AnimalTypeDTO("");
-		AnimalTypeDTO nullNameDto = new AnimalTypeDTO(null);
-		ErrorDTO expectedError = new ErrorDTO(HttpStatus.BAD_REQUEST, "name must not be null or empty");
+		MultiFieldsErrorDTO expectedError = new MultiFieldsErrorDTO(new FieldValidationError("name", "namemustnotbenullorempty"));
 		
 		// when name is empty
 		MvcResult emptyResult = mockMvc
-				.perform(post("/animalType/new").contentType("application/json")
+				.perform(post("/animalType/new")
+						.contentType("application/json")
 						.content(objectMapper.writeValueAsString(emptyNameDto)))
 				.andExpect(status().isBadRequest()).andReturn();
 		
-		// check for exception
-		String actualEmptyResponseBody = emptyResult.getResponse().getContentAsString();
-		String expectedEmptyResponseBody = objectMapper.writeValueAsString(expectedError);
-		assertEquals(StringUtils.trimAllWhitespace(actualEmptyResponseBody),
-				StringUtils.trimAllWhitespace(expectedEmptyResponseBody));
-		
-		// when name is null
-		MvcResult nullResult = mockMvc
-				.perform(post("/animalType/new").contentType("application/json")
-						.content(objectMapper.writeValueAsString(nullNameDto)))
-				.andExpect(status().isBadRequest()).andReturn();
-		
-		// check for exception
-		String actualNullResponseBody = nullResult.getResponse().getContentAsString();
-		String expectedNullResponseBody = objectMapper.writeValueAsString(expectedError);
-		assertEquals(StringUtils.trimAllWhitespace(actualNullResponseBody),
-				StringUtils.trimAllWhitespace(expectedNullResponseBody));
+
+		assertCorrectJSONResult(expectedError, emptyResult);
 	}
 
 	@Test
 	void testAddNew_whenNameIsDuplicated_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO requestDto = new AnimalTypeDTO("Wiewiórka");
-		ErrorDTO expectedError = new ErrorDTO(HttpStatus.BAD_REQUEST, "this animal type exists in database");
+		ErrorDTO expectedError = new ErrorDTO(new AnimalTypeAllreadyExistsException(), HttpStatus.BAD_REQUEST);
 
 		// mocking service method
 		given(animalTypeService.addNew(requestDto)).willThrow(AnimalTypeAllreadyExistsException.class);
 
 		MvcResult result = mockMvc.perform(post("/animalType/new").contentType("application/json")
 				.content(objectMapper.writeValueAsString(requestDto))).andReturn();
-		// check for exception
-		String expectedResponseBody = objectMapper.writeValueAsString(expectedError);
-		String actualResponseBody = result.getResponse().getContentAsString();
-		assertEquals(StringUtils.trimAllWhitespace(expectedResponseBody),
-				StringUtils.trimAllWhitespace(actualResponseBody));
+		
+		assertCorrectJSONResult(expectedError, result);
 	}
 
+	private void assertCorrectJSONResult(Object expected, MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
+		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
+		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
+
+		assertEquals(expectedTrimmed, actualTrimmed);
+	}
 }

@@ -36,7 +36,7 @@ response: 400 BAD request. Error handling: duplicated nip, all fields must be no
 @GET /{id}
 response: 200 ok. body: {"name": "xx", "surname": "xx", "type": "xxx", "animalType": "yyy", "salary": 000, "nip": "xxx"}
 response: 404 not found - if given id not exists in db.
- 
+
 @GET 
 request parameters: page/size - optional, with default values. Default spring boot pagination expected.
 response: 200 ok: body: page with doctors body content. (nie chce mi sie pisac tutaj:D)

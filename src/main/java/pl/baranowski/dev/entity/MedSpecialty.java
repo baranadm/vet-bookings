@@ -30,6 +30,11 @@ public class MedSpecialty {
 	public MedSpecialty(String name) {
 		this.name = name;
 	}
+	
+	public MedSpecialty(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
 	public Long getId() {
 		return id;
