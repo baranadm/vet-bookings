@@ -1,6 +1,41 @@
 Manifest-Version: 1.0
 Implementation-Title: Vet Bookings
 Implementation-Version: 0.0.1-SNAPSHOT
-Build-Jdk-Spec: 1.8
+Built-By: Lenovo
+Implementation-Vendor-Id: pl.baranowski.dev
+Class-Path: lib/spring-boot-starter-2.6.2.jar lib/spring-boot-2.6.2.ja
+ r lib/spring-context-5.3.14.jar lib/spring-boot-autoconfigure-2.6.2.j
+ ar lib/spring-boot-starter-logging-2.6.2.jar lib/logback-classic-1.2.
+ 9.jar lib/logback-core-1.2.9.jar lib/log4j-to-slf4j-2.17.0.jar lib/lo
+ g4j-api-2.17.0.jar lib/jul-to-slf4j-1.7.32.jar lib/jakarta.annotation
+ -api-1.3.5.jar lib/spring-core-5.3.14.jar lib/spring-jcl-5.3.14.jar l
+ ib/snakeyaml-1.29.jar lib/spring-boot-starter-web-2.6.2.jar lib/sprin
+ g-boot-starter-json-2.6.2.jar lib/jackson-databind-2.13.1.jar lib/jac
+ kson-annotations-2.13.1.jar lib/jackson-core-2.13.1.jar lib/jackson-d
+ atatype-jdk8-2.13.1.jar lib/jackson-datatype-jsr310-2.13.1.jar lib/ja
+ ckson-module-parameter-names-2.13.1.jar lib/spring-boot-starter-tomca
+ t-2.6.2.jar lib/tomcat-embed-core-9.0.56.jar lib/tomcat-embed-websock
+ et-9.0.56.jar lib/spring-web-5.3.14.jar lib/spring-beans-5.3.14.jar l
+ ib/spring-webmvc-5.3.14.jar lib/spring-aop-5.3.14.jar lib/spring-expr
+ ession-5.3.14.jar lib/spring-boot-starter-data-jpa-2.6.2.jar lib/spri
+ ng-boot-starter-aop-2.6.2.jar lib/aspectjweaver-1.9.7.jar lib/spring-
+ boot-starter-jdbc-2.6.2.jar lib/HikariCP-4.0.3.jar lib/spring-jdbc-5.
+ 3.14.jar lib/jakarta.transaction-api-1.3.3.jar lib/jakarta.persistenc
+ e-api-2.2.3.jar lib/hibernate-core-5.6.3.Final.jar lib/jboss-logging-
+ 3.4.2.Final.jar lib/antlr-2.7.7.jar lib/jandex-2.2.3.Final.jar lib/cl
+ assmate-1.5.1.jar lib/hibernate-commons-annotations-5.1.2.Final.jar l
+ ib/jaxb-runtime-2.3.5.jar lib/txw2-2.3.5.jar lib/istack-commons-runti
+ me-3.0.12.jar lib/jakarta.activation-1.2.2.jar lib/spring-data-jpa-2.
+ 6.0.jar lib/spring-data-commons-2.6.0.jar lib/spring-orm-5.3.14.jar l
+ ib/spring-tx-5.3.14.jar lib/slf4j-api-1.7.32.jar lib/spring-aspects-5
+ .3.14.jar lib/jakarta.xml.bind-api-2.3.3.jar lib/jakarta.activation-a
+ pi-1.2.2.jar lib/h2-2.0.204.jar lib/byte-buddy-1.11.22.jar lib/spring
+ -boot-starter-validation-2.6.2.jar lib/tomcat-embed-el-9.0.56.jar lib
+ /hibernate-validator-6.2.0.Final.jar lib/jakarta.validation-api-2.0.2
+ .jar lib/modelmapper-2.4.5.jar
+Build-Jdk: 1.8.0_311
+Implementation-URL: https://spring.io/projects/spring-boot/vet-booking
+ s
 Created-By: Maven Integration for Eclipse
+Main-Class: pl.baranowski.dev.App
 
