@@ -177,7 +177,7 @@ class MedSpecialtyControllerTest {
 				post("/medSpecialty/new")
 				.contentType("application/json;charset=UTF-8")
 				.content(objectMapper.writeValueAsString(body)))
-		.andExpect(status().isOk());
+		.andExpect(status().isCreated());
 	}
 	
 	@Test
@@ -187,7 +187,7 @@ class MedSpecialtyControllerTest {
 				post("/medSpecialty/new")
 				.contentType("application/json;charset=UTF-8")
 				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isOk());
+		.andExpect(status().isCreated());
 		
 		ArgumentCaptor<MedSpecialtyDTO> medSpecialtyCaptor = ArgumentCaptor.forClass(MedSpecialtyDTO.class);
 		verify(medSpecialtyService, times(1)).addNew(medSpecialtyCaptor.capture());
@@ -207,7 +207,7 @@ class MedSpecialtyControllerTest {
 				post("/medSpecialty/new")
 				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isOk())
+		.andExpect(status().isCreated())
 				.andDo(mvcResult -> {
 					String res = mvcResult.getResponse().getContentAsString();
 					assertEquals(StringUtils.trimAllWhitespace(

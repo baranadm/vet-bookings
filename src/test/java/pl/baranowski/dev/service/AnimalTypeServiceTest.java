@@ -21,24 +21,24 @@ class AnimalTypeServiceTest {
 	void setUp() throws Exception {
 	}
 
-	@Test
-	void testFindAll() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	void testFindById() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	void testAddNew() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	void testFindByName() {
-		fail("Not yet implemented");
-	}
+//	@Test
+//	void testFindAll() {
+//		fail("Not yet implemented");
+//	}
+//
+//	@Test
+//	void testFindById() {
+//		fail("Not yet implemented");
+//	}
+//
+//	@Test
+//	void testAddNew() {
+//		fail("Not yet implemented");
+//	}
+//
+//	@Test
+//	void testFindByName() {
+//		fail("Not yet implemented");
+//	}
 
 }
