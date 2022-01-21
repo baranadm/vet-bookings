@@ -5,6 +5,7 @@
 	<groupId>pl.baranowski.dev</groupId>
 	<artifactId>vet-bookings</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>Vet Bookings</name>
 	<description>vet bookings app</description>
 	<profiles>
@@ -103,6 +104,10 @@
 			</resource>
 		</resources>
 		<plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.22.2</version>
@@ -114,7 +119,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.2.0</version>
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
@@ -122,19 +126,22 @@
 						<goals>
 							<goal>copy-dependencies</goal>
 						</goals>
+						<configuration>
+							<outputDirectory>
+								${project.build.directory}/libs
+							</outputDirectory>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
 			<plugin>
-				<!-- Build an executable JAR -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.1.0</version>
 				<configuration>
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<classpathPrefix>lib/</classpathPrefix>
+							<classpathPrefix>libs/</classpathPrefix>
 							<mainClass>pl.baranowski.dev.App</mainClass>
 						</manifest>
 					</archive>
