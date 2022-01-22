@@ -116,6 +116,15 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 	- if *id* is not valid - HTTP Status 400  
 	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
 	- if *Vet* is already inactive - HTTP Status 403
+	
+**@PUT /doctor/{doctorId}/addAnimalType/{animalTypeId}**
+- on success - HTTP Status 200  
+- errors:  
+	- if any *id* is not valid - HTTP Status 400  
+	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
+	- if *AnimalType* with given *id* doesn't exists - HTTP Status 404  
+	- if *Vet* already has given *AnimalType* - HTTP Status 403  
+	- if *Vet* is already inactive - HTTP Status 403
 
 #### Patient
 
@@ -123,7 +132,6 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 
 #####to do's:
 **/doctor**
-- adding animal type
 - adding medical specialty
 
 **/patient**

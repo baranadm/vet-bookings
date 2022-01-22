@@ -27,6 +27,15 @@ public class AnimalTypeService {
 		this.animalTypeRepo = animalTypeRepo;
 	}
 
+	public AnimalTypeDTO findById(Long id) throws EntityNotFoundException {
+		AnimalType entry = animalTypeRepo.findById(id).orElseThrow(EntityNotFoundException::new);
+		return mapToDTO(entry);
+	}
+
+	public List<AnimalTypeDTO> findByName(String name) {
+		return animalTypeRepo.findByName(name).stream().map(r -> modelMapper.map(r, AnimalTypeDTO.class)).collect(Collectors.toList());
+	}
+
 	public List<AnimalTypeDTO> findAll() {
 		return animalTypeRepo.findAll().stream().map(r -> modelMapper.map(r, AnimalTypeDTO.class)).collect(Collectors.toList());
 	}
@@ -41,15 +50,6 @@ public class AnimalTypeService {
 		AnimalType result = animalTypeRepo.saveAndFlush(animalType);
 		AnimalTypeDTO resultDTO = mapToDTO(result);
 		return resultDTO;
-	}
-
-	public AnimalTypeDTO findById(Long id) throws EntityNotFoundException {
-		AnimalType entry = animalTypeRepo.findById(id).orElseThrow(EntityNotFoundException::new);
-		return mapToDTO(entry);
-	}
-	
-	public List<AnimalTypeDTO> findByName(String name) {
-		return animalTypeRepo.findByName(name).stream().map(r -> modelMapper.map(r, AnimalTypeDTO.class)).collect(Collectors.toList());
 	}
 
 	private AnimalType mapToEntity(AnimalTypeDTO dto) {

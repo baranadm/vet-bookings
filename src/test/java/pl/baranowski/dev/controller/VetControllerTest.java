@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
@@ -108,9 +109,9 @@ public class VetControllerTest {
 	
 	@Test
 	void getById_whenInvalidId_returns400AndError() throws Exception {
-		String invalidId = "łłł";
-		ErrorDTO expected = new ErrorDTO(new NumberFormatException(), HttpStatus.BAD_REQUEST);
-		expected.setMessage("digits expected");
+		String invalidId = "eee";
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidId);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
 		MvcResult result = mockMvc.perform(get("/doctor/{id}", invalidId))
 				.andExpect(status().isBadRequest()).andReturn();
 		
@@ -178,9 +179,11 @@ public class VetControllerTest {
 	
 	@Test
 	void findAll_whenPageNumberInvalid_returns400AndError() throws Exception {
-		ErrorDTO expected = new ErrorDTO(new NumberFormatException("digits expected"), HttpStatus.BAD_REQUEST);
+		String invalidInt = "bla";
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidInt);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
 		MvcResult result = mockMvc.perform(get("/doctor/")
-				.param("page", "łł")
+				.param("page", invalidInt)
 				.param("size", "1"))
 		.andExpect(status().isBadRequest())
 		.andReturn();
@@ -190,10 +193,12 @@ public class VetControllerTest {
 	
 	@Test
 	void findAll_whenPageSizeInvalid_returns400AndError() throws Exception {
-		ErrorDTO expected = new ErrorDTO(new NumberFormatException("digits expected"), HttpStatus.BAD_REQUEST);
+		String invalidInt = "bla";
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidInt);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
 		MvcResult result = mockMvc.perform(get("/doctor/")
 				.param("page", "2")
-				.param("size", "ąą"))
+				.param("size", invalidInt))
 		.andExpect(status().isBadRequest())
 		.andReturn();
 		
@@ -341,13 +346,14 @@ public class VetControllerTest {
 	
 	@Test
 	void fire_whenInvalidId_returns400AndError() throws Exception {
-		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", "łł")
+		String invalid = "prr";
+		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", invalid)
 				.characterEncoding("UTF-8"))
 		.andExpect(status().isBadRequest())
 		.andReturn();
 		
-		ErrorDTO expected = new ErrorDTO(new NumberFormatException(), HttpStatus.BAD_REQUEST);
-		expected.setMessage("digitsexpected");
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalid);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
 		assertCorrectJSONResult(expected, result);
 	}
 
@@ -363,12 +369,105 @@ public class VetControllerTest {
 		assertCorrectJSONResult(expected, result);
 		
 	}
+
+	@Test
+	void addAnimalType_respondsToRequestAndVerifyBusinessCalls() throws Exception {
+		String vetId = "1";
+		String atId = "1";
+		
+		mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", vetId, atId))
+		.andExpect(status().isOk());
+		
+		ArgumentCaptor<Long> vetIdCaptor = ArgumentCaptor.forClass(Long.class);
+		ArgumentCaptor<Long> atIdCaptor = ArgumentCaptor.forClass(Long.class);
+		
+		verify(vetService, times(1)).addAnimalType(vetIdCaptor.capture(), atIdCaptor.capture());
+		
+		assertEquals(vetId, vetIdCaptor.getValue().toString());
+		assertEquals(atId, atIdCaptor.getValue().toString());
+	}
+	
+	@Test
+	void addAnimalType_whenVetIdInvalid_handlesNumberFormatException() throws Exception {
+		String invalidId = "p";
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", invalidId, "1"))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidId);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addAnimalType_whenAnimalTypeIdInvalid_handlesNumberFormatException() throws Exception {
+		String invalidId = "p";
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", invalidId))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidId);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addAnimalType_handlesEntityNotFoundException() throws Exception {
+		EntityNotFoundException ex = new EntityNotFoundException("blah blah blah");
+		given(vetService.addAnimalType(1L, 1L)).willThrow(ex);
+
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
+				.andExpect(status().isNotFound())
+				.andReturn();
+		
+		
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addAnimalType_handlesDoubledSpecialtyException() throws Exception {
+		DoubledSpecialtyException ex = new DoubledSpecialtyException("animalType", "Cows");
+		given(vetService.addAnimalType(1L, 1L)).willThrow(ex);
+		
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
+				.andExpect(status().isForbidden())
+				.andReturn();
+		
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addAnimalType_handlesVetNotActiveException() throws Exception {
+		VetNotActiveException ex = new VetNotActiveException();
+		given(vetService.addAnimalType(1L, 1L)).willThrow(ex);
+
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
+				.andExpect(status().isForbidden())
+				.andReturn();
+
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		assertCorrectJSONResult(expected, result);
+	}
 	
 	private void assertCorrectJSONResult(Object expected, MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
 
 		assertEquals(expectedTrimmed, actualTrimmed);
+	}
+
+	private NumberFormatException generateNumberFormatExceptionForString(String invalidValue) {
+		NumberFormatException ex = new NumberFormatException();
+		try {
+			Long.decode(invalidValue);
+		} catch (NumberFormatException e) {
+			ex = e;
+		}
+		return ex;
 	}
 	
 }

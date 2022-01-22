@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
@@ -64,6 +65,12 @@ public class VetController {
 	@ResponseStatus(HttpStatus.OK)
 	public void fire(@PathVariable("id") String id) throws NumberFormatException, VetNotActiveException {
 		vetService.fire(Long.decode(id));
+	}
+	
+	@PutMapping(value = "{vetId}/addAnimalType/{atId}", produces="application/json;charset=UTF-8")
+	@ResponseStatus(HttpStatus.OK)
+	public void addAnimalType(@PathVariable String vetId, @PathVariable String atId) throws NumberFormatException, VetNotActiveException, DoubledSpecialtyException {
+		vetService.addAnimalType(Long.decode(vetId), Long.decode(atId));
 	}
 	
 }

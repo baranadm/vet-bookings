@@ -57,13 +57,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(NumberFormatException.class)
 	ResponseEntity<Object> handleNumberFormatException(NumberFormatException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		error.setMessage("digits expected");
+//		error.setMessage("digits expected");
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 	
 	@ExceptionHandler(EmptyFieldException.class)
 	ResponseEntity<Object> handleEmptyFieldException(EmptyFieldException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		error.setMessage(ex.getMessage());
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 	

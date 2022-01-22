@@ -36,12 +36,12 @@ public class MedSpecialtyService {
 		return mapToDTO.apply(medSpecialty);
 	}
 	
+	public List<MedSpecialtyDTO> findByName(String specialty) {
+		return medSpecialtyRepository.findByName(specialty).stream().map(mapToDTO).collect(Collectors.toList());
+	}
+	
 	public List<MedSpecialtyDTO> findAll() {
 		return medSpecialtyRepository.findAll().stream().map(mapToDTO).collect(Collectors.toList());
-	}
-
-	public List<MedSpecialtyDTO> findByName(String specialty) throws EmptyFieldException {
-		return medSpecialtyRepository.findByName(specialty).stream().map(mapToDTO).collect(Collectors.toList());
 	}
 
 	public MedSpecialtyDTO addNew(MedSpecialtyDTO medSpecialtyDTO) throws MedSpecialtyAllreadyExistsException, EmptyFieldException {
