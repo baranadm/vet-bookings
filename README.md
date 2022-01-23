@@ -125,14 +125,15 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 	- if *AnimalType* with given *id* doesn't exists - HTTP Status 404  
 	- if *Vet* already has given *AnimalType* - HTTP Status 403  
 	- if *Vet* is already inactive - HTTP Status 403
+	
+**@PUT /doctor/{doctorId}/addMedSpecialty/{medSpecialtyId}**
+- behaves like endpoint above
 
 #### Patient
 
 #### Visit
 
 #####to do's:
-**/doctor**
-- adding medical specialty
 
 **/patient**
 - everything

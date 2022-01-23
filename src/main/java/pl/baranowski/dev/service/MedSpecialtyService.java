@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
-import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
@@ -44,13 +43,15 @@ public class MedSpecialtyService {
 		return medSpecialtyRepository.findAll().stream().map(mapToDTO).collect(Collectors.toList());
 	}
 
-	public MedSpecialtyDTO addNew(MedSpecialtyDTO medSpecialtyDTO) throws MedSpecialtyAllreadyExistsException, EmptyFieldException {
-		if(!this.findByName(medSpecialtyDTO.getName()).isEmpty()) {
+	public MedSpecialtyDTO addNew(MedSpecialtyDTO medSpecialtyDTO) throws MedSpecialtyAllreadyExistsException {
+		MedSpecialty ms = mapToEntity.apply(medSpecialtyDTO);
+		if(!findByName(ms.getName()).isEmpty()) {
 			throw new MedSpecialtyAllreadyExistsException();
 		}
-		MedSpecialty resultEntity = medSpecialtyRepository
-				.saveAndFlush(mapToEntity.apply(medSpecialtyDTO));
-		return mapToDTO.apply(resultEntity);
+		MedSpecialty result = medSpecialtyRepository
+				.saveAndFlush(ms);
+		MedSpecialtyDTO resultDTO = mapToDTO.apply(result);
+		return resultDTO;
 	}
 	
 	private Function<MedSpecialty, MedSpecialtyDTO> mapToDTO = entity -> modelMapper.map(entity, MedSpecialtyDTO.class);

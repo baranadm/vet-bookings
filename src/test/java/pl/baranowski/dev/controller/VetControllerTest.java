@@ -416,7 +416,7 @@ public class VetControllerTest {
 	@Test
 	void addAnimalType_handlesEntityNotFoundException() throws Exception {
 		EntityNotFoundException ex = new EntityNotFoundException("blah blah blah");
-		given(vetService.addAnimalType(1L, 1L)).willThrow(ex);
+		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
 				.andExpect(status().isNotFound())
@@ -430,7 +430,7 @@ public class VetControllerTest {
 	@Test
 	void addAnimalType_handlesDoubledSpecialtyException() throws Exception {
 		DoubledSpecialtyException ex = new DoubledSpecialtyException("animalType", "Cows");
-		given(vetService.addAnimalType(1L, 1L)).willThrow(ex);
+		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
 		
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
 				.andExpect(status().isForbidden())
@@ -443,9 +443,92 @@ public class VetControllerTest {
 	@Test
 	void addAnimalType_handlesVetNotActiveException() throws Exception {
 		VetNotActiveException ex = new VetNotActiveException();
-		given(vetService.addAnimalType(1L, 1L)).willThrow(ex);
+		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
+				.andExpect(status().isForbidden())
+				.andReturn();
+
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addMedSpecialty_respondsToRequestAndVerifyBusinessCalls() throws Exception {
+		String vetId = "1";
+		String msId = "1";
+		
+		mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", vetId, msId))
+		.andExpect(status().isOk());
+		
+		ArgumentCaptor<Long> vetIdCaptor = ArgumentCaptor.forClass(Long.class);
+		ArgumentCaptor<Long> msIdCaptor = ArgumentCaptor.forClass(Long.class);
+		
+		verify(vetService, times(1)).addMedSpecialty(vetIdCaptor.capture(), msIdCaptor.capture());
+		
+		assertEquals(vetId, vetIdCaptor.getValue().toString());
+		assertEquals(msId, msIdCaptor.getValue().toString());
+	}
+	
+	@Test
+	void addMedSpecialty_whenVetIdInvalid_handlesNumberFormatException() throws Exception {
+		String invalidId = "p";
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", invalidId, "1"))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidId);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addMedSpecialty_whenMedSpecialtyIdInvalid_handlesNumberFormatException() throws Exception {
+		String invalidId = "p";
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", invalidId))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		NumberFormatException ex = generateNumberFormatExceptionForString(invalidId);
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addMedSpecialty_handlesEntityNotFoundException() throws Exception {
+		EntityNotFoundException ex = new EntityNotFoundException("blah blah blah");
+		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
+
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))
+				.andExpect(status().isNotFound())
+				.andReturn();
+		
+		
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addMedSpecialty_handlesDoubledSpecialtyException() throws Exception {
+		DoubledSpecialtyException ex = new DoubledSpecialtyException("MedSpecialty", "Cows");
+		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
+		
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))
+				.andExpect(status().isForbidden())
+				.andReturn();
+		
+		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void addMedSpecialty_handlesVetNotActiveException() throws Exception {
+		VetNotActiveException ex = new VetNotActiveException();
+		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
+
+		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))
 				.andExpect(status().isForbidden())
 				.andReturn();
 

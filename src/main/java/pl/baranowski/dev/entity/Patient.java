@@ -38,11 +38,7 @@ public class Patient {
 	
 	public Patient(String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
 		this.name = name;
-		
-		// will it work correctly?
 		this.animalType = animalType;
-		animalType.enrollPatient(this);
-		
 		this.age = age;
 		this.ownerName = ownerName;
 		this.ownerEmail = ownerEmail;

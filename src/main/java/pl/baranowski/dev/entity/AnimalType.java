@@ -45,32 +45,16 @@ public class AnimalType {
 		return id;
 	}
 
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
 	public String getName() {
 		return name;
 	}
 	
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	public Set<Patient> getPatientsAsOwners() {
-		return patientsAsOwners;
-	}
-	
-	public boolean enrollPatient(Patient patient) {
-		return patientsAsOwners.add(patient);
-	}
-	
-	public boolean delistPatient(Patient patient) {
-		return patientsAsOwners.remove(patient);
-	}
-	
-	public Set<Vet> getMatchingVets() {
-		return matchingVets;
 	}
 
 	@Override
