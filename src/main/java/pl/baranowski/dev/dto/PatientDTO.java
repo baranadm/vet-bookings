@@ -1,47 +1,34 @@
-package pl.baranowski.dev.entity;
+package pl.baranowski.dev.dto;
 
-import java.util.HashSet;
-import java.util.Set;
+import pl.baranowski.dev.entity.AnimalType;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-@Entity
-public class Patient {
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+public class PatientDTO {
 	private Long id;
 	private String name;
-	
-	@ManyToOne
-	@JoinColumn(name = "animal_type_id")
 	private AnimalType animalType;
-
-	@JsonIgnore
-	@OneToMany(mappedBy="patient")
-	private Set<Visit> visits = new HashSet<>();
-	
 	private int age;
 	private String ownerName;
 	private String ownerEmail;
 	
-	public Patient() {
+	public PatientDTO() {
+		// TODO Auto-generated constructor stub
 	}
-	
-	public Patient(String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+
+	public PatientDTO(Long id, String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+		this.id = id;
 		this.name = name;
 		this.animalType = animalType;
 		this.age = age;
 		this.ownerName = ownerName;
 		this.ownerEmail = ownerEmail;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -60,6 +47,14 @@ public class Patient {
 		this.age = age;
 	}
 
+	public AnimalType getAnimalType() {
+		return animalType;
+	}
+
+	public void setAnimalType(AnimalType animalType) {
+		this.animalType = animalType;
+	}
+
 	public String getOwnerName() {
 		return ownerName;
 	}
@@ -74,18 +69,6 @@ public class Patient {
 
 	public void setOwnerEmail(String ownerEmail) {
 		this.ownerEmail = ownerEmail;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public AnimalType getAnimalType() {
-		return animalType;
-	}
-
-	public Set<Visit> getVisits() {
-		return visits;
 	}
 
 	@Override
@@ -109,7 +92,7 @@ public class Patient {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Patient other = (Patient) obj;
+		PatientDTO other = (PatientDTO) obj;
 		if (age != other.age)
 			return false;
 		if (animalType == null) {
@@ -142,8 +125,8 @@ public class Patient {
 
 	@Override
 	public String toString() {
-		return "Patient [id=" + id + ", name=" + name + ", animalType=" + animalType + ", age=" + age + ", ownerName="
-				+ ownerName + ", ownerEmail=" + ownerEmail + "]";
+		return "PatientDTO [id=" + id + ", name=" + name + ", age=" + age + ", animalType=" + animalType
+				+ ", ownerName=" + ownerName + ", ownerEmail=" + ownerEmail + "]";
 	}
 
 }

@@ -20,6 +20,7 @@ import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.exception.NIPExistsException;
+import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
 
 @ControllerAdvice
@@ -88,6 +89,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	
 	@ExceptionHandler(VetNotActiveException.class)
 	ResponseEntity<Object> handleVetNotActiveException(VetNotActiveException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
+	@ExceptionHandler(PatientAllreadyExistsException.class)
+	ResponseEntity<Object> handlePatientAllreadyExistsException(PatientAllreadyExistsException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}

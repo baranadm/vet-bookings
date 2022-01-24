@@ -1,45 +1,35 @@
-package pl.baranowski.dev.entity;
+package pl.baranowski.dev.dto;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.validation.constraints.Digits;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+public class NewPatientDTO {
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-@Entity
-public class Patient {
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	private Long id;
+	@NotBlank
 	private String name;
 	
-	@ManyToOne
-	@JoinColumn(name = "animal_type_id")
-	private AnimalType animalType;
-
-	@JsonIgnore
-	@OneToMany(mappedBy="patient")
-	private Set<Visit> visits = new HashSet<>();
-	
+	@Digits(fraction = 0, integer = 2)
+	@Min(1)
 	private int age;
+	
+	@NotBlank
+	private String animalTypeName;
+	
+	@NotBlank
 	private String ownerName;
+	
+	@NotNull
+	@Email
 	private String ownerEmail;
-	
-	public Patient() {
-	}
-	
-	public Patient(String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+
+	public NewPatientDTO(@NotBlank String name, @NotNull int age, @NotBlank String animalTypeName,
+			@NotBlank String ownerName, @NotBlank String ownerEmail) {
 		this.name = name;
-		this.animalType = animalType;
 		this.age = age;
+		this.animalTypeName = animalTypeName;
 		this.ownerName = ownerName;
 		this.ownerEmail = ownerEmail;
 	}
@@ -60,6 +50,14 @@ public class Patient {
 		this.age = age;
 	}
 
+	public String getAnimalTypeName() {
+		return animalTypeName;
+	}
+
+	public void setAnimalTypeName(String animalTypeName) {
+		this.animalTypeName = animalTypeName;
+	}
+
 	public String getOwnerName() {
 		return ownerName;
 	}
@@ -76,25 +74,12 @@ public class Patient {
 		this.ownerEmail = ownerEmail;
 	}
 
-	public Long getId() {
-		return id;
-	}
-
-	public AnimalType getAnimalType() {
-		return animalType;
-	}
-
-	public Set<Visit> getVisits() {
-		return visits;
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + age;
-		result = prime * result + ((animalType == null) ? 0 : animalType.hashCode());
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((animalTypeName == null) ? 0 : animalTypeName.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((ownerEmail == null) ? 0 : ownerEmail.hashCode());
 		result = prime * result + ((ownerName == null) ? 0 : ownerName.hashCode());
@@ -109,18 +94,13 @@ public class Patient {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Patient other = (Patient) obj;
+		NewPatientDTO other = (NewPatientDTO) obj;
 		if (age != other.age)
 			return false;
-		if (animalType == null) {
-			if (other.animalType != null)
+		if (animalTypeName == null) {
+			if (other.animalTypeName != null)
 				return false;
-		} else if (!animalType.equals(other.animalType))
-			return false;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
+		} else if (!animalTypeName.equals(other.animalTypeName))
 			return false;
 		if (name == null) {
 			if (other.name != null)
@@ -142,7 +122,7 @@ public class Patient {
 
 	@Override
 	public String toString() {
-		return "Patient [id=" + id + ", name=" + name + ", animalType=" + animalType + ", age=" + age + ", ownerName="
+		return "NewPatientDTO [name=" + name + ", age=" + age + ", animalTypeName=" + animalTypeName + ", ownerName="
 				+ ownerName + ", ownerEmail=" + ownerEmail + "]";
 	}
 
