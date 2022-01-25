@@ -43,6 +43,27 @@ public class Patient {
 		this.ownerName = ownerName;
 		this.ownerEmail = ownerEmail;
 	}
+	
+	public Patient(Long id, String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+		this.id = id;
+		this.name = name;
+		this.animalType = animalType;
+		this.age = age;
+		this.ownerName = ownerName;
+		this.ownerEmail = ownerEmail;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+	
+	public Patient withId(Long id) {
+		return new Patient(id, this.name, this.animalType, this.age, this.ownerName, this.ownerEmail);
+	}
 
 	public String getName() {
 		return name;
@@ -50,6 +71,14 @@ public class Patient {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public AnimalType getAnimalType() {
+		return animalType;
+	}
+
+	public void setAnimalType(AnimalType animalType) {
+		this.animalType = animalType;
 	}
 
 	public int getAge() {
@@ -74,18 +103,6 @@ public class Patient {
 
 	public void setOwnerEmail(String ownerEmail) {
 		this.ownerEmail = ownerEmail;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public AnimalType getAnimalType() {
-		return animalType;
-	}
-
-	public Set<Visit> getVisits() {
-		return visits;
 	}
 
 	@Override

@@ -20,6 +20,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
@@ -66,16 +70,27 @@ class PatientServiceTest {
 	}
 	
 	@Test
-	void findAll() {
-		//whenEntitiesExist - returnsDTOs
+	void findAll_whenValidInput() {
+		//whenEntitiesExist - returnsDTOsPage
+		Pageable pageable = PageRequest.of(2, 2);
 		List<Patient> threePatients = Collections.nCopies(3, patient);
-		given(patientRepository.findAll()).willReturn(Collections.nCopies(3, patient));
-		assertEquals(threePatients.stream().map(mapToDto).collect(Collectors.toList())
-				, patientService.findAll());
+		Page<Patient> page = new PageImpl<>(threePatients, pageable, threePatients.size());
+		given(patientRepository.findAll(pageable)).willReturn(page);
+		Page<PatientDTO> expected = new PageImpl<>(
+				threePatients.stream().map(mapToDto).collect(Collectors.toList()), 
+				pageable, threePatients.size());
+		
+		assertEquals(expected, patientService.findAll(pageable));
 
-		//whenEntitiesDoNotExist - returnsEmptyList
-		given(patientRepository.findAll()).willReturn(Collections.emptyList());
-		assertEquals(Collections.emptyList(), patientService.findAll());
+		//whenEntitiesDoNotExist - returnsEmptyPage
+		Page<Patient> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+		given(patientRepository.findAll(pageable)).willReturn(emptyPage);
+		assertEquals(emptyPage.map(mapToDto), patientService.findAll(pageable));
+	}
+	
+	@Test
+	void findAll_whenInvalidInput_returns400andError() {
+		
 	}
 	
 	@Test
@@ -98,14 +113,19 @@ class PatientServiceTest {
 	
 	@Test
 	void addNew_whenNotDuplicatedAndAnimalTypeExists_correctlyCallsBusinessAndReturnsDTO() throws PatientAllreadyExistsException {
-		given(animalTypeRepository.findById(patient.getAnimalType().getId())).willReturn(Optional.of(patient.getAnimalType()));
+		// service will find appropriate AnimalType
+		given(animalTypeRepository.findByName(patient.getAnimalType().getName())).willReturn(Collections.singletonList(patient.getAnimalType()));
 		
+		// service will not find doubled Patient
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
 		Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
 		given(patientRepository.findOne(patientExample)).willReturn(Optional.empty());
-		assertEquals(mapToDto.apply(patient), patientService.addNew(newPatient));
+		
+		// repository will return new Patient with new id
+		Patient expected = patient.withId(1L);
+		given(patientRepository.saveAndFlush(patient)).willReturn(expected);
+		assertEquals(mapToDto.apply(expected), patientService.addNew(newPatient));
 	}
 	
-	// add new: when email is invalid - @Valid contraint
 	private Function<Patient, PatientDTO> mapToDto = entity -> modelMapper.map(entity, PatientDTO.class);
 }

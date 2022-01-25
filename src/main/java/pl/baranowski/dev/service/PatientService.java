@@ -2,7 +2,6 @@ package pl.baranowski.dev.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -10,6 +9,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.NewPatientDTO;
@@ -30,23 +31,14 @@ public class PatientService {
 	@Autowired
 	ModelMapper modelMapper;
 	
-	public List<PatientDTO> findAll() {
-		List<Patient> result = patientRepo.findAll();
-		return result.stream().map(entity -> modelMapper.map(entity, PatientDTO.class)).collect(Collectors.toList());
+	public Page<PatientDTO> findAll(Pageable pageable) {
+		Page<Patient> result = patientRepo.findAll(pageable);
+		return result.map(entity -> modelMapper.map(entity, PatientDTO.class));
 	}
 	
-//	public Patient addNew(String name, String animalTypeName, Integer age, String ownerName, String ownerEmail) {
-//		Patient patient = new Patient(
-//				name, 
-//				animalTypeRepo.findByName(animalTypeName).get(0), 
-//				age, 
-//				ownerName, 
-//				ownerEmail);
-//		return patientRepo.saveAndFlush(patient);
-//	}
-
 	public PatientDTO getById(Long id) {
-		return null;
+		Patient result = patientRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Patient with id " + id + " has not been found."));
+		return modelMapper.map(result, PatientDTO.class);
 	}
 
 	public PatientDTO addNew(NewPatientDTO newDTO) throws PatientAllreadyExistsException {
@@ -57,12 +49,12 @@ public class PatientService {
 		if(animalTypes.size() < 1) {
 			throw new EntityNotFoundException("animal type with name " + newDTO.getAnimalTypeName() + " has not been found");
 		}
-		
+		// .. animalType has been found
 		Patient patient = new Patient(newDTO.getName(), 
 				animalTypes.get(0), // should contain only one record (dulicated names are rejected on creation)
 				newDTO.getAge(), newDTO.getOwnerName(), newDTO.getOwnerEmail());
 		
-		// checks if patient would not be duplicated
+		// checks if patient will not be duplicated
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
 		Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
 		Optional<Patient> old = patientRepo.findOne(patientExample);

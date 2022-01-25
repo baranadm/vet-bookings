@@ -5,11 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -21,6 +23,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +40,7 @@ import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.service.PatientService;
 
@@ -61,6 +68,107 @@ class PatientControllerTest {
 	}
 
 	@Test
+	void getById_whenEntityExists_callsCorrectlyAndReturnsDTO() throws Exception {
+		given(patientService.getById(patientDTO.getId())).willReturn(patientDTO);
+		MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
+				.andExpect(status().isOk())
+				.andReturn();
+		
+		ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
+		verify(patientService, times(1)).getById(idCaptor.capture());
+		
+		// verifies business call
+		assertEquals(patientDTO.getId(), idCaptor.getValue());
+		assertCorrectJSONResult(patientDTO, result);
+	}
+	
+	@Test
+	void getById_whenEntityDoNotExists_throwsEntityNotFoundException() throws Exception {
+		EntityNotFoundException expectedException = new EntityNotFoundException("test");
+		given(patientService.getById(patientDTO.getId())).willThrow(expectedException);
+		MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
+				.andExpect(status().isNotFound())
+				.andReturn();
+		
+		ErrorDTO expectedError = new ErrorDTO(expectedException, HttpStatus.NOT_FOUND);
+		
+		assertCorrectJSONResult(expectedError, result);
+	}
+	
+	@Test
+	void getById_whenInvalidId_throwsNumberFormatException() throws Exception {
+		String invalidId = "a";
+		NumberFormatException expectedException = generateNumberFormatExceptionForString(invalidId);
+		given(patientService.getById(patientDTO.getId())).willThrow(expectedException);
+		MvcResult result = mockMvc.perform(get("/patient/{id}", invalidId))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		ErrorDTO expectedError = new ErrorDTO(expectedException, HttpStatus.BAD_REQUEST);
+		
+		assertCorrectJSONResult(expectedError, result);
+	}
+	
+	@Test
+	void findAll_whenValidParams_makesCorrectCallsAndReturns200AndDTOsPage() throws Exception {
+		Pageable expectedPageable = PageRequest.of(2, 2);
+		Page<PatientDTO> expected = new PageImpl<>(Collections.singletonList(patientDTO), expectedPageable, 1);
+		given(patientService.findAll(expectedPageable)).willReturn(expected);
+
+		MvcResult result = mockMvc.perform(get("/patient/")
+				.contentType("application/json;charset=UTF-8)")
+				.param("page", "2")
+				.param("size", "2"))
+			.andExpect(status().isOk())
+			.andReturn();
+		
+		// verifies business calls
+		ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+		verify(patientService, times(1)).findAll(pageableCaptor.capture());
+		assertEquals(expectedPageable, pageableCaptor.getValue());
+		
+		// verifies response body
+		assertCorrectJSONResult(expected, result);
+	}
+	
+	@Test
+	void findAll_whenInvalidParams_handlesException() throws Exception {
+		MvcResult resultEmptyPage = mockMvc.perform(get("/patient/")
+				.contentType("application/json;charset=UTF-8)")
+				.param("page", "")
+				.param("size", "2"))
+			.andExpect(status().isBadRequest())
+			.andReturn();
+		EmptyFieldException emptyPageExc = new EmptyFieldException("page");
+		ErrorDTO emptyPageError = new ErrorDTO(emptyPageExc, HttpStatus.BAD_REQUEST);
+		assertCorrectJSONResult(emptyPageError, resultEmptyPage);
+
+		MvcResult resultEmptySize = mockMvc.perform(get("/patient/")
+				.contentType("application/json;charset=UTF-8)")
+				.param("page", "2")
+				.param("size", ""))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		EmptyFieldException emptySizeExc = new EmptyFieldException("size");
+		ErrorDTO emptySizeError = new ErrorDTO(emptySizeExc, HttpStatus.BAD_REQUEST);
+		assertCorrectJSONResult(emptySizeError, resultEmptySize);
+		
+		String invalidValue = "a";
+		
+		MvcResult resultNumberFormatError = mockMvc.perform(get("/patient/")
+				.contentType("application/json;charset=UTF-8)")
+				.param("page", "2")
+				.param("size", invalidValue))
+				.andExpect(status().isBadRequest())
+				.andReturn();
+		
+		NumberFormatException numForExc = generateNumberFormatExceptionForString(invalidValue);
+		ErrorDTO numForError = new ErrorDTO(numForExc, HttpStatus.BAD_REQUEST);
+		assertCorrectJSONResult(numForError, resultNumberFormatError);
+	}
+	
+	@Test
 	void addNew_whenInvalidRequestBody_returns404andErrorDTO() throws JsonProcessingException, Exception {
 		NewPatientDTO incorrectNewPatientDTO = new NewPatientDTO("", -1, "", "", "ee");
 		
@@ -87,6 +195,7 @@ class PatientControllerTest {
 		// returns correct response body
 		assertCorrectJSONResult(patientDTO, result);
 	}
+	
 	@Test
 	void addNew_handlesEntityNotFoundException() throws JsonProcessingException, Exception {
 		given(patientService.addNew(newPatientDTO)).willThrow(new EntityNotFoundException());
@@ -111,6 +220,16 @@ class PatientControllerTest {
 		assertCorrectJSONResult(expected, exceptionErrorResult);
 	}
 
+	private NumberFormatException generateNumberFormatExceptionForString(String invalidValue) {
+		NumberFormatException ex = new NumberFormatException();
+		try {
+			Long.decode(invalidValue);
+		} catch (NumberFormatException e) {
+			ex = e;
+		}
+		return ex;
+	}
+	
 	private void assertCorrectJSONResult(Object expected, MvcResult result)
 			throws JsonProcessingException, UnsupportedEncodingException {
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
