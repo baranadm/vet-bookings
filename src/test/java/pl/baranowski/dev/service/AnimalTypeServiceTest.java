@@ -88,7 +88,7 @@ class AnimalTypeServiceTest {
 	void addNew_whenNoDuplicate_returnsNewDTO() throws AnimalTypeAllreadyExistsException {
 		given(animalTypeRepository.saveAndFlush(dogs)).willReturn(dogs);
 		AnimalTypeDTO dogsDTO = mapToDto.apply(dogs);
-		assertEquals(dogsDTO, animalTypeService.addNew(dogsDTO));;
+		assertEquals(dogsDTO, animalTypeService.addNew(dogsDTO));
 	}
 	
 	@Test

@@ -17,7 +17,6 @@ import javax.persistence.EntityNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -28,10 +27,12 @@ import org.springframework.data.domain.Pageable;
 
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.mapper.VetMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -51,19 +52,19 @@ class VetServiceTest {
 	@Autowired
 	VetService vetService;
 	
-	@Autowired
-	ModelMapper modelMapper;
+	VetMapper modelMapper = new VetMapper();
 	
-	private final Vet mostowiak = new Vet(1L, "Marek", "Mostówiak", new BigDecimal(150), "1181328620");
+	private final Vet mostowiak = new Vet(1L, "Marek", "Mostówiak", new BigDecimal(150.0), "1181328620");
 	private List<VetDTO> vetsList;
 	
 	@BeforeEach
 	void setUp() throws Exception {
 		vetsList = new ArrayList<>();
-		vetsList.add(new VetDTO("Robert", "Kubica", new BigDecimal(100000), "1213141516"));
-		vetsList.add(new VetDTO("Mirosław", "Rosomak", new BigDecimal(100.0), "0987654321"));
-		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", new BigDecimal(40.), "5566557755"));
-		vetsList.add(new VetDTO("C", "J", new BigDecimal(123.45), "1122334455"));
+		vetsList.add(new VetDTO("Robert", "Kubica", "100000.0", "1213141516"));
+		vetsList.add(new VetDTO("Mirosław", "Rosomak", "100.0", "0987654321"));
+		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", "40.0", "5566557755"));
+		vetsList.add(new VetDTO("C", "J", "123.45", "1122334455"));
+		
 	}
 
 	@Test
@@ -77,7 +78,6 @@ class VetServiceTest {
 		Long id = 1L;
 		Optional<Vet> expected = Optional.of(mostowiak);
 		given(vetRepository.findById(id)).willReturn(expected);
-
 		VetDTO result = vetService.getById(id);
 		assertEquals(mapToDTO.apply(expected.get()), result);
 	}
@@ -215,6 +215,68 @@ class VetServiceTest {
 		given(animalTypeRepository.findById(pet.getId())).willReturn(Optional.ofNullable(pet));
 		
 		assertThrows(VetNotActiveException.class, () -> vetService.addAnimalType(mostowiak.getId(), pet.getId()));
+		
+	}
+	
+	
+	
+	@Test
+	void addMedSpecialty_whenVetAndAnimalTypeExists_returnsTrueOnSuccess() throws VetNotActiveException, DoubledSpecialtyException {
+		Vet cardioVet = new Vet(mostowiak.getId(), mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip());
+		assertEquals(mostowiak, cardioVet);
+
+		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
+		cardioVet.addMedSpecialty(ms);
+		
+		given(vetRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
+		given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.ofNullable(ms));
+		given(vetRepository.saveAndFlush(cardioVet)).willReturn(cardioVet);
+		
+		VetDTO result = vetService.addMedSpecialty(mostowiak.getId(), ms.getId());
+		
+		assertEquals(mapToDTO.apply(cardioVet), result);
+	}
+	
+	@Test
+	void addMedSpecialty_whenMedSpecialtyNotFound_throwsEntityNotFoundException() {
+		// mocks no medSpecialty in database
+		given(vetRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
+		given(medSpecialtyRepository.findById(1L)).willReturn(Optional.empty());
+
+		assertThrows(EntityNotFoundException.class, () -> vetService.addMedSpecialty(mostowiak.getId(), 1L));
+	}
+	
+	@Test
+	void addMedSpecialty_whenVetNotFound_throwsEntityNotFoundException() {
+		given(vetRepository.findById(mostowiak.getId())).willReturn(Optional.empty());
+		MedSpecialty medSpecialty = new MedSpecialty(1L, "Cardio");
+		given(medSpecialtyRepository.findById(medSpecialty.getId())).willReturn(Optional.ofNullable(medSpecialty));
+		
+		assertThrows(EntityNotFoundException.class, () -> vetService.addMedSpecialty(mostowiak.getId(), medSpecialty.getId()));
+	}
+	
+	@Test
+	void addMedSpecialty_whenVetHasMedSpecialty_throwsDoubledSpecialtyException() {
+		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
+		Vet cardioVet = mostowiak;
+		cardioVet.addMedSpecialty(ms);
+		
+		given(medSpecialtyRepository.findById(1L)).willReturn(Optional.ofNullable(ms));
+		given(vetRepository.findById(cardioVet.getId())).willReturn(Optional.ofNullable(cardioVet));
+		
+		assertThrows(DoubledSpecialtyException.class, () -> vetService.addMedSpecialty(cardioVet.getId(), ms.getId()));
+	}
+	
+	@Test
+	void addMedSpecialty_whenVetIsNotActive_throwsVetIsNotActiveException() {
+		Vet inactive = mostowiak;
+		inactive.setActive(false);
+		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
+		
+		given(vetRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
+		given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.ofNullable(ms));
+		
+		assertThrows(VetNotActiveException.class, () -> vetService.addMedSpecialty(mostowiak.getId(), ms.getId()));
 		
 	}
 	

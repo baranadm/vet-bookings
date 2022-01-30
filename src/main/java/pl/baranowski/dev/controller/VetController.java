@@ -73,4 +73,10 @@ public class VetController {
 		vetService.addAnimalType(Long.decode(vetId), Long.decode(atId));
 	}
 	
+	@PutMapping(value = "{vetId}/addMedSpecialty/{msId}", produces="application/json;charset=UTF-8")
+	@ResponseStatus(HttpStatus.OK)
+	public void addMedSpecialty(@PathVariable String vetId, @PathVariable String msId) throws NumberFormatException, VetNotActiveException, DoubledSpecialtyException {
+		vetService.addMedSpecialty(Long.decode(vetId), Long.decode(msId));
+	}
+	
 }

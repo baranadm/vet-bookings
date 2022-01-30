@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,28 +14,35 @@ import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.mapper.VetMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
+import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.VetRepository;
 
 @Service
 public class VetService {
 	
-	@Autowired
-	ModelMapper modelMapper;
 
 	@Autowired
 	private final VetRepository vetRepository;
 	
 	@Autowired
 	private final AnimalTypeRepository animalTypeRepository;
+	
+	@Autowired
+	MedSpecialtyRepository medSpecialtyRepository;
+
+	VetMapper modelMapper = new VetMapper();
 
 	public VetService(VetRepository vetRepository, AnimalTypeRepository animalTypeRepository) {
 		this.vetRepository = vetRepository;
 		this.animalTypeRepository = animalTypeRepository;
+		
 	}
 
 	public VetDTO getById(long validatedId) throws EntityNotFoundException {
@@ -98,18 +104,48 @@ public class VetService {
 		// if animal type not found, throw
 		AnimalType animalType = animalTypeRepository.findById(animalTypeId).orElseThrow(() -> new EntityNotFoundException("animal type with id: " + animalTypeId + " has not been found"));
 		
-		// if vet has animal type specialty, throw
+		// if vet has already that animal type specialty, throw
 		if(vet.getAnimalTypes().contains(animalType)) {
 			throw new DoubledSpecialtyException("animalType", animalType.getName());
 		}
 		
-		// if everything is ok, update and return vet
+		// if everything is ok, update
 		vet.addAnimalType(animalType);
-		Vet result = vetRepository.saveAndFlush(vet);
-		
-		return mapToDTO.apply(result);
+		VetDTO result = mapToDTO.apply(vetRepository.saveAndFlush(vet));
+		return result;
 	}
 
+	// should throw EntityNotFoundException if no vet
+	// should throw EntityNotFoundException if no medSpecialty
+	// should throw DoubledSpecialtyException if vet already has medSpecialty
+	// should throw VetIsNotActiveException if vet is not active
+
+	public VetDTO addMedSpecialty(Long vetId, Long msId) throws DoubledSpecialtyException, VetNotActiveException {
+		// if no vet found, throw
+		Vet vet = vetRepository.findById(vetId)
+				.orElseThrow(() -> new EntityNotFoundException("Doctor with id " + vetId + " has not been found."));
+		// if vet is not active, throw
+		if(!vet.getActive()) {
+			throw new VetNotActiveException();
+		}
+		// if no medSpecialty found, throw
+		MedSpecialty ms = medSpecialtyRepository.findById(msId)
+				.orElseThrow(() -> new EntityNotFoundException("Medical specialty with id " + msId + " has not been found."));
+		
+		// if vet already has this med specialty
+		// since there can't be two medSpecialties with same name, we can check it with .equals()
+		if(vet.getMedSpecialties().contains(ms)) {
+			throw new DoubledSpecialtyException("medical specialty", ms.getName());
+		}
+		
+		// if everything is ok, then add medSpecialty to vet
+		vet.addMedSpecialty(ms);
+		
+		// save (update) to DB
+		VetDTO result = mapToDTO.apply(vetRepository.saveAndFlush(vet));
+		return result;
+	}
+	
 	Function<VetDTO, Vet> mapToEntity = dto -> modelMapper.map(dto, Vet.class);
 	Function<Vet, VetDTO> mapToDTO = entity -> modelMapper.map(entity, VetDTO.class);
 
