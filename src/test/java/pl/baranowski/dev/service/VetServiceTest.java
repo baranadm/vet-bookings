@@ -17,7 +17,6 @@ import javax.persistence.EntityNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,6 +32,7 @@ import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.mapper.VetMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -52,19 +52,19 @@ class VetServiceTest {
 	@Autowired
 	VetService vetService;
 	
-	@Autowired
-	ModelMapper modelMapper;
+	VetMapper modelMapper = new VetMapper();
 	
-	private final Vet mostowiak = new Vet(1L, "Marek", "Mostówiak", new BigDecimal(150), "1181328620");
+	private final Vet mostowiak = new Vet(1L, "Marek", "Mostówiak", new BigDecimal(150.0), "1181328620");
 	private List<VetDTO> vetsList;
 	
 	@BeforeEach
 	void setUp() throws Exception {
 		vetsList = new ArrayList<>();
-		vetsList.add(new VetDTO("Robert", "Kubica", new BigDecimal(100000), "1213141516"));
-		vetsList.add(new VetDTO("Mirosław", "Rosomak", new BigDecimal(100.0), "0987654321"));
-		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", new BigDecimal(40.), "5566557755"));
-		vetsList.add(new VetDTO("C", "J", new BigDecimal(123.45), "1122334455"));
+		vetsList.add(new VetDTO("Robert", "Kubica", "100000.0", "1213141516"));
+		vetsList.add(new VetDTO("Mirosław", "Rosomak", "100.0", "0987654321"));
+		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", "40.0", "5566557755"));
+		vetsList.add(new VetDTO("C", "J", "123.45", "1122334455"));
+		
 	}
 
 	@Test
@@ -78,7 +78,6 @@ class VetServiceTest {
 		Long id = 1L;
 		Optional<Vet> expected = Optional.of(mostowiak);
 		given(vetRepository.findById(id)).willReturn(expected);
-
 		VetDTO result = vetService.getById(id);
 		assertEquals(mapToDTO.apply(expected.get()), result);
 	}

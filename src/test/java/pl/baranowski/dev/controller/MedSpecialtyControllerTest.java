@@ -131,7 +131,7 @@ class MedSpecialtyControllerTest {
 	@Test
 	void getById_whenInvalidId_returns400AndError() throws Exception {
 		ErrorDTO expectedError = new ErrorDTO(new NumberFormatException(), HttpStatus.BAD_REQUEST);
-		expectedError.setMessage("digits expected");
+		expectedError.setMessage("For input string: \"ł\"");
 		MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", "ł")).andExpect(status().isBadRequest()).andReturn();
 
 		assertCorrectJSONResult(expectedError, result);

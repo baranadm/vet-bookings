@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -20,6 +19,7 @@ import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.mapper.VetMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -27,8 +27,6 @@ import pl.baranowski.dev.repository.VetRepository;
 @Service
 public class VetService {
 	
-	@Autowired
-	ModelMapper modelMapper;
 
 	@Autowired
 	private final VetRepository vetRepository;
@@ -39,9 +37,12 @@ public class VetService {
 	@Autowired
 	MedSpecialtyRepository medSpecialtyRepository;
 
+	VetMapper modelMapper = new VetMapper();
+
 	public VetService(VetRepository vetRepository, AnimalTypeRepository animalTypeRepository) {
 		this.vetRepository = vetRepository;
 		this.animalTypeRepository = animalTypeRepository;
+		
 	}
 
 	public VetDTO getById(long validatedId) throws EntityNotFoundException {

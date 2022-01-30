@@ -1,50 +1,17 @@
-package pl.baranowski.dev.entity;
+package pl.baranowski.dev.dto;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-@Entity
-public class Patient {
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+public class PatientDTO {
 	private Long id;
 	private String name;
-	
-	@ManyToOne
-	@JoinColumn(name = "animal_type_id")
-	private AnimalType animalType;
-
-	@JsonIgnore
-	@OneToMany(mappedBy="patient")
-	private Set<Visit> visits = new HashSet<>();
-	
+	private AnimalTypeDTO animalType;
 	private Integer age;
 	private String ownerName;
 	private String ownerEmail;
 	
-	public Patient() {
+	public PatientDTO() {
 	}
-	
-	public Patient(String name, AnimalType animalType, Integer age, String ownerName, String ownerEmail) {
-		this.name = name;
-		this.animalType = animalType;
-		this.age = age;
-		this.ownerName = ownerName;
-		this.ownerEmail = ownerEmail;
-	}
-	
-	public Patient(Long id, String name, AnimalType animalType, Integer age, String ownerName, String ownerEmail) {
+
+	public PatientDTO(Long id, String name, AnimalTypeDTO animalType, int age, String ownerName, String ownerEmail) {
 		this.id = id;
 		this.name = name;
 		this.animalType = animalType;
@@ -60,10 +27,6 @@ public class Patient {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	public Patient withId(Long id) {
-		return new Patient(id, this.name, this.animalType, this.age, this.ownerName, this.ownerEmail);
-	}
 
 	public String getName() {
 		return name;
@@ -73,20 +36,20 @@ public class Patient {
 		this.name = name;
 	}
 
-	public AnimalType getAnimalType() {
-		return animalType;
-	}
-
-	public void setAnimalType(AnimalType animalType) {
-		this.animalType = animalType;
-	}
-
 	public Integer getAge() {
 		return age;
 	}
 
 	public void setAge(Integer age) {
 		this.age = age;
+	}
+
+	public AnimalTypeDTO getAnimalType() {
+		return animalType;
+	}
+
+	public void setAnimalType(AnimalTypeDTO animalType) {
+		this.animalType = animalType;
 	}
 
 	public String getOwnerName() {
@@ -126,7 +89,7 @@ public class Patient {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Patient other = (Patient) obj;
+		PatientDTO other = (PatientDTO) obj;
 		if (age != other.age)
 			return false;
 		if (animalType == null) {
@@ -159,8 +122,8 @@ public class Patient {
 
 	@Override
 	public String toString() {
-		return "Patient [id=" + id + ", name=" + name + ", animalType=" + animalType + ", age=" + age + ", ownerName="
-				+ ownerName + ", ownerEmail=" + ownerEmail + "]";
+		return "PatientDTO [id=" + id + ", name=" + name + ", age=" + age + ", animalType=" + animalType
+				+ ", ownerName=" + ownerName + ", ownerEmail=" + ownerEmail + "]";
 	}
 
 }
