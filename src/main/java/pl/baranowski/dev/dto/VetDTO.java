@@ -1,14 +1,11 @@
 package pl.baranowski.dev.dto;
 
-import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
+import pl.baranowski.dev.constraint.HourlyRateConstraint;
 import pl.baranowski.dev.constraint.NipConstraint;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
@@ -23,10 +20,8 @@ public class VetDTO {
 	@NotBlank
 	private String surname;
 	
-	@NotNull
-	@DecimalMin(value="0.0", inclusive=true)
-	@Digits(integer=4, fraction=2)
-	private BigDecimal hourlyRate;
+	@HourlyRateConstraint
+	private String hourlyRate;
 	
 	@NipConstraint
 	private String nip;
@@ -37,16 +32,15 @@ public class VetDTO {
 	private Set<AnimalType> animalTypes = new HashSet<>();
 
 	public VetDTO() {
-		// TODO Auto-generated constructor stub
 	}
-	public VetDTO(String name, String surname, BigDecimal hourlyRate, String nip) {
+	public VetDTO(String name, String surname, String hourlyRate, String nip) {
 		this.name = name;
 		this.surname = surname;
 		this.hourlyRate = hourlyRate;
 		this.nip = nip;
 	}
 	
-	public VetDTO(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
+	public VetDTO(Long id, String name, String surname, String hourlyRate, String nip) {
 		this.id = id;
 		this.name = name;
 		this.surname = surname;
@@ -54,7 +48,7 @@ public class VetDTO {
 		this.nip = nip;
 	}
 	
-	public VetDTO(Long id, String name, String surname, BigDecimal hourlyRate, String nip, Boolean active) {
+	public VetDTO(Long id, String name, String surname, String hourlyRate, String nip, Boolean active) {
 		this.id = id;
 		this.name = name;
 		this.surname = surname;
@@ -87,12 +81,20 @@ public class VetDTO {
 		this.surname = surname;
 	}
 
-	public BigDecimal getHourlyRate() {
+	public String getHourlyRate() {
 		return hourlyRate;
 	}
+	
+//	public Double getHourlyRateAsDouble() {
+//		return Double.parseDouble(hourlyRate);
+//	}
 
-	public void setHourlyRate(BigDecimal hourlyRate) {
+	public void setHourlyRate(String hourlyRate) {
 		this.hourlyRate = hourlyRate;
+	}
+	
+	public void setHourlyRateFromDouble(Double hourlyRate) {
+		this.hourlyRate = hourlyRate.toString();
 	}
 
 	public String getNip() {

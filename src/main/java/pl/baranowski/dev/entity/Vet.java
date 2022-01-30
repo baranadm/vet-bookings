@@ -56,19 +56,31 @@ public class Vet {
 	public Vet() {
 	}
 	
+	/**
+	 * 
+	 * @param name
+	 * @param surname
+	 * @param hourlyRate - scale is automatically set to 2
+	 * @param nip
+	 */
 	public Vet(String name, String surname, BigDecimal hourlyRate, String nip) {
 		this.name = name;
 		this.surname = surname;
-		this.hourlyRate = hourlyRate;
+		this.hourlyRate = hourlyRate.setScale(2);
 		this.nip = nip;
 	}
 
+	/**
+	 *  
+	 * @param id
+	 * @param name
+	 * @param surname
+	 * @param hourlyRate - scale is automatically set to 2
+	 * @param nip
+	 */
 	public Vet(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
+		this(name, surname, hourlyRate, nip);
 		this.id = id;
-		this.name = name;
-		this.surname = surname;
-		this.hourlyRate = hourlyRate;
-		this.nip = nip;
 	}
 
 	public String getName() {
@@ -91,8 +103,20 @@ public class Vet {
 		return hourlyRate;
 	}
 
+	/**
+	 * 
+	 * @param hourlyRate - scale automatically set to 2
+	 */
 	public void setHourlyRate(BigDecimal hourlyRate) {
-		this.hourlyRate = hourlyRate;
+		this.hourlyRate = hourlyRate.setScale(2);
+	}
+
+	/**
+	 * 
+	 * @param hourlyRate - scale automatically set to 2
+	 */
+	public void setHourlyRateFromString(String hourlyRate) {
+		this.hourlyRate = BigDecimal.valueOf(Double.parseDouble(hourlyRate)).setScale(2);
 	}
 
 	public String getNip() {
@@ -202,6 +226,13 @@ public class Vet {
 		} else if (!surname.equals(other.surname))
 			return false;
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Vet [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
+				+ nip + ", active=" + active + ", medSpecialties=" + medSpecialties + ", animalTypes=" + animalTypes
+				+ ", visits=" + visits + "]";
 	}
 	
 }

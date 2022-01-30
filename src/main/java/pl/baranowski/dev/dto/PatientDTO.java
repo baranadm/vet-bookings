@@ -1,20 +1,17 @@
 package pl.baranowski.dev.dto;
 
-import pl.baranowski.dev.entity.AnimalType;
-
 public class PatientDTO {
 	private Long id;
 	private String name;
-	private AnimalType animalType;
-	private int age;
+	private AnimalTypeDTO animalType;
+	private Integer age;
 	private String ownerName;
 	private String ownerEmail;
 	
 	public PatientDTO() {
-		// TODO Auto-generated constructor stub
 	}
 
-	public PatientDTO(Long id, String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+	public PatientDTO(Long id, String name, AnimalTypeDTO animalType, int age, String ownerName, String ownerEmail) {
 		this.id = id;
 		this.name = name;
 		this.animalType = animalType;
@@ -39,19 +36,19 @@ public class PatientDTO {
 		this.name = name;
 	}
 
-	public int getAge() {
+	public Integer getAge() {
 		return age;
 	}
 
-	public void setAge(int age) {
+	public void setAge(Integer age) {
 		this.age = age;
 	}
 
-	public AnimalType getAnimalType() {
+	public AnimalTypeDTO getAnimalType() {
 		return animalType;
 	}
 
-	public void setAnimalType(AnimalType animalType) {
+	public void setAnimalType(AnimalTypeDTO animalType) {
 		this.animalType = animalType;
 	}
 

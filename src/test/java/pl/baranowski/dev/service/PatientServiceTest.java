@@ -50,7 +50,7 @@ class PatientServiceTest {
 	
 	Patient patient = new Patient("Rex", new AnimalType(1L, "Dog"), 12, "Juzio Kałuża", "kaluza@duza.pl");
 	NewPatientDTO newPatient = new NewPatientDTO(patient.getName(), 
-			patient.getAge(), 
+			patient.getAge().toString(), 
 			patient.getAnimalType().getName(), 
 			patient.getOwnerName(), 
 			patient.getOwnerEmail());

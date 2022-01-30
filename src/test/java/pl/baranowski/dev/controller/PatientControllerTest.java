@@ -36,10 +36,10 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
-import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.service.PatientService;
@@ -58,9 +58,9 @@ class PatientControllerTest {
 	@Autowired
 	ObjectMapper objectMapper;
 
-	PatientDTO patientDTO = new PatientDTO(1L, "Krakers", new AnimalType(1L, "Cat"), 5, "Papa Smurf",
+	PatientDTO patientDTO = new PatientDTO(1L, "Krakers", new AnimalTypeDTO(1L, "Cat"), 5, "Papa Smurf",
 			"papasmurf@gargamel.com");
-	NewPatientDTO newPatientDTO = new NewPatientDTO(patientDTO.getName(), patientDTO.getAge(),
+	NewPatientDTO newPatientDTO = new NewPatientDTO(patientDTO.getName(), patientDTO.getAge().toString(),
 			patientDTO.getAnimalType().getName(), patientDTO.getOwnerName(), patientDTO.getOwnerEmail());
 
 	@BeforeEach
@@ -170,12 +170,20 @@ class PatientControllerTest {
 	
 	@Test
 	void addNew_whenInvalidRequestBody_returns404andErrorDTO() throws JsonProcessingException, Exception {
-		NewPatientDTO incorrectNewPatientDTO = new NewPatientDTO("", -1, "", "", "ee");
+		NewPatientDTO incorrectNewPatientDTO = new NewPatientDTO("", "-1", "", "", "ee");
 		
 		mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(incorrectNewPatientDTO))
 				.contentType("application/json;charset=UTF-8")).andExpect(status().isBadRequest())
 		// checks, if there are 5 errors thrown
 		.andExpect(jsonPath("$.fieldErrors", hasSize(5)));
+		
+		//for "age": "a"
+		incorrectNewPatientDTO.setAge("a");
+		mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(incorrectNewPatientDTO))
+				.contentType("application/json;charset=UTF-8")).andExpect(status().isBadRequest())
+		// checks, if there are 6 errors thrown
+		.andExpect(jsonPath("$.fieldErrors", hasSize(6)));
+		
 	}
 
 	@Test

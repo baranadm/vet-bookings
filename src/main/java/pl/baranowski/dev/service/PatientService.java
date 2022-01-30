@@ -52,7 +52,8 @@ public class PatientService {
 		// .. animalType has been found
 		Patient patient = new Patient(newDTO.getName(), 
 				animalTypes.get(0), // should contain only one record (dulicated names are rejected on creation)
-				newDTO.getAge(), newDTO.getOwnerName(), newDTO.getOwnerEmail());
+				Integer.valueOf(newDTO.getAge()), // value validated by @Valid @RequestBody
+				newDTO.getOwnerName(), newDTO.getOwnerEmail());
 		
 		// checks if patient will not be duplicated
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();

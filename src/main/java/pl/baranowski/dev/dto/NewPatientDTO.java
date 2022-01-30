@@ -13,7 +13,7 @@ public class NewPatientDTO {
 	
 	@Digits(fraction = 0, integer = 2)
 	@Min(1)
-	private int age;
+	private String age;
 	
 	@NotBlank
 	private String animalTypeName;
@@ -25,7 +25,7 @@ public class NewPatientDTO {
 	@Email
 	private String ownerEmail;
 
-	public NewPatientDTO(@NotBlank String name, @NotNull int age, @NotBlank String animalTypeName,
+	public NewPatientDTO(@NotBlank String name, @NotNull String age, @NotBlank String animalTypeName,
 			@NotBlank String ownerName, @NotBlank String ownerEmail) {
 		this.name = name;
 		this.age = age;
@@ -42,11 +42,11 @@ public class NewPatientDTO {
 		this.name = name;
 	}
 
-	public int getAge() {
+	public String getAge() {
 		return age;
 	}
 
-	public void setAge(int age) {
+	public void setAge(String age) {
 		this.age = age;
 	}
 
@@ -78,7 +78,7 @@ public class NewPatientDTO {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + age;
+		result = prime * result + ((age == null) ? 0 : age.hashCode());
 		result = prime * result + ((animalTypeName == null) ? 0 : animalTypeName.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((ownerEmail == null) ? 0 : ownerEmail.hashCode());
@@ -95,7 +95,10 @@ public class NewPatientDTO {
 		if (getClass() != obj.getClass())
 			return false;
 		NewPatientDTO other = (NewPatientDTO) obj;
-		if (age != other.age)
+		if (age == null) {
+			if (other.age != null)
+				return false;
+		} else if (!age.equals(other.age))
 			return false;
 		if (animalTypeName == null) {
 			if (other.animalTypeName != null)

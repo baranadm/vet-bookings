@@ -1,7 +1,38 @@
 # vet-bookings
 
 ## It is a simple REST API which allows booking an appointments in Veterinary Clinic.
+
+Due to fact, that @Valid validation runs after @RequestBody JSON to DTO conversion, in case Request Body has number type field containing a character, exception thrown by App is InvalidFormatException, not MethodArgumentNotValidException. This causes response error content to contain only this field, not the whole binding result.
+
+For that reason, @RequestBody DTO objects contain String type fields, which are validated by default/custom constraints, and, if needed, are converted to their proper (defined by persistence layer) type.
+
+or....
+
+Every addNew endpoint's method requires body - in order to generate MultiFieldErrorDTO in ExceptionHandler's method handleMethodArgumentNotValid. Thanks to that, every form on client's side will be receiving one kind of error responses, which will be easier to handle.
+
+In addition, every addNew body should have only String params. This is caused by the fact, that in some cases JSON mapping generates ConstraintViolationException/HttpMessageNotReadableException, which does not provide Binding Result (e.g. providing "a" instead of valid BigDecimal in @RequestBody).
+
 ---
+## Functionality for AnimalTypes:
+- getting list of all animalTypes
+- getting one animaltype by id
+- finding animalType by name - results with maximum one animalType - duplications are disallowed during addition process
+- adding new animalType
+
+	Every AnimalType has:
+	- id
+	- name
+
+## Functionality for MedSpecialties:
+- getting list of all medSpecialties
+- getting one medSpecialty by id
+- finding medSpecialty by name - results with maximum one animalType - duplications are disallowed during addition process
+- adding new medSpecialty
+
+	Every MedSpecialty has:
+	- id
+	- name
+
 ## Functionality for doctors (Vets):
 - adding new doctor
 - getting one doctor by id
@@ -85,7 +116,7 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 - requires MedSpecialty body (*name*)
 - returns created MedSpecialty - HTTP Status 201
 - errors:  
-	- if request body is not valid
+	- if request body is not valid  
 	- if MedSpecialty *name* is duplicated
 
 #### Doctor

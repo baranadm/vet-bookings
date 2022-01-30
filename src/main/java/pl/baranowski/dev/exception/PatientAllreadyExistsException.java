@@ -10,7 +10,6 @@ public class PatientAllreadyExistsException extends Exception {
 	private String message;
 
 	public PatientAllreadyExistsException() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	public PatientAllreadyExistsException(String message) {

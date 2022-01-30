@@ -29,14 +29,14 @@ public class Patient {
 	@OneToMany(mappedBy="patient")
 	private Set<Visit> visits = new HashSet<>();
 	
-	private int age;
+	private Integer age;
 	private String ownerName;
 	private String ownerEmail;
 	
 	public Patient() {
 	}
 	
-	public Patient(String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+	public Patient(String name, AnimalType animalType, Integer age, String ownerName, String ownerEmail) {
 		this.name = name;
 		this.animalType = animalType;
 		this.age = age;
@@ -44,7 +44,7 @@ public class Patient {
 		this.ownerEmail = ownerEmail;
 	}
 	
-	public Patient(Long id, String name, AnimalType animalType, int age, String ownerName, String ownerEmail) {
+	public Patient(Long id, String name, AnimalType animalType, Integer age, String ownerName, String ownerEmail) {
 		this.id = id;
 		this.name = name;
 		this.animalType = animalType;
@@ -81,11 +81,11 @@ public class Patient {
 		this.animalType = animalType;
 	}
 
-	public int getAge() {
+	public Integer getAge() {
 		return age;
 	}
 
-	public void setAge(int age) {
+	public void setAge(Integer age) {
 		this.age = age;
 	}
 
