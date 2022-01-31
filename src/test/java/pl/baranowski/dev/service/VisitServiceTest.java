@@ -2,13 +2,14 @@ package pl.baranowski.dev.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.math.BigDecimal;
-import java.util.Calendar;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -33,12 +34,13 @@ import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
 import pl.baranowski.dev.repository.VisitRepository;
 
 
-// TODO inspect, that in datebase, New Visit's isConfirmed = null
+// TODO inspect, why in database every New Visit's isConfirmed = null
 @SpringBootTest
 class VisitServiceTest {
 
@@ -56,19 +58,15 @@ class VisitServiceTest {
 	PatientRepository patientRepository;
 
 	// Below I present to You our todays Heroes:
-	long oneWeekFromNow;
+	long workindDayIn2100year = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 	AnimalType animalType = new AnimalType(1L, "Owad");
 	MedSpecialty medSpecialty = new MedSpecialty(2L, "Czółkolog");
 	Vet vet = new Vet(3L, "Kazik", "Montana", new BigDecimal(220), "1111111111");
 	Patient patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
-	Visit visit = new Visit(13L, vet, patient, oneWeekFromNow);
+	Visit visit = new Visit(13L, vet, patient, workindDayIn2100year);
 	
 	@BeforeEach
 	void setUp() throws Exception {
-		// setting epoch to be one week later in the future
-		Calendar cal = Calendar.getInstance();
-		cal.add(Calendar.DAY_OF_MONTH, 7);
-		this.oneWeekFromNow = cal.getTimeInMillis();
 	}
 
 	@Test
@@ -126,8 +124,12 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException {
+	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, VetNotActiveException {
+		// new Visit without id
 		Visit newVisit = new Visit(visit.getVet(), visit.getPatient(), visit.getEpoch());
+
+		// adds Patient's Animal Type to Vet
+		visit.getVet().addAnimalType(visit.getPatient().getAnimalType());
 		
 		// mocking vetRepo Vet result
 		given(vetRepository.findById(newVisit.getVet().getId())).willReturn(Optional.of(newVisit.getVet()));
@@ -157,18 +159,19 @@ class VisitServiceTest {
 		 */
 		given(vetRepository.findById(1L)).willReturn(Optional.empty());
 		given(patientRepository.findById(2L)).willReturn(Optional.of(patient));
-		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, oneWeekFromNow));
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, workindDayIn2100year));
 
 		/* Vet - found
 		 * Patient - not found
 		 */
 		given(vetRepository.findById(1L)).willReturn(Optional.of(vet));
 		given(patientRepository.findById(2L)).willReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, oneWeekFromNow));
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, workindDayIn2100year));
 	}
 	
 	@Test
 	void addNew_whenVetOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() {
+		// VET IS BUSY
 		// mocking, that there is another visit at that time for chosen Vet
 		given(visitRepository.findByEpochAndVetId(visit.getEpoch(), visit.getVet().getId()))
 			.willReturn(Collections.singletonList(visit));
@@ -178,26 +181,68 @@ class VisitServiceTest {
 				visit.getPatient().getId(), 
 				visit.getEpoch()));
 		
+		// PATIENT IS BUSY
+		// mocking, that there is another visit at that time for chosen Patient
+		given(visitRepository.findByEpochAndPatientId(visit.getEpoch(), visit.getPatient().getId()))
+		.willReturn(Collections.singletonList(visit));
+
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
+				visit.getVet().getId(), 
+				visit.getPatient().getId(), 
+				visit.getEpoch()));
 	}
 	
 	@Test
 	void addNew_whenVetIsNotActive_throwsVetNotActiveException() {
-		fail("Not yet implemented");
+		Vet inactiveVet = new Vet(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
+		inactiveVet.setActive(false);
+		given(vetRepository.findById(inactiveVet.getId())).willReturn(Optional.of(inactiveVet));
+		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
+		
+		assertThrows(VetNotActiveException.class, () -> visitService.addNew(inactiveVet.getId(), patient.getId(), workindDayIn2100year));
 	}
 	
 	@Test
 	void addNew_whenVetDoesNotHavePatientsAnimalType_throwsNewVisitNotPossibleException() {
-		fail("Not yet implemented");
+		Vet catsVet = new Vet(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
+		catsVet.addAnimalType(new AnimalType(1L, "Kot"));
+		
+		given(vetRepository.findById(catsVet.getId())).willReturn(Optional.of(catsVet));
+		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
+		
+		// patient's animalType = Owad, catsVet animalType = "Kot"
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(catsVet.getId(), patient.getId(), workindDayIn2100year));
 	}
 	
 	@Test
-	void addNew_whenEpochNotInFuture_throwsInvalidEpochException() {
-		fail("Not yet implemented");
+	void addNew_whenEpochNotInFuture_throwsNewVisitNotPossibleException() {
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), System.currentTimeMillis()/1000 - 60)); // now - 1 minute
 	}
 	
 	@Test
-	void addNew_whenEpochIsOutsideVetsWorkingHours_throwsInvalidEpochException() {
-		fail("Not yet implemented");
+	void addNew_whenEpochIsOutsideVetsWorkingHoursOrDays_throwsNewVisitNotPossibleException() {
+		given(vetRepository.findById(vet.getId())).willReturn(Optional.of(vet));
+		long epochMondayBeforeWork = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 8, 00, 00), ZoneId.systemDefault()).toEpochSecond();
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), epochMondayBeforeWork));
+		
+		long epochMondayAfterWork = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 16, 00, 00), ZoneId.systemDefault()).toEpochSecond();
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), epochMondayAfterWork));
+
+		long epochSunday = ZonedDateTime.of(LocalDateTime.of(2100, 1, 31, 12, 00, 00), ZoneId.systemDefault()).toEpochSecond();
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), epochSunday));
+	}
+	
+	@Test
+	void addNew_whenEpochIsNotAtTheTopOfTheHour_throwsNewVisitNotPossibleException() {
+		given(vetRepository.findById(vet.getId())).willReturn(Optional.of(vet));
+		// 1sec after the top of the hour
+		long epochMondayDuringWorkPlus1s = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 15, 00, 01), ZoneId.systemDefault()).toEpochSecond();
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), epochMondayDuringWorkPlus1s));
+
+		// 2min after the top of the hour
+		long epochMondayDuringWorkPlus2min = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 15, 02, 00), ZoneId.systemDefault()).toEpochSecond();
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), epochMondayDuringWorkPlus2min));
+
 	}
 	
 }

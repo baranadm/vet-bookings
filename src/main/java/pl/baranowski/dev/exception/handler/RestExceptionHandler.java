@@ -132,6 +132,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	// FORBIDDEN
+	
 	@ExceptionHandler(DoubledSpecialtyException.class)
 	ResponseEntity<Object> handleDoubledSpecialtyException(DoubledSpecialtyException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);

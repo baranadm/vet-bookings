@@ -13,6 +13,10 @@ public class VetNotActiveException extends Exception {
 		customMessage = "";
 	}
 	
+	public VetNotActiveException(String customMessage) {
+		this.customMessage = customMessage;
+	}
+
 	@Override
 	public String getLocalizedMessage() {
 		if(!customMessage.isEmpty()) {

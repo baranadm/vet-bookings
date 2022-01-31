@@ -1,9 +1,14 @@
 package pl.baranowski.dev.entity;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,6 +36,12 @@ public class Vet {
 	private String nip;
 	
 	private Boolean active = true;
+
+    @ElementCollection
+    @CollectionTable(name="listOfWorikngDays")
+	private final List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+	private final Integer worksFrom = 9;
+	private final Integer worksTill = 16;
 	
 	@ManyToMany
 	@JoinTable(
@@ -142,6 +153,10 @@ public class Vet {
 	public void setActive(Boolean active) {
 		this.active = active;
 	}
+	
+	public Boolean isActive() {
+		return active;
+	}
 
 	public Set<MedSpecialty> getMedSpecialties() {
 		return medSpecialties;
@@ -170,8 +185,19 @@ public class Vet {
 	public boolean removeVisit(Visit visit) {
 		return visits.remove(visit);
 	}
-
 	
+	public List<DayOfWeek> getWorkingDays() {
+		return workingDays;
+	}
+
+	public Integer getWorksFrom() {
+		return worksFrom;
+	}
+
+	public Integer getWorksTill() {
+		return worksTill;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

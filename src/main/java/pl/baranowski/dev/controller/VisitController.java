@@ -2,7 +2,6 @@ package pl.baranowski.dev.controller;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.service.VisitService;
 
 @RestController
@@ -54,7 +54,7 @@ public class VisitController {
 	
 	@PostMapping(value="/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException {
+	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, VetNotActiveException {
 		
 		long vetId = Long.decode(nv.getVetId());
 		long patientId = Long.decode(nv.getPatientId());
