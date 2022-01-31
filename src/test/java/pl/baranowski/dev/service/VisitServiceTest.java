@@ -32,8 +32,13 @@ import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.entity.Visit;
+import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.repository.PatientRepository;
+import pl.baranowski.dev.repository.VetRepository;
 import pl.baranowski.dev.repository.VisitRepository;
 
+
+// TODO inspect, that in datebase, New Visit's isConfirmed = null
 @SpringBootTest
 class VisitServiceTest {
 
@@ -42,9 +47,13 @@ class VisitServiceTest {
 	
 	@Autowired
 	ModelMapper modelMapper;
-	
+
 	@MockBean
 	VisitRepository visitRepository;
+	@MockBean
+	VetRepository vetRepository;
+	@MockBean
+	PatientRepository patientRepository;
 
 	// Below I present to You our todays Heroes:
 	long oneWeekFromNow;
@@ -117,18 +126,58 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_correctCallToRepositoryAndDTOReturnValue() {
-		fail("Not yet implemented");
+	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException {
+		Visit newVisit = new Visit(visit.getVet(), visit.getPatient(), visit.getEpoch());
+		
+		// mocking vetRepo Vet result
+		given(vetRepository.findById(newVisit.getVet().getId())).willReturn(Optional.of(newVisit.getVet()));
+		// mocking patientRepo Patient result
+		given(patientRepository.findById(newVisit.getPatient().getId())).willReturn(Optional.of(newVisit.getPatient()));
+		// mocking visitRepo Visit result
+		given(visitRepository.saveAndFlush(newVisit)).willReturn(visit);
+		
+		// verifies return value
+		VisitDTO expected = modelMapper.map(visit, VisitDTO.class);
+		VisitDTO result = visitService.addNew(
+				newVisit.getVet().getId(), 
+				newVisit.getPatient().getId(), 
+				newVisit.getEpoch());
+		assertEquals(expected, result);
+		
+		// verifies repo call
+		ArgumentCaptor<Visit> visitCaptor = ArgumentCaptor.forClass(Visit.class);
+		verify(visitRepository, times(1)).saveAndFlush(visitCaptor.capture());
+		assertEquals(newVisit, visitCaptor.getValue());
 	}
 	
 	@Test
 	void addNew_whenNoVetOrPatient_throwsEntityNotFoundException() {
-		fail("Not yet implemented");
+		/* Vet - not found
+		 * Patient - found
+		 */
+		given(vetRepository.findById(1L)).willReturn(Optional.empty());
+		given(patientRepository.findById(2L)).willReturn(Optional.of(patient));
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, oneWeekFromNow));
+
+		/* Vet - found
+		 * Patient - not found
+		 */
+		given(vetRepository.findById(1L)).willReturn(Optional.of(vet));
+		given(patientRepository.findById(2L)).willReturn(Optional.empty());
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, oneWeekFromNow));
 	}
 	
 	@Test
 	void addNew_whenVetOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() {
-		fail("Not yet implemented");
+		// mocking, that there is another visit at that time for chosen Vet
+		given(visitRepository.findByEpochAndVetId(visit.getEpoch(), visit.getVet().getId()))
+			.willReturn(Collections.singletonList(visit));
+
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
+				visit.getVet().getId(), 
+				visit.getPatient().getId(), 
+				visit.getEpoch()));
+		
 	}
 	
 	@Test

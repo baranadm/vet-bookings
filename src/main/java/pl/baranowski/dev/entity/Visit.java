@@ -23,9 +23,20 @@ public class Visit {
 	private Patient patient;
 	
 	private long epoch;
-	private Boolean isConfirmed;
+	private Boolean isConfirmed = false;
 	
 	public Visit() {
+	}
+	
+	public Visit(Vet vet, Patient patient, long epoch) {
+		this.vet = vet;
+		this.patient = patient;
+		this.epoch = epoch;
+	}
+	
+	public Visit(long id, Vet vet, Patient patient, long epoch) {
+		this(vet, patient, epoch);
+		this.id = id;
 	}
 
 	public Visit(Long id, Vet vet, Patient patient, long epoch, Boolean confirmed) {
@@ -33,14 +44,46 @@ public class Visit {
 		this.isConfirmed = confirmed;
 	}
 
-	public Visit(long id, Vet vet, Patient patient, long epoch) {
-		this.id = id;
-		this.vet = vet;
-		this.patient = patient;
-		this.epoch = epoch;
-		this.isConfirmed = false;
+	public Long getId() {
+		return id;
 	}
 
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Vet getVet() {
+		return vet;
+	}
+
+	public void setVet(Vet vet) {
+		this.vet = vet;
+	}
+
+	public Patient getPatient() {
+		return patient;
+	}
+
+	public void setPatient(Patient patient) {
+		this.patient = patient;
+	}
+
+	public long getEpoch() {
+		return epoch;
+	}
+
+	public void setEpoch(long epoch) {
+		this.epoch = epoch;
+	}
+
+	public Boolean getIsConfirmed() {
+		return isConfirmed;
+	}
+
+	public void setIsConfirmed(Boolean isConfirmed) {
+		this.isConfirmed = isConfirmed;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

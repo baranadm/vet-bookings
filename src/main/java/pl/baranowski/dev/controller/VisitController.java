@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.VisitDTO;
+import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.service.VisitService;
 
 @RestController
@@ -53,7 +54,7 @@ public class VisitController {
 	
 	@PostMapping(value="/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) {
+	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException {
 		
 		long vetId = Long.decode(nv.getVetId());
 		long patientId = Long.decode(nv.getPatientId());

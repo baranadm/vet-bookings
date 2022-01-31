@@ -25,12 +25,17 @@ import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.exception.NIPExistsException;
+import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
+	// TODO clean-up
+
+	// BAD REQUEST
+	
 	@SuppressWarnings("deprecation")
 	@ExceptionHandler(value= {
 		ConstraintViolationException.class,
@@ -70,8 +75,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		ErrorDTO error = new ErrorDTO(ex.getClass().getSimpleName(), "Invalid or missing value for parameter [" + ex.getName() + "]. Should be positive integer digits", HttpStatus.BAD_REQUEST);
 		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
 	}
+
 	
-	// i don't like it, can i delete it?
+	// TODO i don't like it, can i delete it?
 	@Override
 //	@ExceptionHandler(HttpMessageNotReadableException.class)
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
@@ -109,12 +115,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
 	}
 
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(EntityNotFoundException.class)
-	ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
 
 	@ExceptionHandler(NIPExistsException.class)
 	ResponseEntity<Object> handleNIPExistsException(NIPExistsException ex, WebRequest request) {
@@ -122,6 +122,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 
+	// NOT FOUND
+	
+	@SuppressWarnings("deprecation")
+	@ExceptionHandler(EntityNotFoundException.class)
+	ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
+		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
+	}
+
+	// FORBIDDEN
 	@ExceptionHandler(DoubledSpecialtyException.class)
 	ResponseEntity<Object> handleDoubledSpecialtyException(DoubledSpecialtyException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
@@ -136,6 +146,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler(PatientAllreadyExistsException.class)
 	ResponseEntity<Object> handlePatientAllreadyExistsException(PatientAllreadyExistsException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
+	@ExceptionHandler(NewVisitNotPossibleException.class)
+	ResponseEntity<Object> handleNewVisitNotPossible(NewVisitNotPossibleException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
