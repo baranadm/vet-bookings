@@ -25,6 +25,7 @@ import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
+// TODO check, if repo is not considering "Cat" and "Cats" are equal (contains != equals!!). If so, findByName should be repaired
 @SpringBootTest
 class AnimalTypeServiceTest {
 

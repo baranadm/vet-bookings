@@ -1,9 +1,17 @@
 package pl.baranowski.dev.entity;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,6 +39,12 @@ public class Vet {
 	private String nip;
 	
 	private Boolean active = true;
+
+    @ElementCollection
+    @CollectionTable(name="listOfWorikngDays")
+	private final List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+	private final Integer worksFromHour = 9;
+	private final Integer worksTillHour = 16;
 	
 	@ManyToMany
 	@JoinTable(
@@ -142,6 +156,10 @@ public class Vet {
 	public void setActive(Boolean active) {
 		this.active = active;
 	}
+	
+	public Boolean isActive() {
+		return active;
+	}
 
 	public Set<MedSpecialty> getMedSpecialties() {
 		return medSpecialties;
@@ -170,8 +188,41 @@ public class Vet {
 	public boolean removeVisit(Visit visit) {
 		return visits.remove(visit);
 	}
-
 	
+	public List<DayOfWeek> getWorkingDays() {
+		return workingDays;
+	}
+
+	public Integer getWorksFrom() {
+		return worksFromHour;
+	}
+
+	public Integer getWorksTill() {
+		return worksTillHour;
+	}
+	
+	/**
+	 *  Checks, if Vet is busy at epoch start with given duration
+	 * @param start - epoch, seconds, inclusive
+	 * @param dur - seconds
+	 * @return true, if busy
+	 */
+	public boolean isBusyAt(long start, long dur) {
+		// checks, if time is inside working hours
+		Instant instantStart = Instant.ofEpochSecond(start);
+		ZonedDateTime zonedStart = ZonedDateTime.ofInstant(instantStart, ZoneId.systemDefault());
+		if(zonedStart.getHour() < worksFromHour) {
+			return true; // start before working time = busy
+		} else if (zonedStart.getHour() + dur/60/60 > worksTillHour){
+			return true; // end after working time = busy
+		}
+		// checks, if there is another visit at epoch
+		boolean isBusy = visits.stream().anyMatch(visit -> 
+								(start >= visit.getEpoch() && start < visit.getEpoch() + visit.getDuration()) 
+								|| (start + dur <= visit.getEpoch() + visit.getDuration() && start + dur > visit.getEpoch()));
+		return isBusy;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

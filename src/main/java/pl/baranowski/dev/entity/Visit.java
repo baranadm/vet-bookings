@@ -16,38 +16,92 @@ public class Visit {
 	
 	@ManyToOne
 	@JoinColumn(name = "vet_id")
-	private Vet vet;
+	private Vet vet; // required
 	
 	@ManyToOne
 	@JoinColumn(name = "patient_id")
-	private Patient patient;
+	private Patient patient; // required
 	
-	private long epoch;
-	private Boolean isConfirmed;
+	private long epoch; // required
+	private long duration = 3600; // optional, default = 3600
+	private Boolean isConfirmed = false; // optional, default = false
 	
 	public Visit() {
 	}
-
-	public Visit(Long id, Vet vet, Patient patient, long epoch, Boolean confirmed) {
-		this(id, vet, patient, epoch);
-		this.isConfirmed = confirmed;
+	
+	public Visit(VisitBuilder visitBuilder) {
+		this.vet = visitBuilder.vet;
+		this.patient = visitBuilder.patient;
+		this.epoch = visitBuilder.epoch;
+		this.duration = visitBuilder.duration;
+		this.isConfirmed = visitBuilder.isConfirmed;
 	}
 
-	public Visit(long id, Vet vet, Patient patient, long epoch) {
+	public Long getId() {
+		return id;
+	}
+
+	public Vet getVet() {
+		return vet;
+	}
+
+	public Patient getPatient() {
+		return patient;
+	}
+
+	public long getEpoch() {
+		return epoch;
+	}
+	
+	public long getDuration() {
+		return duration;
+	}
+
+	public Boolean getIsConfirmed() {
+		return isConfirmed;
+	}
+	
+	public Visit withId(long id) {
 		this.id = id;
-		this.vet = vet;
-		this.patient = patient;
-		this.epoch = epoch;
-		this.isConfirmed = false;
+		return this;
+	}
+	
+	public static class VisitBuilder {
+		private final Vet vet; // required
+		private final Patient patient; // required
+		private final long epoch; // required
+		private long duration = 3600; // optional, default = 3600
+		private Boolean isConfirmed = false; // optional, default = false
+		
+		public VisitBuilder(Vet vet, Patient patient, long epoch) {
+			this.vet = vet;
+			this.patient = patient;
+			this.epoch = epoch;
+		}
+		
+		public VisitBuilder duration(long duration) {
+			this.duration = duration;
+			return this;
+		}
+		
+		public VisitBuilder isConfirmed(boolean isConfirmed) {
+			this.isConfirmed = isConfirmed;
+			return this;
+		}
+		
+		public Visit build() {
+			return new Visit(this);
+		}
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((isConfirmed == null) ? 0 : isConfirmed.hashCode());
+		result = prime * result + (int) (duration ^ (duration >>> 32));
 		result = prime * result + (int) (epoch ^ (epoch >>> 32));
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		result = prime * result + ((isConfirmed == null) ? 0 : isConfirmed.hashCode());
 		result = prime * result + ((patient == null) ? 0 : patient.hashCode());
 		result = prime * result + ((vet == null) ? 0 : vet.hashCode());
 		return result;
@@ -62,10 +116,7 @@ public class Visit {
 		if (getClass() != obj.getClass())
 			return false;
 		Visit other = (Visit) obj;
-		if (isConfirmed == null) {
-			if (other.isConfirmed != null)
-				return false;
-		} else if (!isConfirmed.equals(other.isConfirmed))
+		if (duration != other.duration)
 			return false;
 		if (epoch != other.epoch)
 			return false;
@@ -73,6 +124,11 @@ public class Visit {
 			if (other.id != null)
 				return false;
 		} else if (!id.equals(other.id))
+			return false;
+		if (isConfirmed == null) {
+			if (other.isConfirmed != null)
+				return false;
+		} else if (!isConfirmed.equals(other.isConfirmed))
 			return false;
 		if (patient == null) {
 			if (other.patient != null)
@@ -89,8 +145,8 @@ public class Visit {
 
 	@Override
 	public String toString() {
-		return "Visit [id=" + id + ", vet=" + vet + ", patient=" + patient + ", epoch=" + epoch + ", confirmed="
-				+ isConfirmed + "]";
+		return "Visit [id=" + id + ", vet=" + vet + ", patient=" + patient + ", epoch=" + epoch + ", duration="
+				+ duration + ", isConfirmed=" + isConfirmed + "]";
 	}
 	
 }
