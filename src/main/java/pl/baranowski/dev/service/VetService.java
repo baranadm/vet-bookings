@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -48,6 +49,26 @@ public class VetService {
 	public VetDTO getById(long validatedId) throws EntityNotFoundException {
 		Vet vet = vetRepository.findById(validatedId).orElseThrow(EntityNotFoundException::new);
 		return mapToDTO.apply(vet);
+	}
+	
+	// TODO tests for below method
+	public List<Vet> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName, String medSpecialtyName) {
+		// getting animalType
+		List<AnimalType> ats = animalTypeRepository.findByName(animalTypeName);
+		if(ats.size() < 1) {
+			throw new EntityNotFoundException("Searching error: animalType with name [" + animalTypeName + "] has not been found.");
+		}
+		AnimalType at = ats.get(0);
+		
+		// getting medSpecialty
+		List<MedSpecialty> mss = medSpecialtyRepository.findByName(medSpecialtyName);
+		if(mss.size() <1) {
+			throw new EntityNotFoundException("Searching error: medSpecialty with name [" + medSpecialtyName + "] has not been found.");
+		}
+		MedSpecialty ms = mss.get(0);
+		
+		List<Vet> result = vetRepository.findByAnimalTypesAndMedSpecialties(at, ms);
+		return result;
 	}
 
 	public Page<VetDTO> findAll(Pageable validatedPageable) {

@@ -27,6 +27,7 @@ import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.VetNotActiveException;
 
 @ControllerAdvice
@@ -122,6 +123,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 
+	@ExceptionHandler(SearchRequestInvalidException.class)
+	ResponseEntity<Object> handleSearchRequestInvalid(SearchRequestInvalidException ex, WebRequest request) {
+		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		return ResponseEntity.status(error.getHttpStatus()).body(error);
+	}
+	
 	// NOT FOUND
 	
 	@SuppressWarnings("deprecation")

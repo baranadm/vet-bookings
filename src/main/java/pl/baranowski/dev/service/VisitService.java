@@ -4,10 +4,15 @@ import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +20,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import pl.baranowski.dev.dto.SearchRequestDTO;
+import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -36,6 +44,8 @@ public class VisitService {
 	VetRepository vetRepository;
 	@Autowired
 	ModelMapper modelMapper;
+	@Autowired
+	VetService vetService;
 
 	public VisitDTO getById(long id) {
 		Visit result = visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
@@ -62,20 +72,91 @@ public class VisitService {
 		// throws, if Vet is not active
 		Vet vet = getVetOrThrowIfNotActive(vetId);
 		
-		// throws, if epochInSeconds is outside Vet's working days and working hours
+		/*
+		 *  throws, if:
+		 *  - epochInSeconds is outside Vet's working days 
+		 *  - epochInSeconds is outside Vet's working hours
+		 *  - epochInSeconds is not at the top of the hour (e.g. 10:00:01 is not correct)
+		 */
 		if(!isTimeOk(epochInSeconds, vet.getWorksFrom(), vet.getWorksTill(), vet.getWorkingDays())) {
 			throw new NewVisitNotPossibleException("Creating new Visit failed: time is: outside working hours, outside of working days, or not at the top of the hour.");
 		}
+
 		// throws, if Vet does not have Patient's AnimalType
 		Patient patient = getPatientOrThowIfAnimalTypeNotCompatibleWithVet(patientId, vet);
 		
 		Visit result = visitRepository.saveAndFlush(
-				new Visit(
-						vet, 
-						patient, 
-						epochInSeconds
-						));
+				new Visit.VisitBuilder(vet, patient, epochInSeconds).build());
 		return mapToDto.apply(result);
+	}
+	
+	// TODO tests...
+	public Map<VetDTO, List<Long>> findFreeSlots(@Valid SearchRequestDTO requestBody) throws SearchRequestInvalidException {
+		// decodes validated epoch start
+		long start = Long.decode(requestBody.getEpochStart());
+		// decodes validated epoch end
+		long end = Long.decode(requestBody.getEpochEnd());
+		// decodes validated interval
+		long interval = Long.decode(requestBody.getInterval());
+		
+		// finds Vets with matching AnimalType and MedSpecialty
+		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(requestBody.getAnimalTypeName(), requestBody.getMedSpecialtyName());
+		
+		// creates map with Vet as a key, and free slots as a value (epoch time)
+		Map<VetDTO, List<Long>> result = new HashMap<>();
+		for(Vet v: matchingVets) {
+			result.computeIfAbsent(modelMapper.map(v, VetDTO.class), k -> new ArrayList<>()).addAll(findFreeSlotsForVet(v, start, end, interval));
+		}
+		return result;
+	}
+	
+	public List<Long> findFreeSlotsForVet(Vet vet, Long epochStart, Long epochEnd, Long interval) throws SearchRequestInvalidException {
+		// validate epochs' values
+		if(epochStart >= epochEnd) {
+			throw new SearchRequestInvalidException("Searching request not valid: epoch start should be less than epoch end.");
+		}
+		if(epochStart < System.currentTimeMillis()/1000) {
+			throw new SearchRequestInvalidException("Searching request not valid: epoch start should be later than now.");
+		}
+		
+		// generates times list (e.g. 9:00, 10:00, 11:00) between epochStart (9:00) and End (11:00) with interval (1 hour = 3600s)
+		List<Long> topHours = createTimeSlots(epochStart, epochEnd, interval);
+		
+		// reduces times list by taken (busy) slots
+		List<Long> result = topHours.stream()
+				.filter(hour -> !vet.isBusyAt(hour, interval))
+				.collect(Collectors.toList());
+		
+		return result;
+	}
+	
+	
+	/**
+	 * Generates times list from epochStart (inclusive) to epochEnd (inclusive) with interval.
+	 * Example:
+	 * epochStart = 1894006800 (GMT: Monday, 7 January 2030 09:00:00),
+	 * epochEnd = 1894014000 (GMT: Monday, 7 January 2030 09:00:00),
+	 * interval = 900 (15 min),
+	 * Result: 1894006800, 1894007700, 1894008600, 1894009500, 1894010400, 1894011300, 1894012200, 1894013100, 1894014000
+	 * @param epochStart inclusive, seconds
+	 * @param epochEnd inclusive, seconds
+	 * @param interval seconds
+	 * @return epoch time list, seconds
+	 */
+	public List<Long> createTimeSlots(long epochStart, long epochEnd, long interval) {
+		List<Long> result = new ArrayList<>();
+		/*
+		 *  epochStart % one hour (3600s) = minutes from last top hour (remainder)
+		 *  epochStart - remainder + one hour = first top hour after epochStart
+		 */
+		long remainder = (epochStart % interval);
+		long top = epochStart;
+		top += remainder > 0 ? -remainder + interval : 0; // if remainder 0, subtract reminder and add 1 hour
+		for(; top<=epochEnd; top+=interval) { // epochEnd inclusive
+			result.add(top);
+		}
+		System.out.println(result);
+		return result;
 	}
 
 	/**
@@ -163,4 +244,5 @@ public class VisitService {
 	}
 	
 	private Function<Visit, VisitDTO> mapToDto = entity -> modelMapper.map(entity, VisitDTO.class);
+
 }

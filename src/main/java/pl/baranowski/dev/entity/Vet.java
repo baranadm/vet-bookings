@@ -2,6 +2,9 @@ package pl.baranowski.dev.entity;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -40,8 +43,8 @@ public class Vet {
     @ElementCollection
     @CollectionTable(name="listOfWorikngDays")
 	private final List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
-	private final Integer worksFrom = 9;
-	private final Integer worksTill = 16;
+	private final Integer worksFromHour = 9;
+	private final Integer worksTillHour = 16;
 	
 	@ManyToMany
 	@JoinTable(
@@ -191,11 +194,33 @@ public class Vet {
 	}
 
 	public Integer getWorksFrom() {
-		return worksFrom;
+		return worksFromHour;
 	}
 
 	public Integer getWorksTill() {
-		return worksTill;
+		return worksTillHour;
+	}
+	
+	/**
+	 *  Checks, if Vet is busy at epoch start with given duration
+	 * @param start - epoch, seconds, inclusive
+	 * @param dur - seconds
+	 * @return true, if busy
+	 */
+	public boolean isBusyAt(long start, long dur) {
+		// checks, if time is inside working hours
+		Instant instantStart = Instant.ofEpochSecond(start);
+		ZonedDateTime zonedStart = ZonedDateTime.ofInstant(instantStart, ZoneId.systemDefault());
+		if(zonedStart.getHour() < worksFromHour) {
+			return true; // start before working time = busy
+		} else if (zonedStart.getHour() + dur/60/60 > worksTillHour){
+			return true; // end after working time = busy
+		}
+		// checks, if there is another visit at epoch
+		boolean isBusy = visits.stream().anyMatch(visit -> 
+								(start >= visit.getEpoch() && start < visit.getEpoch() + visit.getDuration()) 
+								|| (start + dur <= visit.getEpoch() + visit.getDuration() && start + dur > visit.getEpoch()));
+		return isBusy;
 	}
 
 	@Override

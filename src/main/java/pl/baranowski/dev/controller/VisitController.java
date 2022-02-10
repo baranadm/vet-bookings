@@ -1,5 +1,8 @@
 package pl.baranowski.dev.controller;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
@@ -20,9 +23,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.NewVisitDTO;
+import pl.baranowski.dev.dto.SearchRequestDTO;
+import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.service.VetService;
 import pl.baranowski.dev.service.VisitService;
 
 @RestController
@@ -33,9 +40,14 @@ public class VisitController {
 	public static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 5);
 	@Autowired
 	VisitService visitService;
+	@Autowired
+	VetService vetService;
 	
 	//TODO checking free visits feature
-	
+	@GetMapping(value="/check", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
+	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(@Valid @RequestBody SearchRequestDTO requestBody) throws SearchRequestInvalidException {
+		return visitService.findFreeSlots(requestBody);
+	}
 	
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
 	public @ResponseBody VisitDTO getById(@PathVariable String id) throws NumberFormatException {

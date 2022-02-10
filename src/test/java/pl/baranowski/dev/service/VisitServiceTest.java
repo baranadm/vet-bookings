@@ -10,7 +10,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
@@ -34,6 +36,7 @@ import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -57,13 +60,13 @@ class VisitServiceTest {
 	@MockBean
 	PatientRepository patientRepository;
 
-	// Below I present to You our todays Heroes:
-	long workindDayIn2100year = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
+	// Below we present to You our todays Heroes:
+	long mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 	AnimalType animalType = new AnimalType(1L, "Owad");
 	MedSpecialty medSpecialty = new MedSpecialty(2L, "Czółkolog");
 	Vet vet = new Vet(3L, "Kazik", "Montana", new BigDecimal(220), "1111111111");
 	Patient patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
-	Visit visit = new Visit(13L, vet, patient, workindDayIn2100year);
+	Visit visit = new Visit.VisitBuilder(vet, patient, mondayH10Y2100).build().withId(13L);
 	
 	@BeforeEach
 	void setUp() throws Exception {
@@ -126,7 +129,7 @@ class VisitServiceTest {
 	@Test
 	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, VetNotActiveException {
 		// new Visit without id
-		Visit newVisit = new Visit(visit.getVet(), visit.getPatient(), visit.getEpoch());
+		Visit newVisit = new Visit.VisitBuilder(visit.getVet(), visit.getPatient(), visit.getEpoch()).build();
 
 		// adds Patient's Animal Type to Vet
 		visit.getVet().addAnimalType(visit.getPatient().getAnimalType());
@@ -159,14 +162,14 @@ class VisitServiceTest {
 		 */
 		given(vetRepository.findById(1L)).willReturn(Optional.empty());
 		given(patientRepository.findById(2L)).willReturn(Optional.of(patient));
-		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, workindDayIn2100year));
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, mondayH10Y2100));
 
 		/* Vet - found
 		 * Patient - not found
 		 */
 		given(vetRepository.findById(1L)).willReturn(Optional.of(vet));
 		given(patientRepository.findById(2L)).willReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, workindDayIn2100year));
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, mondayH10Y2100));
 	}
 	
 	@Test
@@ -199,7 +202,7 @@ class VisitServiceTest {
 		given(vetRepository.findById(inactiveVet.getId())).willReturn(Optional.of(inactiveVet));
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
 		
-		assertThrows(VetNotActiveException.class, () -> visitService.addNew(inactiveVet.getId(), patient.getId(), workindDayIn2100year));
+		assertThrows(VetNotActiveException.class, () -> visitService.addNew(inactiveVet.getId(), patient.getId(), mondayH10Y2100));
 	}
 	
 	@Test
@@ -211,7 +214,7 @@ class VisitServiceTest {
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
 		
 		// patient's animalType = Owad, catsVet animalType = "Kot"
-		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(catsVet.getId(), patient.getId(), workindDayIn2100year));
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(catsVet.getId(), patient.getId(), mondayH10Y2100));
 	}
 	
 	@Test
@@ -243,6 +246,56 @@ class VisitServiceTest {
 		long epochMondayDuringWorkPlus2min = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 15, 02, 00), ZoneId.systemDefault()).toEpochSecond();
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(vet.getId(), patient.getId(), epochMondayDuringWorkPlus2min));
 
+	}
+	
+	@Test
+	void findFreeSlotsForVet_correctCallToRepositoryAndReturnValue() throws SearchRequestInvalidException {
+		// Vet's working hours: 9-16 (so last visit is at 15:00)
+		// date: 2100-01-25
+		Visit first = new Visit.VisitBuilder(vet, patient, mondayH10Y2100).build().withId(1L); // 10:00
+		Visit second = new Visit.VisitBuilder(vet, patient, mondayH10Y2100 +60*60).build().withId(2L); // 11:00
+		Visit third = new Visit.VisitBuilder(vet, patient, mondayH10Y2100 +2*60*60).build().withId(3L); // 12:00
+		Visit fourth = new Visit.VisitBuilder(vet, patient, mondayH10Y2100 +4*60*60).build().withId(4L); // 14:00
+		
+		vet.addVisit(first);
+		vet.addVisit(second);
+		vet.addVisit(third);
+		vet.addVisit(fourth);
+		
+		List<Long> expected = new ArrayList<>();
+		expected.add(mondayH10Y2100 - 60*60); // 9:00
+		expected.add(mondayH10Y2100 + 3*60*60); // 13:00
+		expected.add(mondayH10Y2100 + 5*60*60); // 15:00
+		
+		// mocking repository result
+		given(vetRepository.findById(vet.getId())).willReturn(Optional.of(vet));
+		
+		// searching start: 2100-01-25 5:00, end 2100-01-25 18:00
+		List<Long> result = visitService.findFreeSlotsForVet(vet, mondayH10Y2100 - 5*60*60, mondayH10Y2100 + 8*60*60, 3600L);
+		assertEquals(expected, result);
+		
+	}
+
+	@Test
+	void findFreeSlotsForVet_epochsValidation_throwSearchRequestInvalidException() {
+		// if start = end
+		final long start = mondayH10Y2100;
+		final long endEqual = start;
+		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForVet(vet, start, endEqual, 3600L));
+		
+		//if start > end
+		final long endBefore = start - 1;
+		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForVet(vet, start, endBefore, 3600L));
+		// if start < now
+		final long startBeforeNow = System.currentTimeMillis()/1000 - 1;
+		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForVet(vet, startBeforeNow, endEqual, 3600L));
+	}
+	
+	@Test
+	void genTopHoursBetween() {
+		long start = mondayH10Y2100 + 30*60; // 2100-01-25 10:30:00;
+		long end = mondayH10Y2100 + 24*60*60 - 30*60; // 2100-01-26 9:30:00;
+		assertEquals(23, visitService.createTimeSlots(start, end, 3600L).size());
 	}
 	
 }

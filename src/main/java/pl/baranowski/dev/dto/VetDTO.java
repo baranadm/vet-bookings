@@ -33,6 +33,7 @@ public class VetDTO {
 
 	public VetDTO() {
 	}
+	
 	public VetDTO(String name, String surname, String hourlyRate, String nip) {
 		this.name = name;
 		this.surname = surname;
