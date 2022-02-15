@@ -52,6 +52,13 @@ public class VisitService {
 		return modelMapper.map(result, VisitDTO.class);
 	}
 	
+	// TODO tests or delete if unused
+	public List<VisitDTO> findAll() {
+		List<Visit> result = visitRepository.findAll();
+		List<VisitDTO> dtoResult = result.stream().map(mapToDto).collect(Collectors.toList());
+		return dtoResult;
+	}
+	
 	public Page<VisitDTO> findAll(Pageable pageable) {
 		Page<Visit> result = visitRepository.findAll(pageable); 
 		Page<VisitDTO> pageOfDTOs = result.map(mapToDto);

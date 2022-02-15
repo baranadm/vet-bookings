@@ -33,6 +33,7 @@ import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.service.VetService;
 import pl.baranowski.dev.service.VisitService;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/visit")
 @Validated
@@ -55,8 +56,11 @@ public class VisitController {
 		return visitService.getById(Long.decode(id));
 	}
 	
+	// TODO integration tests or delete if unused
+	public @ResponseBody List<VisitDTO> findAll() {
+		return visitService.findAll();
+	}
 	// TODO change @ReqestParam page and size to @RequestBody PabeableDTO
-	@CrossOrigin
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	public @ResponseBody Page<VisitDTO> findAll(
 			@RequestParam("page") @Min(value=0, message="invalid parameter: page must be greather than or equal to 0") int page,
