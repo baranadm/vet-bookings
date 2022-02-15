@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,6 +56,7 @@ public class VisitController {
 	}
 	
 	// TODO change @ReqestParam page and size to @RequestBody PabeableDTO
+	@CrossOrigin
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	public @ResponseBody Page<VisitDTO> findAll(
 			@RequestParam("page") @Min(value=0, message="invalid parameter: page must be greather than or equal to 0") int page,
