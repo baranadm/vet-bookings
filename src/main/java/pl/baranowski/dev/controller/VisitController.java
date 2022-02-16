@@ -60,7 +60,7 @@ public class VisitController {
 			@RequestParam("medSpecialtyName") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
 			@RequestParam("epochStart") @NotBlank(message="Invalid search criteria: epochStart should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochStart,
 			@RequestParam("epochEnd") @NotBlank(message="Invalid search criteria: epochEnd should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochEnd,
-			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: interval should not be empty.")	@Pattern(regexp = "[0-9]+", message = "Invalid interval format - only digits allowed") String interval) throws SearchRequestInvalidException {
+			@RequestParam("interval") @NotBlank(message="Invalid search criteria: interval should not be empty.")	@Pattern(regexp = "[0-9]+", message = "Invalid interval format - only digits allowed") String interval) throws SearchRequestInvalidException {
 		return visitService.findFreeSlots(animalTypeName, medSpecialtyName, epochStart, epochEnd, interval);
 	}
 	
