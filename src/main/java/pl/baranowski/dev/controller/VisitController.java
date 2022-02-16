@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.NewVisitDTO;
-import pl.baranowski.dev.dto.SearchRequestDTO;
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
@@ -47,13 +46,7 @@ public class VisitController {
 	@Autowired
 	VetService vetService;
 	
-//	//TODO checking free visits feature
-//	@GetMapping(value="/check", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
-//	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(@Valid @RequestBody SearchRequestDTO requestBody) throws SearchRequestInvalidException {
-//		return visitService.findFreeSlots(requestBody);
-//	}
-	
-	//TODO tests...
+	//TODO correct tests (was with @RequestBody)
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
 	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
@@ -68,12 +61,8 @@ public class VisitController {
 	public @ResponseBody VisitDTO getById(@PathVariable String id) throws NumberFormatException {
 		return visitService.getById(Long.decode(id));
 	}
-	
-	// TODO integration tests or delete if unused
-	public @ResponseBody List<VisitDTO> findAll() {
-		return visitService.findAll();
-	}
-	// TODO change @ReqestParam page and size to @RequestBody PabeableDTO
+	// 		Description	Resource	Path	Location	Type
+
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	public @ResponseBody Page<VisitDTO> findAll(
 			@RequestParam("page") @Min(value=0, message="invalid parameter: page must be greather than or equal to 0") int page,

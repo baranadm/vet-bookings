@@ -3,6 +3,7 @@ package pl.baranowski.dev.dto;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
+// TODO delete class, not used
 public class SearchRequestDTO {
 	
 	@NotBlank(message="Invalid search criteria: animalTypeName should not be empty.")

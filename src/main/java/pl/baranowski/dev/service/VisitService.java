@@ -12,7 +12,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
-import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import pl.baranowski.dev.dto.SearchRequestDTO;
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Patient;
@@ -50,13 +48,6 @@ public class VisitService {
 	public VisitDTO getById(long id) {
 		Visit result = visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
 		return modelMapper.map(result, VisitDTO.class);
-	}
-	
-	// TODO tests or delete if unused
-	public List<VisitDTO> findAll() {
-		List<Visit> result = visitRepository.findAll();
-		List<VisitDTO> dtoResult = result.stream().map(mapToDto).collect(Collectors.toList());
-		return dtoResult;
 	}
 	
 	public Page<VisitDTO> findAll(Pageable pageable) {
@@ -96,26 +87,6 @@ public class VisitService {
 				new Visit.VisitBuilder(vet, patient, epochInSeconds).build());
 		return mapToDto.apply(result);
 	}
-	
-//	// TODO tests...
-//	public Map<VetDTO, List<Long>> findFreeSlots(@Valid SearchRequestDTO requestBody) throws SearchRequestInvalidException {
-//		// decodes validated epoch start
-//		long start = Long.decode(requestBody.getEpochStart());
-//		// decodes validated epoch end
-//		long end = Long.decode(requestBody.getEpochEnd());
-//		// decodes validated interval
-//		long interval = Long.decode(requestBody.getInterval());
-//		
-//		// finds Vets with matching AnimalType and MedSpecialty
-//		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(requestBody.getAnimalTypeName(), requestBody.getMedSpecialtyName());
-//		
-//		// creates map with Vet as a key, and free slots as a value (epoch time)
-//		Map<VetDTO, List<Long>> result = new HashMap<>();
-//		for(Vet v: matchingVets) {
-//			result.computeIfAbsent(modelMapper.map(v, VetDTO.class), k -> new ArrayList<>()).addAll(findFreeSlotsForVet(v, start, end, interval));
-//		}
-//		return result;
-//	}
 	
 	// TODO tests...
 	public Map<VetDTO, List<Long>> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
