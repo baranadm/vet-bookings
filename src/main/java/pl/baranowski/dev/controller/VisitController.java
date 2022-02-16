@@ -54,7 +54,7 @@ public class VisitController {
 //	}
 	
 	//TODO tests...
-	@GetMapping(value="/check", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
+	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
 	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
 			@RequestParam("medSpecialtyName") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
