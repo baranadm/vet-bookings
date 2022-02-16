@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -45,10 +47,21 @@ public class VisitController {
 	@Autowired
 	VetService vetService;
 	
-	//TODO checking free visits feature
+//	//TODO checking free visits feature
+//	@GetMapping(value="/check", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
+//	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(@Valid @RequestBody SearchRequestDTO requestBody) throws SearchRequestInvalidException {
+//		return visitService.findFreeSlots(requestBody);
+//	}
+	
+	//TODO tests...
 	@GetMapping(value="/check", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
-	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(@Valid @RequestBody SearchRequestDTO requestBody) throws SearchRequestInvalidException {
-		return visitService.findFreeSlots(requestBody);
+	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(
+			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
+			@RequestParam("medSpecialty") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
+			@RequestParam("epochStart") @NotBlank(message="Invalid search criteria: epochStart should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochStart,
+			@RequestParam("epochEnd") @NotBlank(message="Invalid search criteria: epochEnd should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochEnd,
+			@RequestParam("interval") @NotBlank(message="Invalid search criteria: interval should not be empty.")	@Pattern(regexp = "[0-9]+", message = "Invalid interval format - only digits allowed") String interval) throws SearchRequestInvalidException {
+		return visitService.findFreeSlots(animalTypeName, medSpecialtyName, epochStart, epochEnd, interval);
 	}
 	
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")

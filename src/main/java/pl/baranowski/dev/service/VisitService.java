@@ -97,17 +97,37 @@ public class VisitService {
 		return mapToDto.apply(result);
 	}
 	
+//	// TODO tests...
+//	public Map<VetDTO, List<Long>> findFreeSlots(@Valid SearchRequestDTO requestBody) throws SearchRequestInvalidException {
+//		// decodes validated epoch start
+//		long start = Long.decode(requestBody.getEpochStart());
+//		// decodes validated epoch end
+//		long end = Long.decode(requestBody.getEpochEnd());
+//		// decodes validated interval
+//		long interval = Long.decode(requestBody.getInterval());
+//		
+//		// finds Vets with matching AnimalType and MedSpecialty
+//		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(requestBody.getAnimalTypeName(), requestBody.getMedSpecialtyName());
+//		
+//		// creates map with Vet as a key, and free slots as a value (epoch time)
+//		Map<VetDTO, List<Long>> result = new HashMap<>();
+//		for(Vet v: matchingVets) {
+//			result.computeIfAbsent(modelMapper.map(v, VetDTO.class), k -> new ArrayList<>()).addAll(findFreeSlotsForVet(v, start, end, interval));
+//		}
+//		return result;
+//	}
+	
 	// TODO tests...
-	public Map<VetDTO, List<Long>> findFreeSlots(@Valid SearchRequestDTO requestBody) throws SearchRequestInvalidException {
+	public Map<VetDTO, List<Long>> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
 		// decodes validated epoch start
-		long start = Long.decode(requestBody.getEpochStart());
+		long start = Long.decode(epochStart);
 		// decodes validated epoch end
-		long end = Long.decode(requestBody.getEpochEnd());
+		long end = Long.decode(epochEnd);
 		// decodes validated interval
-		long interval = Long.decode(requestBody.getInterval());
+		long interval = Long.decode(intervalStr);
 		
 		// finds Vets with matching AnimalType and MedSpecialty
-		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(requestBody.getAnimalTypeName(), requestBody.getMedSpecialtyName());
+		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
 		
 		// creates map with Vet as a key, and free slots as a value (epoch time)
 		Map<VetDTO, List<Long>> result = new HashMap<>();
