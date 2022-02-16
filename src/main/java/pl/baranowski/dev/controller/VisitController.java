@@ -33,7 +33,7 @@ import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.service.VetService;
 import pl.baranowski.dev.service.VisitService;
 
-@CrossOrigin(origins= {"https://baranadm.github.io/", "file:///home/daniel/Projects/vet-bookings-client/"})
+@CrossOrigin
 @RestController
 @RequestMapping("/visit")
 @Validated
