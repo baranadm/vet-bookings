@@ -26,13 +26,13 @@ public class NewVisitDTO {
 		this.epoch = epoch;
 	}
 
-	public String getVetId() {
+	public String getDoctorId() {
 		return doctorId;
 	}
 
 
-	public void setVetId(String vetId) {
-		this.doctorId = vetId;
+	public void setDoctorId(String doctorId) {
+		this.doctorId = doctorId;
 	}
 
 
