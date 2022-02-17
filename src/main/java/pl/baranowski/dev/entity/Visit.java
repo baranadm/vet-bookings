@@ -29,7 +29,7 @@ public class Visit {
 	public Visit() {
 	}
 	
-	public Visit(VisitBuilder visitBuilder) {
+	private Visit(VisitBuilder visitBuilder) {
 		this.vet = visitBuilder.vet;
 		this.patient = visitBuilder.patient;
 		this.epoch = visitBuilder.epoch;
