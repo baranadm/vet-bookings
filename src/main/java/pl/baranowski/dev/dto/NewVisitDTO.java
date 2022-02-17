@@ -17,6 +17,9 @@ public class NewVisitDTO {
 	@Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed")
 	private String epoch;
 
+	public NewVisitDTO() {
+	}
+	
 	public NewVisitDTO(String vetId, String patientId, String epoch) {
 		this.doctorId = vetId;
 		this.patientId = patientId;
