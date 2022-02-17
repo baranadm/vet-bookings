@@ -1,7 +1,6 @@
 package pl.baranowski.dev.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.SingleCheckResultDTO;
-import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
@@ -57,6 +55,9 @@ public class VisitController {
 	 * 		"surname": "Kubica"
 	 * 	}
 	 * 	"epochFreeTimes": [1645072294, ....]
+	 * }
+	 * {
+	 * 	...
 	 * }]
 	 */
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")

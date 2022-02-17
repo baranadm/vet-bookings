@@ -7,14 +7,12 @@ import static org.mockito.BDDMockito.given;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,6 +28,7 @@ import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 
@@ -43,7 +42,7 @@ class PatientServiceTest {
 	AnimalTypeRepository animalTypeRepository;
 	
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 	
 	@Autowired
 	PatientService patientService;
@@ -62,7 +61,7 @@ class PatientServiceTest {
 	void getById() {
 		//whenEntityExists - returnsDTO
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
-		assertEquals(mapToDto.apply(patient), patientService.getById(patient.getId()));
+		assertEquals(mapper.toDto(patient), patientService.getById(patient.getId()));
 		
 		//whenEntityDoesNotExists - throwsEntityNotFoundException
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.empty());
@@ -77,7 +76,7 @@ class PatientServiceTest {
 		Page<Patient> page = new PageImpl<>(threePatients, pageable, threePatients.size());
 		given(patientRepository.findAll(pageable)).willReturn(page);
 		Page<PatientDTO> expected = new PageImpl<>(
-				threePatients.stream().map(mapToDto).collect(Collectors.toList()), 
+				threePatients.stream().map(mapper::toDto).collect(Collectors.toList()), 
 				pageable, threePatients.size());
 		
 		assertEquals(expected, patientService.findAll(pageable));
@@ -85,7 +84,7 @@ class PatientServiceTest {
 		//whenEntitiesDoNotExist - returnsEmptyPage
 		Page<Patient> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
 		given(patientRepository.findAll(pageable)).willReturn(emptyPage);
-		assertEquals(emptyPage.map(mapToDto), patientService.findAll(pageable));
+		assertEquals(emptyPage.map(mapper::toDto), patientService.findAll(pageable));
 	}
 	
 	@Test
@@ -124,8 +123,7 @@ class PatientServiceTest {
 		// repository will return new Patient with new id
 		Patient expected = patient.withId(1L);
 		given(patientRepository.saveAndFlush(patient)).willReturn(expected);
-		assertEquals(mapToDto.apply(expected), patientService.addNew(newPatient));
+		assertEquals(mapper.toDto(expected), patientService.addNew(newPatient));
 	}
 	
-	private Function<Patient, PatientDTO> mapToDto = entity -> modelMapper.map(entity, PatientDTO.class);
 }

@@ -23,6 +23,16 @@ public class CustomMapper {
 	
 	// to ENTITY maps...
 	
+	public AnimalType toEntity(AnimalTypeDTO dto) {
+		AnimalType at = new AnimalType(dto.getId(), dto.getName());
+		return at;
+	}
+	
+	public MedSpecialty toEntity(MedSpecialtyDTO dto) {
+		MedSpecialty ms = new MedSpecialty(dto.getId(), dto.getName());
+		return ms;
+	}
+	
 	public Vet toEntity(VetDTO dto) {
 		Vet vet = new Vet(dto.getId(), dto.getName(), dto.getSurname(), new BigDecimal(dto.getHourlyRate()), dto.getNip());
 		vet.setActive(dto.getActive());

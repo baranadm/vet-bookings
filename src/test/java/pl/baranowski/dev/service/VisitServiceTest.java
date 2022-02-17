@@ -20,7 +20,6 @@ import javax.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -38,6 +37,7 @@ import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
 import pl.baranowski.dev.repository.VisitRepository;
@@ -51,7 +51,7 @@ class VisitServiceTest {
 	VisitService visitService;
 	
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 
 	@MockBean
 	VisitRepository visitRepository;
@@ -77,7 +77,7 @@ class VisitServiceTest {
 		Long id = 13L;
 		given(visitRepository.findById(id)).willReturn(Optional.of(visit));
 
-		VisitDTO expected = modelMapper.map(visit, VisitDTO.class);
+		VisitDTO expected = mapper.toDto(visit);
 		VisitDTO result = visitService.getById(id);
 		
 		ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
@@ -104,7 +104,7 @@ class VisitServiceTest {
 		given(visitRepository.findAll(pageable)).willReturn(mockedRepoResult);
 		
 		// verifies return value
-		Page<VisitDTO> expected = mockedRepoResult.map(visit -> modelMapper.map(visit, VisitDTO.class));
+		Page<VisitDTO> expected = mockedRepoResult.map(visit -> mapper.toDto(visit));
 		Page<VisitDTO> result = visitService.findAll(pageable);
 		assertEquals(expected, result);
 		
@@ -142,7 +142,7 @@ class VisitServiceTest {
 		given(visitRepository.saveAndFlush(newVisit)).willReturn(visit);
 		
 		// verifies return value
-		VisitDTO expected = modelMapper.map(visit, VisitDTO.class);
+		VisitDTO expected = mapper.toDto(visit);
 		VisitDTO result = visitService.addNew(
 				newVisit.getVet().getId(), 
 				newVisit.getPatient().getId(), 
