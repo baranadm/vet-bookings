@@ -280,7 +280,11 @@ class VetServiceTest {
 		assertThrows(VetNotActiveException.class, () -> vetService.addMedSpecialty(mostowiak.getId(), ms.getId()));
 		
 	}
-	
+
+	@Test
+	void testMappings() {
+		assertEquals(mostowiak, mapper.toEntity(mapper.toDto(mostowiak)));
+	}
 	private void assertPagesEquals(Page<VetDTO> expected, Page<VetDTO> result) {
 		assertEquals(expected.get().collect(Collectors.toList()), result.get().collect(Collectors.toList()));
 		assertEquals(expected.getPageable(), result.getPageable());
