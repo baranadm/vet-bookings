@@ -21,10 +21,8 @@ public class WebConfiguration implements WebMvcConfigurer {
 	
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
-		registry.addMapping("/**")
-			.allowedOrigins("https://baranadm.github.io/vet-bookings-client/")
-			.allowedOrigins("file:///home/daniel/Projects/vet-bookings-client/")
-			.allowedMethods("GET", "POST", "PUT");
-		WebMvcConfigurer.super.addCorsMappings(registry);
+		registry
+			.addMapping("/**");
+//		WebMvcConfigurer.super.addCorsMappings(registry);
 	}
 }
