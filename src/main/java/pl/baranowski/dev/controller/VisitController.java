@@ -88,7 +88,7 @@ public class VisitController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, VetNotActiveException {
 		
-		long vetId = Long.decode(nv.getVetId());
+		long vetId = Long.decode(nv.getDoctorId());
 		long patientId = Long.decode(nv.getPatientId());
 		long epoch = Long.decode(nv.getEpoch());
 		
