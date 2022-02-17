@@ -79,15 +79,16 @@ public class VetControllerTest {
 	@MockBean
 	VetService vetService;
 	
-	private final VetDTO mostowiak = new VetDTO(1L, "Marek", "Mostówiak", "150", "1181328620");
+	private final VetDTO mostowiak = new VetDTO.Builder("Marek", "Mostowiak").id(1L).hourlyRate("150").nip("1181328620").build();
 	private List<VetDTO> vetsList;
 	
 	public VetControllerTest() {
 		vetsList = new ArrayList<>();
-		vetsList.add(new VetDTO("Robert", "Kubica", "100000", "1213141516"));
-		vetsList.add(new VetDTO("Mirosław", "Rosomak", "100.0", "0987654321"));
-		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", "40", "5566557755"));
-		vetsList.add(new VetDTO("C", "J", "123.45", "1122334455"));
+		
+		vetsList.add(new VetDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
+		vetsList.add(new VetDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
+		vetsList.add(new VetDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		vetsList.add(new VetDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
 	}
 	
 	@Test // request: @GET /{id}
@@ -260,7 +261,12 @@ public class VetControllerTest {
 	
 	@Test
 	void addNew_whenValidRequestBody_returns201AndEntry() throws JsonProcessingException, Exception {
-		VetDTO requestDTO = new VetDTO(0L, mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip());
+		VetDTO requestDTO = new VetDTO.Builder(mostowiak.getName(), mostowiak.getSurname())
+				.id(mostowiak.getId())
+				.hourlyRate(mostowiak.getHourlyRate())
+				.nip(mostowiak.getNip())
+				.build();
+		
 		VetDTO expectedDTO = mostowiak;
 		given(vetService.addNew(requestDTO)).willReturn(expectedDTO);
 		MvcResult result = mockMvc.perform(post("/doctor/")
@@ -292,7 +298,8 @@ public class VetControllerTest {
 
 	@Test
 	void addNew_whenAllFieldsNotValid_returns400AndErrorForEveryField() throws JsonProcessingException, Exception {
-		VetDTO requestDTO = new VetDTO("", "", "a1", "1111111112");
+		VetDTO requestDTO = new VetDTO.Builder("", "").hourlyRate("a1").nip("1111111112").build();
+		
 		mockMvc.perform(post("/doctor/")
 				.contentType("application/json")
 				.characterEncoding("UTF-8")

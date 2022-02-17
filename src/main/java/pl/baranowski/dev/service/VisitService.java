@@ -5,20 +5,17 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import pl.baranowski.dev.dto.SingleCheckResultDTO;
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Patient;
@@ -27,6 +24,7 @@ import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
 import pl.baranowski.dev.repository.VisitRepository;
@@ -41,18 +39,18 @@ public class VisitService {
 	@Autowired
 	VetRepository vetRepository;
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 	@Autowired
 	VetService vetService;
 
 	public VisitDTO getById(long id) {
 		Visit result = visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
-		return modelMapper.map(result, VisitDTO.class);
+		return mapper.toDto(result);
 	}
 	
 	public Page<VisitDTO> findAll(Pageable pageable) {
 		Page<Visit> result = visitRepository.findAll(pageable); 
-		Page<VisitDTO> pageOfDTOs = result.map(mapToDto);
+		Page<VisitDTO> pageOfDTOs = result.map(mapper::toDto);
 		return pageOfDTOs;
 	}
 
@@ -85,11 +83,11 @@ public class VisitService {
 		
 		Visit result = visitRepository.saveAndFlush(
 				new Visit.VisitBuilder(vet, patient, epochInSeconds).build());
-		return mapToDto.apply(result);
+		return mapper.toDto(result);
 	}
 	
 	// TODO tests...
-	public Map<VetDTO, List<Long>> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
+	public List<SingleCheckResultDTO> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
 		// decodes validated epoch start
 		long start = Long.decode(epochStart);
 		// decodes validated epoch end
@@ -99,12 +97,13 @@ public class VisitService {
 		
 		// finds Vets with matching AnimalType and MedSpecialty
 		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
-		
-		// creates map with Vet as a key, and free slots as a value (epoch time)
-		Map<VetDTO, List<Long>> result = new HashMap<>();
-		for(Vet v: matchingVets) {
-			result.computeIfAbsent(modelMapper.map(v, VetDTO.class), k -> new ArrayList<>()).addAll(findFreeSlotsForVet(v, start, end, interval));
+
+		// creates list of SingleCheckResultDTO and populates it with Vets and their free times
+		List<SingleCheckResultDTO> result = new ArrayList<>();
+		for(Vet vet: matchingVets) {
+			result.add(new SingleCheckResultDTO(new VetDTO.Builder(vet.getName(), vet.getSurname()).id(vet.getId()).build(), findFreeSlotsForVet(vet, start, end, interval)));
 		}
+			
 		return result;
 	}
 	
@@ -241,6 +240,4 @@ public class VisitService {
 		return true;
 	}
 	
-	private Function<Visit, VisitDTO> mapToDto = entity -> modelMapper.map(entity, VisitDTO.class);
-
 }

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.NewVisitDTO;
+import pl.baranowski.dev.dto.SingleCheckResultDTO;
 import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
@@ -48,18 +49,18 @@ public class VisitController {
 	
 	//TODO correct tests (was with @RequestBody)
 	/*
-	 * should produce result like:
-	 * {
+	 * should produce result like: (array of JSON-serialized objects)
+	 * [{
 	 * 	"vet" : {
 	 * 		"id": 12,
 	 * 		"name": "Robert",
 	 * 		"surname": "Kubica"
 	 * 	}
 	 * 	"epochFreeTimes": [1645072294, ....]
-	 * }
+	 * }]
 	 */
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
-	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(
+	public @ResponseBody List<SingleCheckResultDTO> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
 			@RequestParam("medSpecialtyName") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
 			@RequestParam("epochStart") @NotBlank(message="Invalid search criteria: epochStart should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochStart,

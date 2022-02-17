@@ -81,7 +81,7 @@ class VisitControllerTest {
 	VetService vetService;
 	
 	AnimalTypeDTO animalType = new AnimalTypeDTO(3L, "Wielbłąd");
-	VetDTO vet = new VetDTO(1L, "Robert", "Kupicha", "600", "1111111111");
+	VetDTO vet = new VetDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
 	PatientDTO patient = new PatientDTO(2L, "Maniek", animalType, 8, "Lucyna Brzoza", "brzozazlasuobok@gmail.com");
 	
 	@BeforeEach
@@ -434,9 +434,14 @@ class VisitControllerTest {
 	}
 	
 	private Function<Vet, VetDTO> mapToDto = entity -> {
-		VetDTO dto = new VetDTO(entity.getId(), entity.getName(), entity.getSurname(), entity.getHourlyRate().toPlainString(), entity.getNip(), entity.getActive());
-		dto.setAnimalTypes(entity.getAnimalTypes());
-		dto.setMedSpecialties(entity.getMedSpecialties());
+		VetDTO dto = new VetDTO.Builder(entity.getName(), entity.getSurname())
+				.id(entity.getId())
+				.hourlyRate(entity.getHourlyRate().toPlainString())
+				.nip(entity.getNip())
+				.active(entity.getActive())
+				.animalTypes(entity.getAnimalTypes())
+				.medSpecialties(entity.getMedSpecialties())
+				.build();
 		return dto;
 	};
 	private void mockMvcPerformAndExpect(NewVisitDTO requestDTO, ResultMatcher httpStatusMatcher, String field)

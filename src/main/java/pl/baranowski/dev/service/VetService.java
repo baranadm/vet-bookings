@@ -2,7 +2,6 @@ package pl.baranowski.dev.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
@@ -20,7 +19,7 @@ import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
-import pl.baranowski.dev.mapper.VetMapper;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -38,8 +37,9 @@ public class VetService {
 	@Autowired
 	MedSpecialtyRepository medSpecialtyRepository;
 
-	VetMapper modelMapper = new VetMapper();
-
+	@Autowired
+	CustomMapper mapper;
+	
 	public VetService(VetRepository vetRepository, AnimalTypeRepository animalTypeRepository) {
 		this.vetRepository = vetRepository;
 		this.animalTypeRepository = animalTypeRepository;
@@ -48,7 +48,7 @@ public class VetService {
 
 	public VetDTO getById(long validatedId) throws EntityNotFoundException {
 		Vet vet = vetRepository.findById(validatedId).orElseThrow(EntityNotFoundException::new);
-		return mapToDTO.apply(vet);
+		return mapper.toDto(vet);
 	}
 	
 	// TODO tests for below method
@@ -75,7 +75,7 @@ public class VetService {
 		Page<Vet> vets = vetRepository.findAll(validatedPageable);
 		Page<VetDTO> vetsDTO = new PageImpl<VetDTO>(
 				vets.toList().stream()
-				.map(mapToDTO)
+				.map(mapper::toDto)
 				.collect(Collectors.toList()), 
 				vets.getPageable(), 
 				vets.getSize());
@@ -87,9 +87,9 @@ public class VetService {
 		if(!vetRepository.findByNip(validatedVetDTO.getNip()).isEmpty()) {
 			throw new NIPExistsException(); // NIP duplicated
 		}
-		Vet vet = mapToEntity.apply(validatedVetDTO);
+		Vet vet = mapper.toEntity(validatedVetDTO);
 		Vet result = vetRepository.saveAndFlush(vet);
-		VetDTO resultDTO = mapToDTO.apply(result);
+		VetDTO resultDTO = mapper.toDto(result);
 		return resultDTO;
 	}
 
@@ -132,7 +132,7 @@ public class VetService {
 		
 		// if everything is ok, update
 		vet.addAnimalType(animalType);
-		VetDTO result = mapToDTO.apply(vetRepository.saveAndFlush(vet));
+		VetDTO result = mapper.toDto(vetRepository.saveAndFlush(vet));
 		return result;
 	}
 
@@ -163,11 +163,8 @@ public class VetService {
 		vet.addMedSpecialty(ms);
 		
 		// save (update) to DB
-		VetDTO result = mapToDTO.apply(vetRepository.saveAndFlush(vet));
+		VetDTO result = mapper.toDto(vetRepository.saveAndFlush(vet));
 		return result;
 	}
-	
-	Function<VetDTO, Vet> mapToEntity = dto -> modelMapper.map(dto, Vet.class);
-	Function<Vet, VetDTO> mapToDTO = entity -> modelMapper.map(entity, VetDTO.class);
 
 }

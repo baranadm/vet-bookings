@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
@@ -32,7 +31,7 @@ import pl.baranowski.dev.entity.Vet;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.VetNotActiveException;
-import pl.baranowski.dev.mapper.VetMapper;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -52,7 +51,8 @@ class VetServiceTest {
 	@Autowired
 	VetService vetService;
 	
-	VetMapper modelMapper = new VetMapper();
+	@Autowired
+	CustomMapper mapper;
 	
 	private final Vet mostowiak = new Vet(1L, "Marek", "Mostówiak", new BigDecimal(150.0), "1181328620");
 	private List<VetDTO> vetsList;
@@ -60,17 +60,18 @@ class VetServiceTest {
 	@BeforeEach
 	void setUp() throws Exception {
 		vetsList = new ArrayList<>();
-		vetsList.add(new VetDTO("Robert", "Kubica", "100000.0", "1213141516"));
-		vetsList.add(new VetDTO("Mirosław", "Rosomak", "100.0", "0987654321"));
-		vetsList.add(new VetDTO("Mamadou", "Urghabananandi", "40.0", "5566557755"));
-		vetsList.add(new VetDTO("C", "J", "123.45", "1122334455"));
+		
+		vetsList.add(new VetDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
+		vetsList.add(new VetDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
+		vetsList.add(new VetDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		vetsList.add(new VetDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
 		
 	}
 
 	@Test
 	void test_mappings() {
-		VetDTO dto = vetService.mapToDTO.apply(mostowiak);
-		assertEquals(mostowiak, vetService.mapToEntity.apply(dto));
+		VetDTO dto = mapper.toDto(mostowiak);
+		assertEquals(mostowiak, mapper.toEntity(dto));
 	}
 
 	@Test
@@ -79,7 +80,7 @@ class VetServiceTest {
 		Optional<Vet> expected = Optional.of(mostowiak);
 		given(vetRepository.findById(id)).willReturn(expected);
 		VetDTO result = vetService.getById(id);
-		assertEquals(mapToDTO.apply(expected.get()), result);
+		assertEquals(mapper.toDto(expected.get()), result);
 	}
 
 	@Test
@@ -94,7 +95,7 @@ class VetServiceTest {
 	@Test
 	void findAll_ifEntitiesFound_returnsPageWithListOfDTOs() {
 		Pageable pageable = PageRequest.of(0, 2);
-		List<Vet> entitiesVetsList = vetsList.stream().map(mapToEntity).collect(Collectors.toList());
+		List<Vet> entitiesVetsList = vetsList.stream().map(mapper::toEntity).collect(Collectors.toList());
 		Page<Vet> repoResult = new PageImpl<>(entitiesVetsList, pageable, entitiesVetsList.size());
 
 		given(vetRepository.findAll(pageable)).willReturn(repoResult);
@@ -109,7 +110,7 @@ class VetServiceTest {
 	void findAll_ifNoEntitiesFound_returnsEmptyPage() {
 		Pageable pageable = PageRequest.of(0, 2);
 		Page<Vet> repoResult = new PageImpl<Vet>(Collections.emptyList(), pageable, 0);
-		Page<VetDTO> expected = repoResult.map(mapToDTO);
+		Page<VetDTO> expected = repoResult.map(mapper::toDto);
 		
 		given(vetRepository.findAll(pageable)).willReturn(repoResult);
 		assertPagesEquals(expected, vetService.findAll(pageable));
@@ -118,8 +119,8 @@ class VetServiceTest {
 	@Test
 	void addNew_ifOK_returnDTO() throws NIPExistsException {
 		given(vetRepository.saveAndFlush(mostowiak)).willReturn(mostowiak);
-		VetDTO expected = mapToDTO.apply(mostowiak);
-		VetDTO result = vetService.addNew(mapToDTO.apply(mostowiak));
+		VetDTO expected = mapper.toDto(mostowiak);
+		VetDTO result = vetService.addNew(mapper.toDto(mostowiak));
 		assertEquals(expected, result);
 	}
 	
@@ -127,7 +128,7 @@ class VetServiceTest {
 	void addNew_ifNipExists_throwNIPExistsException() {
 		// simulation of existing NIP in database
 		given(vetRepository.findByNip(mostowiak.getNip())).willReturn(Collections.singletonList(mostowiak));
-		assertThrows(NIPExistsException.class, () -> vetService.addNew(mapToDTO.apply(mostowiak)));
+		assertThrows(NIPExistsException.class, () -> vetService.addNew(mapper.toDto(mostowiak)));
 	}
 	
 	@Test
@@ -172,7 +173,7 @@ class VetServiceTest {
 		
 		VetDTO result = vetService.addAnimalType(mostowiak.getId(), pet.getId());
 		
-		assertEquals(mapToDTO.apply(catsVet), result);
+		assertEquals(mapper.toDto(catsVet), result);
 	}
 	
 	@Test
@@ -234,7 +235,7 @@ class VetServiceTest {
 		
 		VetDTO result = vetService.addMedSpecialty(mostowiak.getId(), ms.getId());
 		
-		assertEquals(mapToDTO.apply(cardioVet), result);
+		assertEquals(mapper.toDto(cardioVet), result);
 	}
 	
 	@Test
@@ -284,9 +285,5 @@ class VetServiceTest {
 		assertEquals(expected.get().collect(Collectors.toList()), result.get().collect(Collectors.toList()));
 		assertEquals(expected.getPageable(), result.getPageable());
 	}
-	
-	private Function<VetDTO, Vet> mapToEntity = dto -> modelMapper.map(dto, Vet.class);
-	private Function<Vet, VetDTO> mapToDTO = entity -> modelMapper.map(entity, VetDTO.class);
-
 
 }
