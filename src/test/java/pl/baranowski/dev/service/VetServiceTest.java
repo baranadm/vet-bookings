@@ -61,9 +61,9 @@ class VetServiceTest {
 	void setUp() throws Exception {
 		vetsList = new ArrayList<>();
 		
-		vetsList.add(new VetDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
-		vetsList.add(new VetDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
-		vetsList.add(new VetDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		vetsList.add(new VetDTO.Builder("Robert", "Kubica").hourlyRate("100000.00").nip("1213141516").build());
+		vetsList.add(new VetDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.00").nip("0987654321").build());
+		vetsList.add(new VetDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40.00").nip("5566557755").build());
 		vetsList.add(new VetDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
 		
 	}

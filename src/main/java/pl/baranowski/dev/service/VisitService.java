@@ -16,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.SingleCheckResultDTO;
-import pl.baranowski.dev.dto.VetDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Vet;
@@ -101,7 +100,7 @@ public class VisitService {
 		// creates list of SingleCheckResultDTO and populates it with Vets and their free times
 		List<SingleCheckResultDTO> result = new ArrayList<>();
 		for(Vet vet: matchingVets) {
-			result.add(new SingleCheckResultDTO(new VetDTO.Builder(vet.getName(), vet.getSurname()).id(vet.getId()).build(), findFreeSlotsForVet(vet, start, end, interval)));
+			result.add(new SingleCheckResultDTO(mapper.toDto(vet), findFreeSlotsForVet(vet, start, end, interval)));
 		}
 			
 		return result;
