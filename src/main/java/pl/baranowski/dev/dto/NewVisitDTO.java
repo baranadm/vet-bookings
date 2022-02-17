@@ -20,8 +20,8 @@ public class NewVisitDTO {
 	public NewVisitDTO() {
 	}
 	
-	public NewVisitDTO(String vetId, String patientId, String epoch) {
-		this.doctorId = vetId;
+	public NewVisitDTO(String doctorId, String patientId, String epoch) {
+		this.doctorId = doctorId;
 		this.patientId = patientId;
 		this.epoch = epoch;
 	}
