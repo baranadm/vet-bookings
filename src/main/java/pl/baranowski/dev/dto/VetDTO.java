@@ -5,9 +5,6 @@ import java.util.Set;
 
 import javax.validation.constraints.NotBlank;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
 import pl.baranowski.dev.constraint.HourlyRateConstraint;
 import pl.baranowski.dev.constraint.NipConstraint;
 import pl.baranowski.dev.entity.AnimalType;
@@ -23,21 +20,16 @@ public class VetDTO {
 	@NotBlank
 	private String surname;
 
-    @JsonInclude(Include.NON_NULL)
 	@HourlyRateConstraint
 	private String hourlyRate;
 
-    @JsonInclude(Include.NON_NULL)
 	@NipConstraint
 	private String nip;
 
-    @JsonInclude(Include.NON_NULL)
 	private Boolean active = true;
 
-    @JsonInclude(Include.NON_EMPTY)
 	private Set<MedSpecialty> medSpecialties = new HashSet<>();
 
-    @JsonInclude(Include.NON_EMPTY)
 	private Set<AnimalType> animalTypes = new HashSet<>();
 
 	public VetDTO() {
