@@ -33,6 +33,7 @@ import pl.baranowski.dev.exception.VetNotActiveException;
 import pl.baranowski.dev.service.VetService;
 import pl.baranowski.dev.service.VisitService;
 
+// TODO repair showing free slots for weekend days
 @CrossOrigin
 @RestController
 @RequestMapping("/visit")
@@ -45,7 +46,6 @@ public class VisitController {
 	@Autowired
 	VetService vetService;
 	
-	//TODO correct tests (was with @RequestBody)
 	/*
 	 * should produce result like: (array of JSON-serialized objects)
 	 * [{
