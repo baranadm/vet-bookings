@@ -47,6 +47,17 @@ public class VisitController {
 	VetService vetService;
 	
 	//TODO correct tests (was with @RequestBody)
+	/*
+	 * should produce result like:
+	 * {
+	 * 	"vet" : {
+	 * 		"id": 12,
+	 * 		"name": "Robert",
+	 * 		"surname": "Kubica"
+	 * 	}
+	 * 	"epochFreeTimes": [1645072294, ....]
+	 * }
+	 */
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
 	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
@@ -61,7 +72,6 @@ public class VisitController {
 	public @ResponseBody VisitDTO getById(@PathVariable String id) throws NumberFormatException {
 		return visitService.getById(Long.decode(id));
 	}
-	// 		Description	Resource	Path	Location	Type
 
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	public @ResponseBody Page<VisitDTO> findAll(
