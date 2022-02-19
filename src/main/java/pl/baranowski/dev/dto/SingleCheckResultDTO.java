@@ -3,20 +3,20 @@ package pl.baranowski.dev.dto;
 import java.util.List;
 
 public class SingleCheckResultDTO {
-	private VetDTO vetDTO;
+	private DoctorDTO vetDTO;
 	private List<Long> epochFreeTimes;
 	
-	public SingleCheckResultDTO(VetDTO vetDTO, List<Long> epochFreeTimes) {
+	public SingleCheckResultDTO(DoctorDTO vetDTO, List<Long> epochFreeTimes) {
 		super();
 		this.vetDTO = vetDTO;
 		this.epochFreeTimes = epochFreeTimes;
 	}
 
-	public VetDTO getVetDTO() {
+	public DoctorDTO getVetDTO() {
 		return vetDTO;
 	}
 
-	public void setVetDTO(VetDTO vetDTO) {
+	public void setVetDTO(DoctorDTO vetDTO) {
 		this.vetDTO = vetDTO;
 	}
 

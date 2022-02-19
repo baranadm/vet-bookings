@@ -7,12 +7,12 @@ import org.springframework.stereotype.Component;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.dto.PatientDTO;
-import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Vet;
+import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
 
 @Component
@@ -33,8 +33,8 @@ public class CustomMapper {
 		return ms;
 	}
 	
-	public Vet toEntity(VetDTO dto) {
-		Vet vet = new Vet(dto.getId(), dto.getName(), dto.getSurname(), new BigDecimal(dto.getHourlyRate()), dto.getNip());
+	public Doctor toEntity(DoctorDTO dto) {
+		Doctor vet = new Doctor(dto.getId(), dto.getName(), dto.getSurname(), new BigDecimal(dto.getHourlyRate()), dto.getNip());
 		vet.setActive(dto.getActive());
 		return vet;
 	}
@@ -56,8 +56,8 @@ public class CustomMapper {
 		return dto;
 	}
 	
-	public VetDTO toDto(Vet vet) {
-		VetDTO dto = new VetDTO.Builder(vet.getName(), vet.getSurname())
+	public DoctorDTO toDto(Doctor vet) {
+		DoctorDTO dto = new DoctorDTO.Builder(vet.getName(), vet.getSurname())
 				.id(vet.getId())
 				.hourlyRate(vet.getHourlyRate().toPlainString())
 				.nip(vet.getNip())
@@ -69,7 +69,7 @@ public class CustomMapper {
 	}
 	
 	public VisitDTO toDto(Visit visit) {
-		VisitDTO dto = new VisitDTO(visit.getId(), toDto(visit.getVet()), toDto(visit.getPatient()), visit.getEpoch(), visit.getIsConfirmed());
+		VisitDTO dto = new VisitDTO(visit.getId(), toDto(visit.getDoctor()), toDto(visit.getPatient()), visit.getEpoch(), visit.getIsConfirmed());
 		return dto;
 	}
 }

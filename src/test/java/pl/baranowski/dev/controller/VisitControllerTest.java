@@ -50,15 +50,15 @@ import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.PatientDTO;
-import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Vet;
+import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.mapper.CustomMapper;
-import pl.baranowski.dev.service.VetService;
+import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
 @ExtendWith(SpringExtension.class)
@@ -79,10 +79,10 @@ class VisitControllerTest {
 	VisitService visitService;
 	
 	@MockBean
-	VetService vetService;
+	DoctorService vetService;
 	
 	AnimalTypeDTO animalType = new AnimalTypeDTO(3L, "Wielbłąd");
-	VetDTO vet = new VetDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
+	DoctorDTO vet = new DoctorDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
 	PatientDTO patient = new PatientDTO(2L, "Maniek", animalType, 8, "Lucyna Brzoza", "brzozazlasuobok@gmail.com");
 	
 	@BeforeEach
@@ -369,35 +369,35 @@ class VisitControllerTest {
 
 		// setting up Vet1:
 		Patient catPatient = new Patient(11L, "Kicia", cats, 7, "Lucyna", "lu@cy.na");
-		Vet vet1 = new Vet(51L, "First", "One", new BigDecimal(100), "1111111111");
+		Doctor vet1 = new Doctor(51L, "First", "One", new BigDecimal(100), "1111111111");
 		vet1.addAnimalType(cats);
 		vet1.addMedSpecialty(urologist);
 		vet1.addVisit(new Visit.VisitBuilder(vet1, catPatient, mondayH11Y2100).build().withId(1L));
 		vet1.addVisit(new Visit.VisitBuilder(vet1, catPatient, mondayH14Y2100).build().withId(2L));
 		
 		// setting up Vet2:
-		Vet vet2 = new Vet(52L, "Second", "One", new BigDecimal(100), "1181328620");
+		Doctor vet2 = new Doctor(52L, "Second", "One", new BigDecimal(100), "1181328620");
 		vet1.addAnimalType(cats);
 		vet1.addMedSpecialty(urologist);
 		vet1.addVisit(new Visit.VisitBuilder(vet2, catPatient, mondayH10Y2100).build().withId(3L));
 		vet1.addVisit(new Visit.VisitBuilder(vet2, catPatient, mondayH12Y2100).build().withId(4L));
 		
 		// expected Map of Vets with free slots list (e.g. Vet1: 10:00, 11:00; Vet2: 12:00, 13:00 etc.)
-		Map<VetDTO, List<Long>> expected = new HashMap<>();
+		Map<DoctorDTO, List<Long>> expected = new HashMap<>();
 		// expected values for Vet1
-		VetDTO vet1dto = mapper.toDto(vet1);
+		DoctorDTO vet1dto = mapper.toDto(vet1);
 		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH10Y2100);
 		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH12Y2100);
 		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH13Y2100);
 		
 		// expected values for Vet2
-		VetDTO vet2dto = mapper.toDto(vet2);
+		DoctorDTO vet2dto = mapper.toDto(vet2);
 		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH11Y2100);
 		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH13Y2100);
 		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH14Y2100);
 		
 		// mocking vetService return values
-		List<Vet> vetRepoResult = new ArrayList<>();
+		List<Doctor> vetRepoResult = new ArrayList<>();
 		vetRepoResult.add(vet1);
 		vetRepoResult.add(vet2);
 		given(vetService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), urologist.getName())).willReturn(vetRepoResult);

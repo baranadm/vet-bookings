@@ -38,12 +38,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import pl.baranowski.dev.dto.ErrorDTO;
-import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.NIPExistsException;
-import pl.baranowski.dev.exception.VetNotActiveException;
-import pl.baranowski.dev.service.VetService;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.service.DoctorService;
 
 //API dla lekarzy
 //root path: /doctor
@@ -65,7 +65,7 @@ import pl.baranowski.dev.service.VetService;
 //response: 200 OK. changed status of given doctor, this doctor will not be able to handle any visits.
 //response: 404 NOT FOUND - if given id not exists in db.
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(controllers = VetController.class)
+@WebMvcTest(controllers = DoctorController.class)
 //@SpringBootTest
 //@AutoConfigureMockMvc
 public class VetControllerTest {
@@ -77,18 +77,18 @@ public class VetControllerTest {
 	ObjectMapper objectMapper;
 	
 	@MockBean
-	VetService vetService;
+	DoctorService vetService;
 	
-	private final VetDTO mostowiak = new VetDTO.Builder("Marek", "Mostowiak").id(1L).hourlyRate("150").nip("1181328620").build();
-	private List<VetDTO> vetsList;
+	private final DoctorDTO mostowiak = new DoctorDTO.Builder("Marek", "Mostowiak").id(1L).hourlyRate("150").nip("1181328620").build();
+	private List<DoctorDTO> vetsList;
 	
 	public VetControllerTest() {
 		vetsList = new ArrayList<>();
 		
-		vetsList.add(new VetDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
-		vetsList.add(new VetDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
-		vetsList.add(new VetDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
-		vetsList.add(new VetDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
+		vetsList.add(new DoctorDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
+		vetsList.add(new DoctorDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
+		vetsList.add(new DoctorDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		vetsList.add(new DoctorDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
 	}
 	
 	@Test // request: @GET /{id}
@@ -98,7 +98,7 @@ public class VetControllerTest {
 	
 	@Test
 	void getById_whenValidId_returns200AndEntry() throws Exception {
-		VetDTO expected = this.mostowiak;
+		DoctorDTO expected = this.mostowiak;
 		given(vetService.getById(expected.getId())).willReturn(expected);
 		
 		MvcResult result = mockMvc.perform(get("/doctor/{id}", expected.getId()))
@@ -136,7 +136,7 @@ public class VetControllerTest {
 	@Test
 	void findAll_respondsToRequest() throws Exception {
 		Pageable expectedRequest = PageRequest.of(0, 3);
-		Page<VetDTO> resultPage = Page.empty(expectedRequest);
+		Page<DoctorDTO> resultPage = Page.empty(expectedRequest);
 		given(vetService.findAll(expectedRequest)).willReturn(resultPage);
 		mockMvc.perform(get("/doctor/")
 				.param("page", "0")
@@ -147,7 +147,7 @@ public class VetControllerTest {
 	@Test
 	void findAll_withPaginationAttr_callsForEntriesWithValidPagination() throws Exception {
 		Pageable expectedRequest = PageRequest.of(0, 3);
-		Page<VetDTO> resultPage = Page.empty(expectedRequest);
+		Page<DoctorDTO> resultPage = Page.empty(expectedRequest);
 		
 		given(vetService.findAll(expectedRequest)).willReturn(resultPage);
 		mockMvc.perform(get("/doctor/")
@@ -162,8 +162,8 @@ public class VetControllerTest {
 	
 	@Test
 	void findAll_whenNoPaginationAttr_callsForEntriesWithDefaultPagination() throws Exception {
-		Pageable expectedDefaultRequest = VetController.DEFAULT_PAGEABLE;
-		Page<VetDTO> resultPage = Page.empty(expectedDefaultRequest);
+		Pageable expectedDefaultRequest = DoctorController.DEFAULT_PAGEABLE;
+		Page<DoctorDTO> resultPage = Page.empty(expectedDefaultRequest);
 		
 		given(vetService.findAll(expectedDefaultRequest)).willReturn(resultPage);
 		
@@ -232,7 +232,7 @@ public class VetControllerTest {
 	@Test
 	void findAll_whenValidInput_returnsVetsPage() throws Exception {
 		Pageable pageable = PageRequest.of(0, 3);
-		Page<VetDTO> expected = new PageImpl<>(vetsList, pageable, vetsList.size());
+		Page<DoctorDTO> expected = new PageImpl<>(vetsList, pageable, vetsList.size());
 		
 		given(vetService.findAll(pageable)).willReturn(expected);
 		
@@ -251,7 +251,7 @@ public class VetControllerTest {
 	//response: 400 BAD request. Error handling: duplicated nip, all fields must be not empty, salary cannot be negative.
 	@Test
 	void addNew_respondsToRequest() throws Exception {
-		VetDTO expected = mostowiak;
+		DoctorDTO expected = mostowiak;
 		mockMvc.perform(post("/doctor/")
 				.contentType("application/json")
 				.characterEncoding("UTF-8")
@@ -261,13 +261,13 @@ public class VetControllerTest {
 	
 	@Test
 	void addNew_whenValidRequestBody_returns201AndEntry() throws JsonProcessingException, Exception {
-		VetDTO requestDTO = new VetDTO.Builder(mostowiak.getName(), mostowiak.getSurname())
+		DoctorDTO requestDTO = new DoctorDTO.Builder(mostowiak.getName(), mostowiak.getSurname())
 				.id(mostowiak.getId())
 				.hourlyRate(mostowiak.getHourlyRate())
 				.nip(mostowiak.getNip())
 				.build();
 		
-		VetDTO expectedDTO = mostowiak;
+		DoctorDTO expectedDTO = mostowiak;
 		given(vetService.addNew(requestDTO)).willReturn(expectedDTO);
 		MvcResult result = mockMvc.perform(post("/doctor/")
 				.contentType("application/json")
@@ -281,7 +281,7 @@ public class VetControllerTest {
 	
 	@Test
 	void addNew_whenValidRequestAndNIPExists_returns400AndError() throws JsonProcessingException, Exception {
-		VetDTO requestDTO = mostowiak;
+		DoctorDTO requestDTO = mostowiak;
 		ErrorDTO expected = new ErrorDTO(new NIPExistsException(), HttpStatus.BAD_REQUEST);
 		
 		given(vetService.addNew(requestDTO)).willThrow(new NIPExistsException());
@@ -298,7 +298,7 @@ public class VetControllerTest {
 
 	@Test
 	void addNew_whenAllFieldsNotValid_returns400AndErrorForEveryField() throws JsonProcessingException, Exception {
-		VetDTO requestDTO = new VetDTO.Builder("", "").hourlyRate("a1").nip("1111111112").build();
+		DoctorDTO requestDTO = new DoctorDTO.Builder("", "").hourlyRate("a1").nip("1111111112").build();
 		
 		mockMvc.perform(post("/doctor/")
 				.contentType("application/json")
@@ -366,8 +366,8 @@ public class VetControllerTest {
 	@Test
 	void fire_handlesException() throws Exception {
 		String customMessage = "vet id: " + " not found";
-		ErrorDTO expected = new ErrorDTO(new VetNotActiveException().withCustomMessage("vet id: " + " not found"), HttpStatus.FORBIDDEN);
-		doThrow(new VetNotActiveException().withCustomMessage(customMessage)).when(vetService).fire(mostowiak.getId());
+		ErrorDTO expected = new ErrorDTO(new DoctorNotActiveException().withCustomMessage("vet id: " + " not found"), HttpStatus.FORBIDDEN);
+		doThrow(new DoctorNotActiveException().withCustomMessage(customMessage)).when(vetService).fire(mostowiak.getId());
 		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", "1"))
 		.andExpect(status().isForbidden())
 		.andReturn();
@@ -448,7 +448,7 @@ public class VetControllerTest {
 	
 	@Test
 	void addAnimalType_handlesVetNotActiveException() throws Exception {
-		VetNotActiveException ex = new VetNotActiveException();
+		DoctorNotActiveException ex = new DoctorNotActiveException();
 		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
@@ -531,7 +531,7 @@ public class VetControllerTest {
 	
 	@Test
 	void addMedSpecialty_handlesVetNotActiveException() throws Exception {
-		VetNotActiveException ex = new VetNotActiveException();
+		DoctorNotActiveException ex = new DoctorNotActiveException();
 		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))

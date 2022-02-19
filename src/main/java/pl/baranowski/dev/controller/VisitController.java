@@ -29,8 +29,8 @@ import pl.baranowski.dev.dto.SingleCheckResultDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
-import pl.baranowski.dev.exception.VetNotActiveException;
-import pl.baranowski.dev.service.VetService;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
 // TODO repair showing free slots for weekend days
@@ -44,7 +44,7 @@ public class VisitController {
 	@Autowired
 	VisitService visitService;
 	@Autowired
-	VetService vetService;
+	DoctorService vetService;
 	
 	/*
 	 * should produce result like: (array of JSON-serialized objects)
@@ -86,7 +86,7 @@ public class VisitController {
 	
 	@PostMapping(value="/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, VetNotActiveException {
+	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		
 		long vetId = Long.decode(nv.getDoctorId());
 		long patientId = Long.decode(nv.getPatientId());

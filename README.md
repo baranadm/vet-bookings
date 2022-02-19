@@ -6,12 +6,6 @@ Due to fact, that @Valid validation runs after @RequestBody JSON to DTO conversi
 
 For that reason, @RequestBody DTO objects contain String type fields, which are validated by default/custom constraints, and, if needed, are converted to their proper (defined by persistence layer) type.
 
-or....
-
-Every addNew endpoint's method requires body - in order to generate MultiFieldErrorDTO in ExceptionHandler's method handleMethodArgumentNotValid. Thanks to that, every form on client's side will be receiving one kind of error responses, which will be easier to handle.
-
-In addition, every addNew body should have only String params. This is caused by the fact, that in some cases JSON mapping generates ConstraintViolationException/HttpMessageNotReadableException, which does not provide Binding Result (e.g. providing "a" instead of valid BigDecimal in @RequestBody).
-
 ---
 ## Functionality for AnimalTypes:
 - getting list of all animalTypes
@@ -73,7 +67,8 @@ In addition, every addNew body should have only String params. This is caused by
 	- confirmation status
 ---
 # HTTP Endpoints:
-All requests and responses are in JSON's format and encoded in UTF-8. Request and response objects are wrapped into DTO's. All errors contain *Error name* and *message*.
+All requests and responses are encoded in UTF-8, every payload has JSON format. Request and response objects are wrapped into DTO's. All errors contain *HttpStatus*, *Error name* and *message*.
+
 #### Animal Type
 **@GET /animalType/all**
 - returns List of Animal Types (or empty list)
@@ -134,10 +129,10 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 	 - if *page* or *size* parameter is missing or invalid - HTTP Status 400
 
 **@POST /doctor/**
-- requires Vet body (*name, surname, hourly rate, NIP*)
-- returns created Vet body - HTTP Status 201
+- requires DoctorDTO body (*name - required, surname - required, hourly rate, NIP*)
+- returns created doctor's DoctorDTO body - HTTP Status 201
 - errors:  
-	- if request Vet body is missing/not valid - HTTP Status 400  
+	- if request DoctorDTO body is missing/not valid - HTTP Status 400  
 	- if NIP is duplicated - HTTP Status 400  
 	- if NIP is not valid - HTTP Status 400  
 	
@@ -145,17 +140,17 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 - on success - HTTP Status 200  
 - errors:  
 	- if *id* is not valid - HTTP Status 400  
-	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
-	- if *Vet* is already inactive - HTTP Status 403
+	- if *Doctor* with given *id* doesn't exists - HTTP Status 404  
+	- if *Doctor* is already inactive - HTTP Status 403
 	
 **@PUT /doctor/{doctorId}/addAnimalType/{animalTypeId}**
 - on success - HTTP Status 200  
 - errors:  
 	- if any *id* is not valid - HTTP Status 400  
-	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
+	- if *Doctor* with given *id* doesn't exists - HTTP Status 404  
 	- if *AnimalType* with given *id* doesn't exists - HTTP Status 404  
-	- if *Vet* already has given *AnimalType* - HTTP Status 403  
-	- if *Vet* is already inactive - HTTP Status 403
+	- if *Doctor* already has given *AnimalType* - HTTP Status 403  
+	- if *Doctor* is already inactive - HTTP Status 403
 	
 **@PUT /doctor/{doctorId}/addMedSpecialty/{medSpecialtyId}**
 - behaves like endpoint above

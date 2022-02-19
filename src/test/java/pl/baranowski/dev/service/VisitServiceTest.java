@@ -32,11 +32,11 @@ import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Vet;
+import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
-import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
@@ -64,7 +64,7 @@ class VisitServiceTest {
 	long mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 	AnimalType animalType = new AnimalType(1L, "Owad");
 	MedSpecialty medSpecialty = new MedSpecialty(2L, "Czółkolog");
-	Vet vet = new Vet(3L, "Kazik", "Montana", new BigDecimal(220), "1111111111");
+	Doctor vet = new Doctor(3L, "Kazik", "Montana", new BigDecimal(220), "1111111111");
 	Patient patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
 	Visit visit = new Visit.VisitBuilder(vet, patient, mondayH10Y2100).build().withId(13L);
 	
@@ -127,15 +127,15 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, VetNotActiveException {
+	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, DoctorNotActiveException {
 		// new Visit without id
-		Visit newVisit = new Visit.VisitBuilder(visit.getVet(), visit.getPatient(), visit.getEpoch()).build();
+		Visit newVisit = new Visit.VisitBuilder(visit.getDoctor(), visit.getPatient(), visit.getEpoch()).build();
 
 		// adds Patient's Animal Type to Vet
-		visit.getVet().addAnimalType(visit.getPatient().getAnimalType());
+		visit.getDoctor().addAnimalType(visit.getPatient().getAnimalType());
 		
 		// mocking vetRepo Vet result
-		given(vetRepository.findById(newVisit.getVet().getId())).willReturn(Optional.of(newVisit.getVet()));
+		given(vetRepository.findById(newVisit.getDoctor().getId())).willReturn(Optional.of(newVisit.getDoctor()));
 		// mocking patientRepo Patient result
 		given(patientRepository.findById(newVisit.getPatient().getId())).willReturn(Optional.of(newVisit.getPatient()));
 		// mocking visitRepo Visit result
@@ -144,7 +144,7 @@ class VisitServiceTest {
 		// verifies return value
 		VisitDTO expected = mapper.toDto(visit);
 		VisitDTO result = visitService.addNew(
-				newVisit.getVet().getId(), 
+				newVisit.getDoctor().getId(), 
 				newVisit.getPatient().getId(), 
 				newVisit.getEpoch());
 		assertEquals(expected, result);
@@ -176,11 +176,11 @@ class VisitServiceTest {
 	void addNew_whenVetOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() {
 		// VET IS BUSY
 		// mocking, that there is another visit at that time for chosen Vet
-		given(visitRepository.findByEpochAndVetId(visit.getEpoch(), visit.getVet().getId()))
+		given(visitRepository.findByEpochAndVetId(visit.getEpoch(), visit.getDoctor().getId()))
 			.willReturn(Collections.singletonList(visit));
 
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
-				visit.getVet().getId(), 
+				visit.getDoctor().getId(), 
 				visit.getPatient().getId(), 
 				visit.getEpoch()));
 		
@@ -190,24 +190,24 @@ class VisitServiceTest {
 		.willReturn(Collections.singletonList(visit));
 
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
-				visit.getVet().getId(), 
+				visit.getDoctor().getId(), 
 				visit.getPatient().getId(), 
 				visit.getEpoch()));
 	}
 	
 	@Test
 	void addNew_whenVetIsNotActive_throwsVetNotActiveException() {
-		Vet inactiveVet = new Vet(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
+		Doctor inactiveVet = new Doctor(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
 		inactiveVet.setActive(false);
 		given(vetRepository.findById(inactiveVet.getId())).willReturn(Optional.of(inactiveVet));
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
 		
-		assertThrows(VetNotActiveException.class, () -> visitService.addNew(inactiveVet.getId(), patient.getId(), mondayH10Y2100));
+		assertThrows(DoctorNotActiveException.class, () -> visitService.addNew(inactiveVet.getId(), patient.getId(), mondayH10Y2100));
 	}
 	
 	@Test
 	void addNew_whenVetDoesNotHavePatientsAnimalType_throwsNewVisitNotPossibleException() {
-		Vet catsVet = new Vet(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
+		Doctor catsVet = new Doctor(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
 		catsVet.addAnimalType(new AnimalType(1L, "Kot"));
 		
 		given(vetRepository.findById(catsVet.getId())).willReturn(Optional.of(catsVet));

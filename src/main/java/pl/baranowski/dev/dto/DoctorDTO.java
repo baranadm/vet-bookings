@@ -10,7 +10,7 @@ import pl.baranowski.dev.constraint.NipConstraint;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 
-public class VetDTO {
+public class DoctorDTO {
 	
 	private Long id;
 	
@@ -32,10 +32,10 @@ public class VetDTO {
 
 	private Set<AnimalType> animalTypes = new HashSet<>();
 
-	public VetDTO() {
+	public DoctorDTO() {
 	}
 
-	public VetDTO(Builder builder) {
+	public DoctorDTO(Builder builder) {
 		this.id = builder.id;
 		this.name = builder.name;
 		this.surname = builder.surname;
@@ -124,8 +124,8 @@ public class VetDTO {
 			return this;
 		}
 		
-		public VetDTO build() {
-			return new VetDTO(this);
+		public DoctorDTO build() {
+			return new DoctorDTO(this);
 		}
 		
 	}
@@ -148,7 +148,7 @@ public class VetDTO {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		VetDTO other = (VetDTO) obj;
+		DoctorDTO other = (DoctorDTO) obj;
 		if (active == null) {
 			if (other.active != null)
 				return false;
@@ -179,7 +179,7 @@ public class VetDTO {
 	
 	@Override
 	public String toString() {
-		return "VetDTO [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
+		return "DoctorDTO [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
 				+ nip + ", active=" + active + "]";
 	}
 	

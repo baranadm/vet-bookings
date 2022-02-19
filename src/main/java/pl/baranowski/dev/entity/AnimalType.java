@@ -27,7 +27,7 @@ public class AnimalType {
 	
 	@JsonIgnore
 	@ManyToMany(mappedBy="animalTypes")
-	private Set<Vet> matchingVets = new HashSet<>();
+	private Set<Doctor> matchingVets = new HashSet<>();
 
 	public AnimalType() {
 	}
