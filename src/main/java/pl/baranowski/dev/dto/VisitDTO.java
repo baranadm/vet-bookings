@@ -3,7 +3,7 @@ package pl.baranowski.dev.dto;
 public class VisitDTO {
 
 	private long id;
-	private DoctorDTO vet;
+	private DoctorDTO doctor;
 	private PatientDTO patient;
 	private long epoch;
 	private Boolean isConfirmed;
@@ -11,23 +11,23 @@ public class VisitDTO {
 	public VisitDTO() {
 	}
 
-	public VisitDTO(DoctorDTO vet, PatientDTO patient, long epoch, Boolean isConfirmed) {
-		this.vet = vet;
+	public VisitDTO(DoctorDTO doctor, PatientDTO patient, long epoch, Boolean isConfirmed) {
+		this.doctor = doctor;
 		this.patient = patient;
 		this.epoch = epoch;
 		this.isConfirmed = isConfirmed;
 	}
 
-	public VisitDTO(long id, DoctorDTO vet, PatientDTO patient, long epoch, Boolean confirmed) {
+	public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, long epoch, Boolean confirmed) {
 		this.id = id;
-		this.vet = vet;
+		this.doctor = doctor;
 		this.patient = patient;
 		this.epoch = epoch;
 		this.isConfirmed = confirmed;
 	}
 	
 	public VisitDTO withId(long id) {
-		return new VisitDTO(id, vet, patient,epoch, isConfirmed);
+		return new VisitDTO(id, doctor, patient,epoch, isConfirmed);
 	}
 
 	public long getId() {
@@ -38,12 +38,12 @@ public class VisitDTO {
 		this.id = id;
 	}
 
-	public DoctorDTO getVet() {
-		return vet;
+	public DoctorDTO getDoctor() {
+		return doctor;
 	}
 
-	public void setVet(DoctorDTO vet) {
-		this.vet = vet;
+	public void setDoctor(DoctorDTO doctor) {
+		this.doctor = doctor;
 	}
 
 	public PatientDTO getPatient() {
@@ -78,7 +78,7 @@ public class VisitDTO {
 		result = prime * result + (int) (epoch ^ (epoch >>> 32));
 		result = prime * result + (int) (id ^ (id >>> 32));
 		result = prime * result + ((patient == null) ? 0 : patient.hashCode());
-		result = prime * result + ((vet == null) ? 0 : vet.hashCode());
+		result = prime * result + ((doctor == null) ? 0 : doctor.hashCode());
 		return result;
 	}
 
@@ -105,17 +105,17 @@ public class VisitDTO {
 				return false;
 		} else if (!patient.equals(other.patient))
 			return false;
-		if (vet == null) {
-			if (other.vet != null)
+		if (doctor == null) {
+			if (other.doctor != null)
 				return false;
-		} else if (!vet.equals(other.vet))
+		} else if (!doctor.equals(other.doctor))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "VisitDTO [id=" + id + ", vet=" + vet + ", patient=" + patient + ", epoch=" + epoch + ", confirmed="
+		return "VisitDTO [id=" + id + ", doctor=" + doctor + ", patient=" + patient + ", epoch=" + epoch + ", confirmed="
 				+ isConfirmed + "]";
 	}
 	

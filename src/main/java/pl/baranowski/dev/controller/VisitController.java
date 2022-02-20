@@ -44,12 +44,12 @@ public class VisitController {
 	@Autowired
 	VisitService visitService;
 	@Autowired
-	DoctorService vetService;
+	DoctorService doctorService;
 	
 	/*
 	 * should produce result like: (array of JSON-serialized objects)
 	 * [{
-	 * 	"vet" : {
+	 * 	"doctor" : {
 	 * 		"id": 12,
 	 * 		"name": "Robert",
 	 * 		"surname": "Kubica"
@@ -88,11 +88,11 @@ public class VisitController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		
-		long vetId = Long.decode(nv.getDoctorId());
+		long doctorId = Long.decode(nv.getDoctorId());
 		long patientId = Long.decode(nv.getPatientId());
 		long epoch = Long.decode(nv.getEpoch());
 		
-		return visitService.addNew(vetId, patientId, epoch);
+		return visitService.addNew(doctorId, patientId, epoch);
 	}
 	
 }

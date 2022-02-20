@@ -22,14 +22,14 @@ import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
-import pl.baranowski.dev.repository.VetRepository;
+import pl.baranowski.dev.repository.DoctorRepository;
 
 @Service
 public class DoctorService {
 	
 
 	@Autowired
-	private final VetRepository vetRepository;
+	private final DoctorRepository doctorRepository;
 	
 	@Autowired
 	private final AnimalTypeRepository animalTypeRepository;
@@ -40,15 +40,15 @@ public class DoctorService {
 	@Autowired
 	CustomMapper mapper;
 	
-	public DoctorService(VetRepository vetRepository, AnimalTypeRepository animalTypeRepository) {
-		this.vetRepository = vetRepository;
+	public DoctorService(DoctorRepository doctorRepository, AnimalTypeRepository animalTypeRepository) {
+		this.doctorRepository = doctorRepository;
 		this.animalTypeRepository = animalTypeRepository;
 		
 	}
 
 	public DoctorDTO getById(long validatedId) throws EntityNotFoundException {
-		Doctor vet = vetRepository.findById(validatedId).orElseThrow(EntityNotFoundException::new);
-		return mapper.toDto(vet);
+		Doctor doctor = doctorRepository.findById(validatedId).orElseThrow(EntityNotFoundException::new);
+		return mapper.toDto(doctor);
 	}
 	
 	// TODO tests for below method
@@ -67,103 +67,103 @@ public class DoctorService {
 		}
 		MedSpecialty ms = mss.get(0);
 		
-		List<Doctor> result = vetRepository.findByAnimalTypesAndMedSpecialties(at, ms);
+		List<Doctor> result = doctorRepository.findByAnimalTypesAndMedSpecialties(at, ms);
 		return result;
 	}
 
 	public Page<DoctorDTO> findAll(Pageable validatedPageable) {
-		Page<Doctor> vets = vetRepository.findAll(validatedPageable);
-		Page<DoctorDTO> vetsDTO = new PageImpl<DoctorDTO>(
-				vets.toList().stream()
+		Page<Doctor> doctors = doctorRepository.findAll(validatedPageable);
+		Page<DoctorDTO> doctorsDTO = new PageImpl<DoctorDTO>(
+				doctors.toList().stream()
 				.map(mapper::toDto)
 				.collect(Collectors.toList()), 
-				vets.getPageable(), 
-				vets.getSize());
-		return vetsDTO;
+				doctors.getPageable(), 
+				doctors.getSize());
+		return doctorsDTO;
 		
 	}
 
-	public DoctorDTO addNew(DoctorDTO validatedVetDTO) throws NIPExistsException {
-		if(!vetRepository.findByNip(validatedVetDTO.getNip()).isEmpty()) {
+	public DoctorDTO addNew(DoctorDTO validatedDoctorDTO) throws NIPExistsException {
+		if(!doctorRepository.findByNip(validatedDoctorDTO.getNip()).isEmpty()) {
 			throw new NIPExistsException(); // NIP duplicated
 		}
-		Doctor vet = mapper.toEntity(validatedVetDTO);
-		Doctor result = vetRepository.saveAndFlush(vet);
+		Doctor doctor = mapper.toEntity(validatedDoctorDTO);
+		Doctor result = doctorRepository.saveAndFlush(doctor);
 		DoctorDTO resultDTO = mapper.toDto(result);
 		return resultDTO;
 	}
 
 	public void fire(Long id) throws DoctorNotActiveException {
-		Optional<Doctor> vetOpt = vetRepository.findById(id);
-		if(vetOpt.isPresent()) {
-			Doctor vet = vetOpt.get();
-			if(vet.getActive()) { // if Vet is active, sets active to false
-				vet.setActive(false);
-			} else { // if Vet is inactive, throws exception
-				throw new DoctorNotActiveException().withCustomMessage("vet id: " + vet.getId() + " is not active");
+		Optional<Doctor> doctorOpt = doctorRepository.findById(id);
+		if(doctorOpt.isPresent()) {
+			Doctor doctor = doctorOpt.get();
+			if(doctor.getActive()) { // if Doctor is active, sets active to false
+				doctor.setActive(false);
+			} else { // if Doctor is inactive, throws exception
+				throw new DoctorNotActiveException().withCustomMessage("Doctor id: " + doctor.getId() + " is not active");
 			}
 		} else {
-			throw new EntityNotFoundException("Vet has not ben found");
+			throw new EntityNotFoundException("Doctor has not ben found");
 		}
 	}
 
-	// should throw EntityNotFoundException if no vet
+	// should throw EntityNotFoundException if no Doctor
 	// should throw EntityNotFoundException if no animalType
-	// should throw DoubledSpecialtyException if vet already has animalType
-	// should throw VetIsNotActiveException if vet is not active
+	// should throw DoubledSpecialtyException if Doctor already has animalType
+	// should throw DoctorIsNotActiveException if Doctor is not active
 	
-	public DoctorDTO addAnimalType(Long vetId, Long animalTypeId) throws DoctorNotActiveException, DoubledSpecialtyException {
+	public DoctorDTO addAnimalType(Long doctorId, Long animalTypeId) throws DoctorNotActiveException, DoubledSpecialtyException {
 		
-		// if vet not found, throw
-		Doctor vet = vetRepository.findById(vetId).orElseThrow(() -> new EntityNotFoundException("vet with id " + vetId + " has not been found"));
+		// if Doctor not found, throw
+		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found"));
 
-		// if vet is not active, throw
-		if(!vet.getActive()) {
-			throw new DoctorNotActiveException().withCustomMessage("vet id: " + vet.getId() + " not found");
+		// if Doctor is not active, throw
+		if(!doctor.getActive()) {
+			throw new DoctorNotActiveException().withCustomMessage("Doctor id: " + doctor.getId() + " not found");
 		}
 		
 		// if animal type not found, throw
 		AnimalType animalType = animalTypeRepository.findById(animalTypeId).orElseThrow(() -> new EntityNotFoundException("animal type with id: " + animalTypeId + " has not been found"));
 		
-		// if vet has already that animal type specialty, throw
-		if(vet.getAnimalTypes().contains(animalType)) {
+		// if Doctor has already that animal type specialty, throw
+		if(doctor.getAnimalTypes().contains(animalType)) {
 			throw new DoubledSpecialtyException("animalType", animalType.getName());
 		}
 		
 		// if everything is ok, update
-		vet.addAnimalType(animalType);
-		DoctorDTO result = mapper.toDto(vetRepository.saveAndFlush(vet));
+		doctor.addAnimalType(animalType);
+		DoctorDTO result = mapper.toDto(doctorRepository.saveAndFlush(doctor));
 		return result;
 	}
 
-	// should throw EntityNotFoundException if no vet
+	// should throw EntityNotFoundException if no Doctor
 	// should throw EntityNotFoundException if no medSpecialty
-	// should throw DoubledSpecialtyException if vet already has medSpecialty
-	// should throw VetIsNotActiveException if vet is not active
+	// should throw DoubledSpecialtyException if Doctor already has medSpecialty
+	// should throw DoctorIsNotActiveException if Doctor is not active
 
-	public DoctorDTO addMedSpecialty(Long vetId, Long msId) throws DoubledSpecialtyException, DoctorNotActiveException {
-		// if no vet found, throw
-		Doctor vet = vetRepository.findById(vetId)
-				.orElseThrow(() -> new EntityNotFoundException("Doctor with id " + vetId + " has not been found."));
-		// if vet is not active, throw
-		if(!vet.getActive()) {
+	public DoctorDTO addMedSpecialty(Long doctorId, Long msId) throws DoubledSpecialtyException, DoctorNotActiveException {
+		// if no Doctor found, throw
+		Doctor doctor = doctorRepository.findById(doctorId)
+				.orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found."));
+		// if Doctor is not active, throw
+		if(!doctor.getActive()) {
 			throw new DoctorNotActiveException();
 		}
 		// if no medSpecialty found, throw
 		MedSpecialty ms = medSpecialtyRepository.findById(msId)
 				.orElseThrow(() -> new EntityNotFoundException("Medical specialty with id " + msId + " has not been found."));
 		
-		// if vet already has this med specialty
+		// if Doctor already has this med specialty
 		// since there can't be two medSpecialties with same name, we can check it with .equals()
-		if(vet.getMedSpecialties().contains(ms)) {
+		if(doctor.getMedSpecialties().contains(ms)) {
 			throw new DoubledSpecialtyException("medical specialty", ms.getName());
 		}
 		
-		// if everything is ok, then add medSpecialty to vet
-		vet.addMedSpecialty(ms);
+		// if everything is ok, then add medSpecialty to Doctor
+		doctor.addMedSpecialty(ms);
 		
 		// save (update) to DB
-		DoctorDTO result = mapper.toDto(vetRepository.saveAndFlush(vet));
+		DoctorDTO result = mapper.toDto(doctorRepository.saveAndFlush(doctor));
 		return result;
 	}
 

@@ -3,21 +3,21 @@ package pl.baranowski.dev.dto;
 import java.util.List;
 
 public class SingleCheckResultDTO {
-	private DoctorDTO vetDTO;
+	private DoctorDTO doctorDTO;
 	private List<Long> epochFreeTimes;
 	
-	public SingleCheckResultDTO(DoctorDTO vetDTO, List<Long> epochFreeTimes) {
+	public SingleCheckResultDTO(DoctorDTO doctorDTO, List<Long> epochFreeTimes) {
 		super();
-		this.vetDTO = vetDTO;
+		this.doctorDTO = doctorDTO;
 		this.epochFreeTimes = epochFreeTimes;
 	}
 
-	public DoctorDTO getVetDTO() {
-		return vetDTO;
+	public DoctorDTO getDoctorDTO() {
+		return doctorDTO;
 	}
 
-	public void setVetDTO(DoctorDTO vetDTO) {
-		this.vetDTO = vetDTO;
+	public void setDoctorDTO(DoctorDTO doctorDTO) {
+		this.doctorDTO = doctorDTO;
 	}
 
 	public List<Long> getEpochFreeTimes() {
@@ -33,7 +33,7 @@ public class SingleCheckResultDTO {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((epochFreeTimes == null) ? 0 : epochFreeTimes.hashCode());
-		result = prime * result + ((vetDTO == null) ? 0 : vetDTO.hashCode());
+		result = prime * result + ((doctorDTO == null) ? 0 : doctorDTO.hashCode());
 		return result;
 	}
 
@@ -51,17 +51,17 @@ public class SingleCheckResultDTO {
 				return false;
 		} else if (!epochFreeTimes.equals(other.epochFreeTimes))
 			return false;
-		if (vetDTO == null) {
-			if (other.vetDTO != null)
+		if (doctorDTO == null) {
+			if (other.doctorDTO != null)
 				return false;
-		} else if (!vetDTO.equals(other.vetDTO))
+		} else if (!doctorDTO.equals(other.doctorDTO))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "CheckResultDTO [vetDTO=" + vetDTO + ", epochFreeTimes=" + epochFreeTimes + "]";
+		return "CheckResultDTO [doctorDTO=" + doctorDTO + ", epochFreeTimes=" + epochFreeTimes + "]";
 	}
 	
 }

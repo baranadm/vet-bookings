@@ -25,7 +25,7 @@ import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.PatientRepository;
-import pl.baranowski.dev.repository.VetRepository;
+import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.VisitRepository;
 
 @Service
@@ -36,11 +36,11 @@ public class VisitService {
 	@Autowired
 	PatientRepository patientRepository;
 	@Autowired
-	VetRepository vetRepository;
+	DoctorRepository doctorRepository;
 	@Autowired
 	CustomMapper mapper;
 	@Autowired
-	DoctorService vetService;
+	DoctorService doctorService;
 
 	public VisitDTO getById(long id) {
 		Visit result = visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
@@ -53,35 +53,35 @@ public class VisitService {
 		return pageOfDTOs;
 	}
 
-	public VisitDTO addNew(Long vetId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
+	public VisitDTO addNew(Long doctorId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		// throws, if epoch is before now
 		if(epochInSeconds - System.currentTimeMillis()/1000 < 0) {
 			throw new NewVisitNotPossibleException("Creating new Visit failed: provided epoch time is not in the future.");
 		}
-		// throws, if Vet is busy at epoch
-		throwIfVetBusyAt(epochInSeconds, vetId);
+		// throws, if Doctor is busy at epoch
+		throwIfDoctorBusyAt(epochInSeconds, doctorId);
 
 		// throws, if Patient is busy at epoch
 		throwIfPatientBusyAt(epochInSeconds, patientId);
 		
-		// throws, if Vet is not active
-		Doctor vet = getVetOrThrowIfNotActive(vetId);
+		// throws, if Doctor is not active
+		Doctor doctor = getDoctorOrThrowIfNotActive(doctorId);
 		
 		/*
 		 *  throws, if:
-		 *  - epochInSeconds is outside Vet's working days 
-		 *  - epochInSeconds is outside Vet's working hours
+		 *  - epochInSeconds is outside Doctor's working days 
+		 *  - epochInSeconds is outside Doctor's working hours
 		 *  - epochInSeconds is not at the top of the hour (e.g. 10:00:01 is not correct)
 		 */
-		if(!isTimeOk(epochInSeconds, vet.getWorksFrom(), vet.getWorksTill(), vet.getWorkingDays())) {
+		if(!isTimeOk(epochInSeconds, doctor.getWorksFrom(), doctor.getWorksTill(), doctor.getWorkingDays())) {
 			throw new NewVisitNotPossibleException("Creating new Visit failed: time is: outside working hours, outside of working days, or not at the top of the hour.");
 		}
 
-		// throws, if Vet does not have Patient's AnimalType
-		Patient patient = getPatientOrThowIfAnimalTypeNotCompatibleWithVet(patientId, vet);
+		// throws, if Doctor does not have Patient's AnimalType
+		Patient patient = getPatientOrThowIfAnimalTypeNotCompatibleWithDoctor(patientId, doctor);
 		
 		Visit result = visitRepository.saveAndFlush(
-				new Visit.VisitBuilder(vet, patient, epochInSeconds).build());
+				new Visit.VisitBuilder(doctor, patient, epochInSeconds).build());
 		return mapper.toDto(result);
 	}
 	
@@ -94,19 +94,19 @@ public class VisitService {
 		// decodes validated interval
 		long interval = Long.decode(intervalStr);
 		
-		// finds Vets with matching AnimalType and MedSpecialty
-		List<Doctor> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
+		// finds Doctors with matching AnimalType and MedSpecialty
+		List<Doctor> matchingDoctors = doctorService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
 
-		// creates list of SingleCheckResultDTO and populates it with Vets and their free times
+		// creates list of SingleCheckResultDTO and populates it with Doctors and their free times
 		List<SingleCheckResultDTO> result = new ArrayList<>();
-		for(Doctor vet: matchingVets) {
-			result.add(new SingleCheckResultDTO(mapper.toDto(vet), findFreeSlotsForVet(vet, start, end, interval)));
+		for(Doctor doctor: matchingDoctors) {
+			result.add(new SingleCheckResultDTO(mapper.toDto(doctor), findFreeSlotsForDoctor(doctor, start, end, interval)));
 		}
 			
 		return result;
 	}
 	
-	public List<Long> findFreeSlotsForVet(Doctor vet, Long epochStart, Long epochEnd, Long interval) throws SearchRequestInvalidException {
+	public List<Long> findFreeSlotsForDoctor(Doctor doctor, Long epochStart, Long epochEnd, Long interval) throws SearchRequestInvalidException {
 		// validate epochs' values
 		if(epochStart >= epochEnd) {
 			throw new SearchRequestInvalidException("Searching request not valid: epoch start should be less than epoch end.");
@@ -120,7 +120,7 @@ public class VisitService {
 		
 		// reduces times list by taken (busy) slots
 		List<Long> result = topHours.stream()
-				.filter(hour -> !vet.isBusyAt(hour, interval))
+				.filter(hour -> !doctor.isBusyAt(hour, interval))
 				.collect(Collectors.toList());
 		
 		return result;
@@ -156,37 +156,37 @@ public class VisitService {
 	}
 
 	/**
-	 * Returns Patient or throws, if Vet is not compatible with Patient's AnimalType
+	 * Returns Patient or throws, if Doctor is not compatible with Patient's AnimalType
 	 * @param patientId
-	 * @param vet
+	 * @param doctor
 	 * @return
 	 * @throws NewVisitNotPossibleException
 	 */
-	private Patient getPatientOrThowIfAnimalTypeNotCompatibleWithVet(Long patientId, Doctor vet) throws NewVisitNotPossibleException {
+	private Patient getPatientOrThowIfAnimalTypeNotCompatibleWithDoctor(Long patientId, Doctor doctor) throws NewVisitNotPossibleException {
 		Patient patient = patientRepository.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
-		if(!vet.getAnimalTypes().contains(patient.getAnimalType())) {
+		if(!doctor.getAnimalTypes().contains(patient.getAnimalType())) {
 			throw new NewVisitNotPossibleException("Doctor does not have animalType: " + patient.getAnimalType());
 		}
 		return patient;
 	}
 
-	private Doctor getVetOrThrowIfNotActive(Long vetId) throws DoctorNotActiveException {
-		Doctor vet = vetRepository.findById(vetId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + vetId + " has not been found."));
-		if(!vet.isActive()) {
-			throw new DoctorNotActiveException("Creating Visit failed. Vet with id " + vetId + " is not active.");
+	private Doctor getDoctorOrThrowIfNotActive(Long doctorId) throws DoctorNotActiveException {
+		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found."));
+		if(!doctor.isActive()) {
+			throw new DoctorNotActiveException("Creating Visit failed. Doctor with id " + doctorId + " is not active.");
 		}
-		return vet;
+		return doctor;
 	}
 
 	/*
-	 * Checks, if Vet has any visits at epoch. If so, throws exception.
+	 * Checks, if Doctor has any visits at epoch. If so, throws exception.
 	 * Unconfirmed visits are also considered.
-	 * TODO checking, if Vet is not on vacation
+	 * TODO checking, if Doctor is not on vacation
 	 */
-	private void throwIfVetBusyAt(long time, long vetId) throws NewVisitNotPossibleException {
-		List<Visit> result = visitRepository.findByEpochAndVetId(time, vetId);
+	private void throwIfDoctorBusyAt(long time, long doctorId) throws NewVisitNotPossibleException {
+		List<Visit> result = visitRepository.findByEpochAndDoctorId(time, doctorId);
 		if(result.size() >= 1) {
-			String errorMessage = generateMessageWithArrayOfVisits("Vet", time, vetId, result);
+			String errorMessage = generateMessageWithArrayOfVisits("Doctor", time, doctorId, result);
 			throw new NewVisitNotPossibleException(errorMessage);
 		}
 	}

@@ -67,16 +67,16 @@ public class DoctorController {
 		doctorService.fire(Long.decode(id));
 	}
 	
-	@PutMapping(value = "{vetId}/addAnimalType/{atId}", produces="application/json;charset=UTF-8")
+	@PutMapping(value = "{doctorId}/addAnimalType/{atId}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
-	public void addAnimalType(@PathVariable String vetId, @PathVariable String atId) throws NumberFormatException, DoctorNotActiveException, DoubledSpecialtyException {
-		doctorService.addAnimalType(Long.decode(vetId), Long.decode(atId));
+	public void addAnimalType(@PathVariable String doctorId, @PathVariable String atId) throws NumberFormatException, DoctorNotActiveException, DoubledSpecialtyException {
+		doctorService.addAnimalType(Long.decode(doctorId), Long.decode(atId));
 	}
 	
-	@PutMapping(value = "{vetId}/addMedSpecialty/{msId}", produces="application/json;charset=UTF-8")
+	@PutMapping(value = "{doctorId}/addMedSpecialty/{msId}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
-	public void addMedSpecialty(@PathVariable String vetId, @PathVariable String msId) throws NumberFormatException, DoctorNotActiveException, DoubledSpecialtyException {
-		doctorService.addMedSpecialty(Long.decode(vetId), Long.decode(msId));
+	public void addMedSpecialty(@PathVariable String doctorId, @PathVariable String msId) throws NumberFormatException, DoctorNotActiveException, DoubledSpecialtyException {
+		doctorService.addMedSpecialty(Long.decode(doctorId), Long.decode(msId));
 	}
 	
 }

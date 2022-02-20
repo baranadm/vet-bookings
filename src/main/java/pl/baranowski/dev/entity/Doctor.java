@@ -202,7 +202,7 @@ public class Doctor {
 	}
 	
 	/**
-	 *  Checks, if Vet is busy at epoch start with given duration
+	 *  Checks, if Doctor is busy at epoch start with given duration
 	 * @param start - epoch, seconds, inclusive
 	 * @param dur - seconds
 	 * @return true, if busy

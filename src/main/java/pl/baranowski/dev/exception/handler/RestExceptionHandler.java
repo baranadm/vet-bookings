@@ -147,7 +147,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	@ExceptionHandler(DoctorNotActiveException.class)
-	ResponseEntity<Object> handleVetNotActiveException(DoctorNotActiveException ex, WebRequest request) {
+	ResponseEntity<Object> handleDoctorNotActiveException(DoctorNotActiveException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}

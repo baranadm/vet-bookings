@@ -34,9 +34,9 @@ public class CustomMapper {
 	}
 	
 	public Doctor toEntity(DoctorDTO dto) {
-		Doctor vet = new Doctor(dto.getId(), dto.getName(), dto.getSurname(), new BigDecimal(dto.getHourlyRate()), dto.getNip());
-		vet.setActive(dto.getActive());
-		return vet;
+		Doctor doctor = new Doctor(dto.getId(), dto.getName(), dto.getSurname(), new BigDecimal(dto.getHourlyRate()), dto.getNip());
+		doctor.setActive(dto.getActive());
+		return doctor;
 	}
 	
 	// to DTO maps...
@@ -56,14 +56,14 @@ public class CustomMapper {
 		return dto;
 	}
 	
-	public DoctorDTO toDto(Doctor vet) {
-		DoctorDTO dto = new DoctorDTO.Builder(vet.getName(), vet.getSurname())
-				.id(vet.getId())
-				.hourlyRate(vet.getHourlyRate().toPlainString())
-				.nip(vet.getNip())
-				.active(vet.getActive())
-				.medSpecialties(vet.getMedSpecialties())
-				.animalTypes(vet.getAnimalTypes())
+	public DoctorDTO toDto(Doctor doctor) {
+		DoctorDTO dto = new DoctorDTO.Builder(doctor.getName(), doctor.getSurname())
+				.id(doctor.getId())
+				.hourlyRate(doctor.getHourlyRate().toPlainString())
+				.nip(doctor.getNip())
+				.active(doctor.getActive())
+				.medSpecialties(doctor.getMedSpecialties())
+				.animalTypes(doctor.getAnimalTypes())
 			.build();
 		return dto;
 	}

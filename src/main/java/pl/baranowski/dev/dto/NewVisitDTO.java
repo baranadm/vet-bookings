@@ -95,7 +95,7 @@ public class NewVisitDTO {
 
 	@Override
 	public String toString() {
-		return "NewVisitDTO [vetId=" + doctorId + ", patientId=" + patientId + ", epoch=" + epoch + "]";
+		return "NewVisitDTO [doctorId=" + doctorId + ", patientId=" + patientId + ", epoch=" + epoch + "]";
 	}
 	
 }
