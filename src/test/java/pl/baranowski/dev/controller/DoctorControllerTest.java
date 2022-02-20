@@ -68,7 +68,7 @@ import pl.baranowski.dev.service.DoctorService;
 @WebMvcTest(controllers = DoctorController.class)
 //@SpringBootTest
 //@AutoConfigureMockMvc
-public class VetControllerTest {
+public class DoctorControllerTest {
 
 	@Autowired
 	MockMvc mockMvc;
@@ -77,18 +77,18 @@ public class VetControllerTest {
 	ObjectMapper objectMapper;
 	
 	@MockBean
-	DoctorService vetService;
+	DoctorService doctorService;
 	
 	private final DoctorDTO mostowiak = new DoctorDTO.Builder("Marek", "Mostowiak").id(1L).hourlyRate("150").nip("1181328620").build();
-	private List<DoctorDTO> vetsList;
+	private List<DoctorDTO> doctorsList;
 	
-	public VetControllerTest() {
-		vetsList = new ArrayList<>();
+	public DoctorControllerTest() {
+		doctorsList = new ArrayList<>();
 		
-		vetsList.add(new DoctorDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
-		vetsList.add(new DoctorDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
-		vetsList.add(new DoctorDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
-		vetsList.add(new DoctorDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
+		doctorsList.add(new DoctorDTO.Builder("Robert", "Kubica").hourlyRate("100000").nip("1213141516").build());
+		doctorsList.add(new DoctorDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.0").nip("0987654321").build());
+		doctorsList.add(new DoctorDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		doctorsList.add(new DoctorDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
 	}
 	
 	@Test // request: @GET /{id}
@@ -99,7 +99,7 @@ public class VetControllerTest {
 	@Test
 	void getById_whenValidId_returns200AndEntry() throws Exception {
 		DoctorDTO expected = this.mostowiak;
-		given(vetService.getById(expected.getId())).willReturn(expected);
+		given(doctorService.getById(expected.getId())).willReturn(expected);
 		
 		MvcResult result = mockMvc.perform(get("/doctor/{id}", expected.getId()))
 				.andExpect(status().isOk()).andReturn();
@@ -122,7 +122,7 @@ public class VetControllerTest {
 	@Test
 	void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
 		ErrorDTO expected = new ErrorDTO(new EntityNotFoundException(), HttpStatus.NOT_FOUND);
-		given(vetService.getById(1L)).willThrow(EntityNotFoundException.class);
+		given(doctorService.getById(1L)).willThrow(EntityNotFoundException.class);
 		
 		MvcResult result = mockMvc.perform(get("/doctor/{id}", 1L))
 				.andExpect(status().isNotFound()).andReturn();
@@ -137,7 +137,7 @@ public class VetControllerTest {
 	void findAll_respondsToRequest() throws Exception {
 		Pageable expectedRequest = PageRequest.of(0, 3);
 		Page<DoctorDTO> resultPage = Page.empty(expectedRequest);
-		given(vetService.findAll(expectedRequest)).willReturn(resultPage);
+		given(doctorService.findAll(expectedRequest)).willReturn(resultPage);
 		mockMvc.perform(get("/doctor/")
 				.param("page", "0")
 				.param("size", "3"))
@@ -149,14 +149,14 @@ public class VetControllerTest {
 		Pageable expectedRequest = PageRequest.of(0, 3);
 		Page<DoctorDTO> resultPage = Page.empty(expectedRequest);
 		
-		given(vetService.findAll(expectedRequest)).willReturn(resultPage);
+		given(doctorService.findAll(expectedRequest)).willReturn(resultPage);
 		mockMvc.perform(get("/doctor/")
 				.param("page", "0")
 				.param("size", "3"))
 		.andExpect(status().isOk());
 		
 		ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-		verify(vetService).findAll(pageableCaptor.capture());
+		verify(doctorService).findAll(pageableCaptor.capture());
 		assertEquals(expectedRequest, pageableCaptor.getValue());
 	}
 	
@@ -165,7 +165,7 @@ public class VetControllerTest {
 		Pageable expectedDefaultRequest = DoctorController.DEFAULT_PAGEABLE;
 		Page<DoctorDTO> resultPage = Page.empty(expectedDefaultRequest);
 		
-		given(vetService.findAll(expectedDefaultRequest)).willReturn(resultPage);
+		given(doctorService.findAll(expectedDefaultRequest)).willReturn(resultPage);
 		
 		mockMvc.perform(get("/doctor/")
 				.param("page", "" + expectedDefaultRequest.getPageNumber())
@@ -173,7 +173,7 @@ public class VetControllerTest {
 		.andExpect(status().isOk());
 		
 		ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-		verify(vetService).findAll(pageableCaptor.capture());
+		verify(doctorService).findAll(pageableCaptor.capture());
 		assertEquals(expectedDefaultRequest, pageableCaptor.getValue());
 	}
 	
@@ -230,11 +230,11 @@ public class VetControllerTest {
 	}
 	
 	@Test
-	void findAll_whenValidInput_returnsVetsPage() throws Exception {
+	void findAll_whenValidInput_returnsDoctorsPage() throws Exception {
 		Pageable pageable = PageRequest.of(0, 3);
-		Page<DoctorDTO> expected = new PageImpl<>(vetsList, pageable, vetsList.size());
+		Page<DoctorDTO> expected = new PageImpl<>(doctorsList, pageable, doctorsList.size());
 		
-		given(vetService.findAll(pageable)).willReturn(expected);
+		given(doctorService.findAll(pageable)).willReturn(expected);
 		
 		MvcResult result = mockMvc.perform(get("/doctor/")
 				.param("page", "" + pageable.getPageNumber())
@@ -268,7 +268,7 @@ public class VetControllerTest {
 				.build();
 		
 		DoctorDTO expectedDTO = mostowiak;
-		given(vetService.addNew(requestDTO)).willReturn(expectedDTO);
+		given(doctorService.addNew(requestDTO)).willReturn(expectedDTO);
 		MvcResult result = mockMvc.perform(post("/doctor/")
 				.contentType("application/json")
 				.characterEncoding("UTF-8")
@@ -284,7 +284,7 @@ public class VetControllerTest {
 		DoctorDTO requestDTO = mostowiak;
 		ErrorDTO expected = new ErrorDTO(new NIPExistsException(), HttpStatus.BAD_REQUEST);
 		
-		given(vetService.addNew(requestDTO)).willThrow(new NIPExistsException());
+		given(doctorService.addNew(requestDTO)).willThrow(new NIPExistsException());
 		
 		MvcResult result = mockMvc.perform(post("/doctor/")
 				.contentType("application/json")
@@ -329,7 +329,7 @@ public class VetControllerTest {
 		.andExpect(status().isOk());
 		
 		ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
-		verify(vetService, times(1)).fire(captor.capture());
+		verify(doctorService, times(1)).fire(captor.capture());
 		assertEquals(1L, captor.getValue());
 	}
 
@@ -337,8 +337,7 @@ public class VetControllerTest {
 	void fire_whenValidId_callsFireWithCorrectId_andWhenNoEntry_Returns404AndError() throws Exception {
 		Long id = 1L;
 		String message = "Doctor with id " + id + " not found!";
-//		given(vetService.fire(id)).willThrow(new EntityNotFoundException(message));
-		doThrow(new EntityNotFoundException(message)).when(vetService).fire(id);
+		doThrow(new EntityNotFoundException(message)).when(doctorService).fire(id);
 		
 		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", 1L)
 				.characterEncoding("UTF-8"))
@@ -365,9 +364,9 @@ public class VetControllerTest {
 
 	@Test
 	void fire_handlesException() throws Exception {
-		String customMessage = "vet id: " + " not found";
-		ErrorDTO expected = new ErrorDTO(new DoctorNotActiveException().withCustomMessage("vet id: " + " not found"), HttpStatus.FORBIDDEN);
-		doThrow(new DoctorNotActiveException().withCustomMessage(customMessage)).when(vetService).fire(mostowiak.getId());
+		String customMessage = "Doctor id: " + " not found";
+		ErrorDTO expected = new ErrorDTO(new DoctorNotActiveException().withCustomMessage("Doctor id: " + " not found"), HttpStatus.FORBIDDEN);
+		doThrow(new DoctorNotActiveException().withCustomMessage(customMessage)).when(doctorService).fire(mostowiak.getId());
 		MvcResult result = mockMvc.perform(put("/doctor/fire/{id}", "1"))
 		.andExpect(status().isForbidden())
 		.andReturn();
@@ -378,23 +377,23 @@ public class VetControllerTest {
 
 	@Test
 	void addAnimalType_respondsToRequestAndVerifyBusinessCalls() throws Exception {
-		String vetId = "1";
+		String doctorId = "1";
 		String atId = "1";
 		
-		mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", vetId, atId))
+		mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", doctorId, atId))
 		.andExpect(status().isOk());
 		
-		ArgumentCaptor<Long> vetIdCaptor = ArgumentCaptor.forClass(Long.class);
+		ArgumentCaptor<Long> doctorIdCaptor = ArgumentCaptor.forClass(Long.class);
 		ArgumentCaptor<Long> atIdCaptor = ArgumentCaptor.forClass(Long.class);
 		
-		verify(vetService, times(1)).addAnimalType(vetIdCaptor.capture(), atIdCaptor.capture());
+		verify(doctorService, times(1)).addAnimalType(doctorIdCaptor.capture(), atIdCaptor.capture());
 		
-		assertEquals(vetId, vetIdCaptor.getValue().toString());
+		assertEquals(doctorId, doctorIdCaptor.getValue().toString());
 		assertEquals(atId, atIdCaptor.getValue().toString());
 	}
 	
 	@Test
-	void addAnimalType_whenVetIdInvalid_handlesNumberFormatException() throws Exception {
+	void addAnimalType_whenDoctorIdInvalid_handlesNumberFormatException() throws Exception {
 		String invalidId = "p";
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", invalidId, "1"))
 				.andExpect(status().isBadRequest())
@@ -422,7 +421,7 @@ public class VetControllerTest {
 	@Test
 	void addAnimalType_handlesEntityNotFoundException() throws Exception {
 		EntityNotFoundException ex = new EntityNotFoundException("blah blah blah");
-		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
+		doThrow(ex).when(doctorService).addAnimalType(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
 				.andExpect(status().isNotFound())
@@ -436,7 +435,7 @@ public class VetControllerTest {
 	@Test
 	void addAnimalType_handlesDoubledSpecialtyException() throws Exception {
 		DoubledSpecialtyException ex = new DoubledSpecialtyException("animalType", "Cows");
-		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
+		doThrow(ex).when(doctorService).addAnimalType(1L, 1L);
 		
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
 				.andExpect(status().isForbidden())
@@ -447,9 +446,9 @@ public class VetControllerTest {
 	}
 	
 	@Test
-	void addAnimalType_handlesVetNotActiveException() throws Exception {
+	void addAnimalType_handlesDoctorNotActiveException() throws Exception {
 		DoctorNotActiveException ex = new DoctorNotActiveException();
-		doThrow(ex).when(vetService).addAnimalType(1L, 1L);
+		doThrow(ex).when(doctorService).addAnimalType(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addAnimalType/{id}", "1", "1"))
 				.andExpect(status().isForbidden())
@@ -461,23 +460,23 @@ public class VetControllerTest {
 	
 	@Test
 	void addMedSpecialty_respondsToRequestAndVerifyBusinessCalls() throws Exception {
-		String vetId = "1";
+		String doctorId = "1";
 		String msId = "1";
 		
-		mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", vetId, msId))
+		mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", doctorId, msId))
 		.andExpect(status().isOk());
 		
-		ArgumentCaptor<Long> vetIdCaptor = ArgumentCaptor.forClass(Long.class);
+		ArgumentCaptor<Long> doctorIdCaptor = ArgumentCaptor.forClass(Long.class);
 		ArgumentCaptor<Long> msIdCaptor = ArgumentCaptor.forClass(Long.class);
 		
-		verify(vetService, times(1)).addMedSpecialty(vetIdCaptor.capture(), msIdCaptor.capture());
+		verify(doctorService, times(1)).addMedSpecialty(doctorIdCaptor.capture(), msIdCaptor.capture());
 		
-		assertEquals(vetId, vetIdCaptor.getValue().toString());
+		assertEquals(doctorId, doctorIdCaptor.getValue().toString());
 		assertEquals(msId, msIdCaptor.getValue().toString());
 	}
 	
 	@Test
-	void addMedSpecialty_whenVetIdInvalid_handlesNumberFormatException() throws Exception {
+	void addMedSpecialty_whenDoctorIdInvalid_handlesNumberFormatException() throws Exception {
 		String invalidId = "p";
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", invalidId, "1"))
 				.andExpect(status().isBadRequest())
@@ -505,7 +504,7 @@ public class VetControllerTest {
 	@Test
 	void addMedSpecialty_handlesEntityNotFoundException() throws Exception {
 		EntityNotFoundException ex = new EntityNotFoundException("blah blah blah");
-		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
+		doThrow(ex).when(doctorService).addMedSpecialty(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))
 				.andExpect(status().isNotFound())
@@ -519,7 +518,7 @@ public class VetControllerTest {
 	@Test
 	void addMedSpecialty_handlesDoubledSpecialtyException() throws Exception {
 		DoubledSpecialtyException ex = new DoubledSpecialtyException("MedSpecialty", "Cows");
-		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
+		doThrow(ex).when(doctorService).addMedSpecialty(1L, 1L);
 		
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))
 				.andExpect(status().isForbidden())
@@ -530,9 +529,9 @@ public class VetControllerTest {
 	}
 	
 	@Test
-	void addMedSpecialty_handlesVetNotActiveException() throws Exception {
+	void addMedSpecialty_handlesDoctorNotActiveException() throws Exception {
 		DoctorNotActiveException ex = new DoctorNotActiveException();
-		doThrow(ex).when(vetService).addMedSpecialty(1L, 1L);
+		doThrow(ex).when(doctorService).addMedSpecialty(1L, 1L);
 
 		MvcResult result = mockMvc.perform(put("/doctor/{id}/addMedSpecialty/{id}", "1", "1"))
 				.andExpect(status().isForbidden())

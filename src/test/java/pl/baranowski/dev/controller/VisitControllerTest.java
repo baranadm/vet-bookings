@@ -79,10 +79,10 @@ class VisitControllerTest {
 	VisitService visitService;
 	
 	@MockBean
-	DoctorService vetService;
+	DoctorService doctorService;
 	
 	AnimalTypeDTO animalType = new AnimalTypeDTO(3L, "Wielbłąd");
-	DoctorDTO vet = new DoctorDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
+	DoctorDTO doctor = new DoctorDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
 	PatientDTO patient = new PatientDTO(2L, "Maniek", animalType, 8, "Lucyna Brzoza", "brzozazlasuobok@gmail.com");
 	
 	@BeforeEach
@@ -92,7 +92,7 @@ class VisitControllerTest {
 	@Test
 	void getById_whenValidId_correctCallsAndReturnValue() throws Exception {
 		long epoch = System.currentTimeMillis();
-		VisitDTO expected = new VisitDTO(1L, vet, patient, epoch, false);
+		VisitDTO expected = new VisitDTO(1L, doctor, patient, epoch, false);
 		
 		// mocks service return value
 		given(visitService.getById(expected.getId())).willReturn(expected);
@@ -114,7 +114,7 @@ class VisitControllerTest {
 	
 	@Test
 	void getById_whenValidIdAndEntityNotFound_returns404AndNotFound() throws Exception {long epoch = System.currentTimeMillis();
-		VisitDTO notExisting = new VisitDTO(1L, vet, patient, epoch, false);
+		VisitDTO notExisting = new VisitDTO(1L, doctor, patient, epoch, false);
 		EntityNotFoundException exc = new EntityNotFoundException("testing");
 		ErrorDTO expected = new ErrorDTO(exc, HttpStatus.NOT_FOUND);
 		
@@ -148,7 +148,7 @@ class VisitControllerTest {
 	void findAll_withPaginationAttr_callsServiceAndReturnsPage() throws Exception {
 		// creates mocked result
 		List<VisitDTO> visits = Collections.nCopies(3, 
-				new VisitDTO(vet, 
+				new VisitDTO(doctor, 
 						patient, 
 						System.currentTimeMillis() + 60*60*24*5, // + 5 days 
 						false)); 
@@ -243,12 +243,12 @@ class VisitControllerTest {
 	void addNew_whenCorrectInputs_respondsWith201AndCallsServiceCorrectlyAndReturnsDTOs() throws Exception {
 		Long epoch = 1643157711000L; //26 January 2022 00:41:51
 
-		NewVisitDTO newVisitDTO = new NewVisitDTO(vet.getId().toString(), patient.getId().toString(), epoch.toString());
+		NewVisitDTO newVisitDTO = new NewVisitDTO(doctor.getId().toString(), patient.getId().toString(), epoch.toString());
 		
-		VisitDTO expected = new VisitDTO(vet, patient, epoch, false).withId(4L);
+		VisitDTO expected = new VisitDTO(doctor, patient, epoch, false).withId(4L);
 		
 		// mocking visitService.addNew()
-		given(visitService.addNew(vet.getId(), patient.getId(), epoch)).willReturn(expected);
+		given(visitService.addNew(doctor.getId(), patient.getId(), epoch)).willReturn(expected);
 		
 		MvcResult result = mockMvc.perform(post("/visit/")
 				.content(objectMapper.writeValueAsString(newVisitDTO))
@@ -258,12 +258,12 @@ class VisitControllerTest {
 			.andReturn();
 		
 		// verifies business call
-		ArgumentCaptor<Long> vetIdCaptor = ArgumentCaptor.forClass(Long.class);
+		ArgumentCaptor<Long> doctorIdCaptor = ArgumentCaptor.forClass(Long.class);
 		ArgumentCaptor<Long> patientIdCaptor = ArgumentCaptor.forClass(Long.class);
 		ArgumentCaptor<Long> epochCaptor = ArgumentCaptor.forClass(Long.class);
 		
-		verify(visitService, times(1)).addNew(vetIdCaptor.capture(), patientIdCaptor.capture(), epochCaptor.capture());
-		assertEquals(vet.getId(), vetIdCaptor.getValue());
+		verify(visitService, times(1)).addNew(doctorIdCaptor.capture(), patientIdCaptor.capture(), epochCaptor.capture());
+		assertEquals(doctor.getId(), doctorIdCaptor.getValue());
 		assertEquals(patient.getId(), patientIdCaptor.getValue());
 		assertEquals(epoch, epochCaptor.getValue());
 		
@@ -367,60 +367,60 @@ class VisitControllerTest {
 		AnimalType cats = new AnimalType(33L, "Kot");
 		MedSpecialty urologist = new MedSpecialty(99L, "Urolog");
 
-		// setting up Vet1:
+		// setting up Doctor1:
 		Patient catPatient = new Patient(11L, "Kicia", cats, 7, "Lucyna", "lu@cy.na");
-		Doctor vet1 = new Doctor(51L, "First", "One", new BigDecimal(100), "1111111111");
-		vet1.addAnimalType(cats);
-		vet1.addMedSpecialty(urologist);
-		vet1.addVisit(new Visit.VisitBuilder(vet1, catPatient, mondayH11Y2100).build().withId(1L));
-		vet1.addVisit(new Visit.VisitBuilder(vet1, catPatient, mondayH14Y2100).build().withId(2L));
+		Doctor doctor1 = new Doctor(51L, "First", "One", new BigDecimal(100), "1111111111");
+		doctor1.addAnimalType(cats);
+		doctor1.addMedSpecialty(urologist);
+		doctor1.addVisit(new Visit.VisitBuilder(doctor1, catPatient, mondayH11Y2100).build().withId(1L));
+		doctor1.addVisit(new Visit.VisitBuilder(doctor1, catPatient, mondayH14Y2100).build().withId(2L));
 		
-		// setting up Vet2:
-		Doctor vet2 = new Doctor(52L, "Second", "One", new BigDecimal(100), "1181328620");
-		vet1.addAnimalType(cats);
-		vet1.addMedSpecialty(urologist);
-		vet1.addVisit(new Visit.VisitBuilder(vet2, catPatient, mondayH10Y2100).build().withId(3L));
-		vet1.addVisit(new Visit.VisitBuilder(vet2, catPatient, mondayH12Y2100).build().withId(4L));
+		// setting up Doctor2:
+		Doctor doctor2 = new Doctor(52L, "Second", "One", new BigDecimal(100), "1181328620");
+		doctor1.addAnimalType(cats);
+		doctor1.addMedSpecialty(urologist);
+		doctor1.addVisit(new Visit.VisitBuilder(doctor2, catPatient, mondayH10Y2100).build().withId(3L));
+		doctor1.addVisit(new Visit.VisitBuilder(doctor2, catPatient, mondayH12Y2100).build().withId(4L));
 		
-		// expected Map of Vets with free slots list (e.g. Vet1: 10:00, 11:00; Vet2: 12:00, 13:00 etc.)
+		// expected Map of Doctors with free slots list (e.g. Doctor1: 10:00, 11:00; Doctor2: 12:00, 13:00 etc.)
 		Map<DoctorDTO, List<Long>> expected = new HashMap<>();
-		// expected values for Vet1
-		DoctorDTO vet1dto = mapper.toDto(vet1);
-		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH10Y2100);
-		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH12Y2100);
-		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH13Y2100);
+		// expected values for Doctor1
+		DoctorDTO doctor1dto = mapper.toDto(doctor1);
+		expected.computeIfAbsent(doctor1dto, k -> new ArrayList<>()).add(mondayH10Y2100);
+		expected.computeIfAbsent(doctor1dto, k -> new ArrayList<>()).add(mondayH12Y2100);
+		expected.computeIfAbsent(doctor1dto, k -> new ArrayList<>()).add(mondayH13Y2100);
 		
-		// expected values for Vet2
-		DoctorDTO vet2dto = mapper.toDto(vet2);
-		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH11Y2100);
-		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH13Y2100);
-		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH14Y2100);
+		// expected values for Doctor2
+		DoctorDTO doctor2dto = mapper.toDto(doctor2);
+		expected.computeIfAbsent(doctor2dto, k -> new ArrayList<>()).add(mondayH11Y2100);
+		expected.computeIfAbsent(doctor2dto, k -> new ArrayList<>()).add(mondayH13Y2100);
+		expected.computeIfAbsent(doctor2dto, k -> new ArrayList<>()).add(mondayH14Y2100);
 		
-		// mocking vetService return values
-		List<Doctor> vetRepoResult = new ArrayList<>();
-		vetRepoResult.add(vet1);
-		vetRepoResult.add(vet2);
-		given(vetService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), urologist.getName())).willReturn(vetRepoResult);
+		// mocking doctorService return values
+		List<Doctor> doctorRepoResult = new ArrayList<>();
+		doctorRepoResult.add(doctor1);
+		doctorRepoResult.add(doctor2);
+		given(doctorService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), urologist.getName())).willReturn(doctorRepoResult);
 		
 		// times: start and end
 		String start = mondayH10Y2100.toString();
 		String end = mondayH15Y2100.toString();
 		
-		// mocking visitService return value for Vet1
-		given(visitService.findFreeSlotsForVet(
-				vet1,
+		// mocking visitService return value for Doctor1
+		given(visitService.findFreeSlotsForDoctor(
+				doctor1,
 				Long.decode(start), 
 				Long.decode(end),
 				3600L))
-			.willReturn(expected.get(vet1dto));
+			.willReturn(expected.get(doctor1dto));
 		
-		// mocking visitService return value for Vet2
-		given(visitService.findFreeSlotsForVet(
-				vet2, 
+		// mocking visitService return value for Doctor2
+		given(visitService.findFreeSlotsForDoctor(
+				doctor2, 
 				Long.decode(start), 
 				Long.decode(end),
 				3600L))
-			.willReturn(expected.get(vet2dto));
+			.willReturn(expected.get(doctor2dto));
 		
 		MvcResult result = mockMvc.perform(get("/visit/check")
 				.param("animalTypeName", cats.getName())

@@ -8,8 +8,8 @@ import pl.baranowski.dev.entity.Visit;
 
 public interface VisitRepository extends JpaRepository<Visit, Long>{
 
-	public List<Visit> findByVetId(long vetId);
-	public List<Visit> findByEpochAndVetId(long epoch, long vetId);
+	public List<Visit> findByDoctorId(long doctorId);
+	public List<Visit> findByEpochAndDoctorId(long epoch, long doctorId);
 	public List<Visit> findByEpochAndPatientId(long epoch, long patientId);
 
 }

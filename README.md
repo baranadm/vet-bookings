@@ -31,13 +31,13 @@ For that reason, @RequestBody DTO objects contain String type fields, which are 
 	- id
 	- name
 
-## Functionality for doctors (Vets):
+## Functionality for Doctors:
 - adding new doctor
 - getting one doctor by id
 - getting all doctors (with pagination)
 - deactivating doctor (soft delete)
 
-	Every Vet has:
+	Every Doctor has:
 	- name
 	- surname
 	- hourly rate

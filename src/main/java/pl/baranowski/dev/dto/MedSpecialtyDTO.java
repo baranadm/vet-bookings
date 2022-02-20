@@ -9,9 +9,6 @@ public class MedSpecialtyDTO {
 	@NotBlank(message = "specialty must not be null or empty")
 	private String name;
 
-	//	is it necessary?
-	//	private Set<Vet> entitledVets = new HashSet<>();
-
 	public MedSpecialtyDTO() {
 	}
 
