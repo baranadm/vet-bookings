@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -18,6 +17,7 @@ import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 
@@ -29,16 +29,16 @@ public class PatientService {
 	@Autowired
 	AnimalTypeRepository animalTypeRepo;
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 	
 	public Page<PatientDTO> findAll(Pageable pageable) {
 		Page<Patient> result = patientRepo.findAll(pageable);
-		return result.map(entity -> modelMapper.map(entity, PatientDTO.class));
+		return result.map(entity -> mapper.toDto(entity));
 	}
 	
 	public PatientDTO getById(Long id) {
 		Patient result = patientRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Patient with id " + id + " has not been found."));
-		return modelMapper.map(result, PatientDTO.class);
+		return mapper.toDto(result);
 	}
 
 	public PatientDTO addNew(NewPatientDTO newDTO) throws PatientAllreadyExistsException {
@@ -65,7 +65,7 @@ public class PatientService {
 		
 		Patient result = patientRepo.saveAndFlush(patient);
 		
-		return modelMapper.map(result, PatientDTO.class);
+		return mapper.toDto(result);
 	}
 	
 }

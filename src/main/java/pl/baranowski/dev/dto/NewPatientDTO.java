@@ -25,6 +25,9 @@ public class NewPatientDTO {
 	@Email
 	private String ownerEmail;
 
+	public NewPatientDTO() {
+	}
+	
 	public NewPatientDTO(@NotBlank String name, @NotNull String age, @NotBlank String animalTypeName,
 			@NotBlank String ownerName, @NotBlank String ownerEmail) {
 		this.name = name;

@@ -28,7 +28,7 @@ import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
-import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -146,8 +146,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 
-	@ExceptionHandler(VetNotActiveException.class)
-	ResponseEntity<Object> handleVetNotActiveException(VetNotActiveException ex, WebRequest request) {
+	@ExceptionHandler(DoctorNotActiveException.class)
+	ResponseEntity<Object> handleVetNotActiveException(DoctorNotActiveException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}

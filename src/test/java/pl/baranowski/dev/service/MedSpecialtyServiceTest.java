@@ -8,14 +8,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -23,6 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
 @SpringBootTest
@@ -35,7 +34,7 @@ class MedSpecialtyServiceTest {
 	MedSpecialtyService medSpecialtyService;
 	
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 	
 	MedSpecialty cardio = new MedSpecialty(1L, "Kardiolog");
 	MedSpecialty uro = new MedSpecialty(2l, "Urolog");
@@ -48,7 +47,7 @@ class MedSpecialtyServiceTest {
 	@Test
 	void getById_whenEntityExists_returnsDTO() {
 		given(medSpecialtyRepository.findById(cardio.getId())).willReturn(Optional.ofNullable(cardio));
-		assertEquals(mapToDto.apply(cardio), medSpecialtyService.getById(cardio.getId()));
+		assertEquals(mapper.toDto(cardio), medSpecialtyService.getById(cardio.getId()));
 	}
 
 	@Test
@@ -61,7 +60,7 @@ class MedSpecialtyServiceTest {
 	void findByName_whenEntitiesExist_returnsListOfDTOs() {
 		given(medSpecialtyRepository.findByName(uro.getName())).willReturn(Collections.singletonList(uro));
 		assertEquals(
-				Collections.singletonList(uro).stream().map(mapToDto).collect(Collectors.toList()),
+				Collections.singletonList(uro).stream().map(mapper::toDto).collect(Collectors.toList()),
 				medSpecialtyService.findByName(uro.getName())
 				);
 	}
@@ -75,7 +74,7 @@ class MedSpecialtyServiceTest {
 	@Test
 	void findAll_whenEntitiesExists_returnsListOfDTOs() {
 		given(medSpecialtyRepository.findAll()).willReturn(specialties);
-		assertEquals(specialties.stream().map(mapToDto).collect(Collectors.toList()),
+		assertEquals(specialties.stream().map(mapper::toDto).collect(Collectors.toList()),
 				medSpecialtyService.findAll()
 				);
 	}
@@ -92,7 +91,7 @@ class MedSpecialtyServiceTest {
 //		given(medSpecialtyRepository.findByName(ms.getName())).willReturn(Collections.emptyList());
 		given(medSpecialtyRepository.saveAndFlush(ms)).willReturn(ms);
 		
-		MedSpecialtyDTO dto = mapToDto.apply(ms);
+		MedSpecialtyDTO dto = mapper.toDto(ms);
 
 		assertEquals(dto, medSpecialtyService.addNew(dto));
 	}
@@ -102,8 +101,7 @@ class MedSpecialtyServiceTest {
 		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
 		given(medSpecialtyRepository.findByName(ms.getName())).willReturn(Collections.singletonList(ms));
 		
-		assertThrows(MedSpecialtyAllreadyExistsException.class, () -> medSpecialtyService.addNew(mapToDto.apply(ms)));
+		assertThrows(MedSpecialtyAllreadyExistsException.class, () -> medSpecialtyService.addNew(mapper.toDto(ms)));
 	}
 
-	private Function<MedSpecialty, MedSpecialtyDTO> mapToDto = entity -> modelMapper.map(entity, MedSpecialtyDTO.class);
 }

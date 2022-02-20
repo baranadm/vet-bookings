@@ -17,19 +17,22 @@ public class NewVisitDTO {
 	@Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed")
 	private String epoch;
 
-	public NewVisitDTO(String vetId, String patientId, String epoch) {
-		this.doctorId = vetId;
+	public NewVisitDTO() {
+	}
+	
+	public NewVisitDTO(String doctorId, String patientId, String epoch) {
+		this.doctorId = doctorId;
 		this.patientId = patientId;
 		this.epoch = epoch;
 	}
 
-	public String getVetId() {
+	public String getDoctorId() {
 		return doctorId;
 	}
 
 
-	public void setVetId(String vetId) {
-		this.doctorId = vetId;
+	public void setDoctorId(String doctorId) {
+		this.doctorId = doctorId;
 	}
 
 

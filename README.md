@@ -2,15 +2,13 @@
 
 ## It is a simple REST API which allows booking an appointments in Veterinary Clinic.
 
+API has been deployed on Heroku: [https://vet-bookings.herokuapp.com/](https://vet-bookings.herokuapp.com/)  
+Info: first request takes up approx. 30sec to receive response.
+
+
 Due to fact, that @Valid validation runs after @RequestBody JSON to DTO conversion, in case Request Body has number type field containing a character, exception thrown by App is InvalidFormatException, not MethodArgumentNotValidException. This causes response error content to contain only this field, not the whole binding result.
 
 For that reason, @RequestBody DTO objects contain String type fields, which are validated by default/custom constraints, and, if needed, are converted to their proper (defined by persistence layer) type.
-
-or....
-
-Every addNew endpoint's method requires body - in order to generate MultiFieldErrorDTO in ExceptionHandler's method handleMethodArgumentNotValid. Thanks to that, every form on client's side will be receiving one kind of error responses, which will be easier to handle.
-
-In addition, every addNew body should have only String params. This is caused by the fact, that in some cases JSON mapping generates ConstraintViolationException/HttpMessageNotReadableException, which does not provide Binding Result (e.g. providing "a" instead of valid BigDecimal in @RequestBody).
 
 ---
 ## Functionality for AnimalTypes:
@@ -73,7 +71,8 @@ In addition, every addNew body should have only String params. This is caused by
 	- confirmation status
 ---
 # HTTP Endpoints:
-All requests and responses are in JSON's format and encoded in UTF-8. Request and response objects are wrapped into DTO's. All errors contain *Error name* and *message*.
+All requests and responses are encoded in UTF-8, every payload has JSON format. Request and response objects are wrapped into DTO's. All errors contain *HttpStatus*, *Error name* and *message*.
+
 #### Animal Type
 **@GET /animalType/all**
 - returns List of Animal Types (or empty list)
@@ -87,14 +86,15 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 **@GET /animalType/find**
 - params: *name* [String]
 - returns List of AnimalTypes with given name (or empty list)
-	- if *specialty* is empty
+- errors:   
+	- if *name* is empty - HTTP Status 400
 
 **@POST /animalType/new**
-- requires AnimalType body (*name*)
+- requires AnimalType body (*name*) - JSON
 - returns created AnimalType - HTTP Status 201
 - errors:  
-	- if request body is not valid
-	- if Animal Type *name* is duplicated
+	- if request body is not valid - HTTP Status 400  
+	- if Animal Type *name* is duplicated - HTTP Status 400
 	
 #### MedSpecialty
 **@GET /medSpecialty/all**
@@ -110,34 +110,34 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 - params: *specialty* [String]
 - returns List of MedSpecialties with given name (or empty list)
 - errors:  
-	- if *specialty* is empty
+	- if *specialty* is empty - HTTP Status 400
 
 **@POST /medSpecialty/new**
-- requires MedSpecialty body (*name*)
+- requires MedSpecialty body (*name*) - JSON
 - returns created MedSpecialty - HTTP Status 201
 - errors:  
-	- if request body is not valid  
-	- if MedSpecialty *name* is duplicated
+	- if request body is not valid - HTTP Status 400
+	- if MedSpecialty *name* is duplicated - HTTP Status 400
 
 #### Doctor
 **@GET /doctor/{id}** 
-- returns Vet - HTTP Status 200
+- returns DoctorDTO - HTTP Status 200
 - errors:  
 	- if *id* is not valid - HTTP Status 400  
-	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
+	- if *Doctor* with given *id* doesn't exists - HTTP Status 404  
 
 **@GET /doctor/**
 - params: *page* - [int], *size* - [int]
-- returns all Vets (or empty Page) - HTTP Status 200
+- returns all Doctos (or empty Page) - HTTP Status 200
 - result type: Page
 - errors:  
 	 - if *page* or *size* parameter is missing or invalid - HTTP Status 400
 
 **@POST /doctor/**
-- requires Vet body (*name, surname, hourly rate, NIP*)
-- returns created Vet body - HTTP Status 201
+- requires DoctorDTO body (*name - required, surname - required, hourly rate, NIP*) - JSON
+- returns created doctor's DoctorDTO body - HTTP Status 201
 - errors:  
-	- if request Vet body is missing/not valid - HTTP Status 400  
+	- if request DoctorDTO body is missing/not valid - HTTP Status 400  
 	- if NIP is duplicated - HTTP Status 400  
 	- if NIP is not valid - HTTP Status 400  
 	
@@ -145,29 +145,68 @@ All requests and responses are in JSON's format and encoded in UTF-8. Request an
 - on success - HTTP Status 200  
 - errors:  
 	- if *id* is not valid - HTTP Status 400  
-	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
-	- if *Vet* is already inactive - HTTP Status 403
+	- if *Doctor* with given *id* doesn't exists - HTTP Status 404  
+	- if *Doctor* is already inactive - HTTP Status 403
 	
 **@PUT /doctor/{doctorId}/addAnimalType/{animalTypeId}**
 - on success - HTTP Status 200  
 - errors:  
 	- if any *id* is not valid - HTTP Status 400  
-	- if *Vet* with given *id* doesn't exists - HTTP Status 404  
+	- if *Doctor* with given *id* doesn't exists - HTTP Status 404  
 	- if *AnimalType* with given *id* doesn't exists - HTTP Status 404  
-	- if *Vet* already has given *AnimalType* - HTTP Status 403  
-	- if *Vet* is already inactive - HTTP Status 403
+	- if *Doctor* already has given *AnimalType* - HTTP Status 403  
+	- if *Doctor* is already inactive - HTTP Status 403
 	
 **@PUT /doctor/{doctorId}/addMedSpecialty/{medSpecialtyId}**
 - behaves like endpoint above
 
 #### Patient
+**@GET /patient/{id}** 
+- returns PatientDTO - HTTP Status 200
+- errors:  
+	- if *id* is not valid - HTTP Status 400  
+	- if *Patient* with given *id* doesn't exists - HTTP Status 404  
 
+**@GET /patient/**
+- params: *page* - [int], *size* - [int]
+- returns all Patients (or empty Page) - HTTP Status 200
+- result type: Page
+- errors:  
+	 - if *page* or *size* parameter is missing or invalid - HTTP Status 400
+
+**@POST /patient/**
+- requires NewPatientDTO body (*name - required, animalTypeName - required, ownerName - required, ownerEmail - required, age*) - JSON
+- returns created patient's PatientDTO body - HTTP Status 201
+- errors:  
+	- if request NewPatientDTO body is missing/arguments are not valid - HTTP Status 400  
+	- if animalType with *name* has not been found - HTTP Status 404  
+	- if *Patient* with exact same arguments has been found in database - HTTP Status 403
+	 
 #### Visit
+**@GET /visit/{id}** 
+- returns VisitDTO - HTTP Status 200
+- errors:  
+	- if *id* is not valid - HTTP Status 400  
+	- if *Visit* with given *id* doesn't exists - HTTP Status 404  
 
-#####to do's:
+**@GET /visit/**
+- params: *page* - [int], *size* - [int]
+- returns all Visits (or empty Page) - HTTP Status 200
+- result type: Page
+- errors:  
+	 - if *page* or *size* parameter is missing or invalid - HTTP Status 400
 
-**/patient**
-- everything
-
-**/visit**
-- everything
+**@POST /visit/**
+- requires NewVisitDTO body (*doctorId - required, patientId - required, epoch - required*) - JSON
+- returns created visit's VisitDTO body - HTTP Status 201
+- errors:  
+	- if request NewVisitDTO body is missing/arguments are not valid - HTTP Status 400  
+	- if Doctor with *doctorId* has not been found - HTTP Status 404  
+	- if Doctor is busy/not available at given epoch - HTTP Status 403  
+	- if Doctor is not active - HTTP Status 403  
+	- if Patient with *patientId* has not been found - HTTP Status 404  
+	- if Patient has another Visit at given epoch - HTTP Status 403  
+	- if Doctor does not have Patient's animalType - HTTP Status 403
+	- if *epoch* is not in future - HTTP Status 403  
+	
+#### to do's:

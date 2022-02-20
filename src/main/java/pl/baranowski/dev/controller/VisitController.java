@@ -1,7 +1,6 @@
 package pl.baranowski.dev.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -26,14 +25,15 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.NewVisitDTO;
-import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.dto.SingleCheckResultDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
-import pl.baranowski.dev.exception.VetNotActiveException;
-import pl.baranowski.dev.service.VetService;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
+// TODO repair showing free slots for weekend days
 @CrossOrigin
 @RestController
 @RequestMapping("/visit")
@@ -44,12 +44,11 @@ public class VisitController {
 	@Autowired
 	VisitService visitService;
 	@Autowired
-	VetService vetService;
+	DoctorService vetService;
 	
-	//TODO correct tests (was with @RequestBody)
 	/*
-	 * should produce result like:
-	 * {
+	 * should produce result like: (array of JSON-serialized objects)
+	 * [{
 	 * 	"vet" : {
 	 * 		"id": 12,
 	 * 		"name": "Robert",
@@ -57,9 +56,12 @@ public class VisitController {
 	 * 	}
 	 * 	"epochFreeTimes": [1645072294, ....]
 	 * }
+	 * {
+	 * 	...
+	 * }]
 	 */
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
-	public @ResponseBody Map<VetDTO, List<Long>> findFreeSlots(
+	public @ResponseBody List<SingleCheckResultDTO> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
 			@RequestParam("medSpecialtyName") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
 			@RequestParam("epochStart") @NotBlank(message="Invalid search criteria: epochStart should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochStart,
@@ -84,9 +86,9 @@ public class VisitController {
 	
 	@PostMapping(value="/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, VetNotActiveException {
+	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		
-		long vetId = Long.decode(nv.getVetId());
+		long vetId = Long.decode(nv.getDoctorId());
 		long patientId = Long.decode(nv.getPatientId());
 		long epoch = Long.decode(nv.getEpoch());
 		

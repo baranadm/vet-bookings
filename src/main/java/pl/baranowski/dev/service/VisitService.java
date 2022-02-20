@@ -5,28 +5,25 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.dto.SingleCheckResultDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Vet;
+import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.exception.SearchRequestInvalidException;
-import pl.baranowski.dev.exception.VetNotActiveException;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VetRepository;
 import pl.baranowski.dev.repository.VisitRepository;
@@ -41,22 +38,22 @@ public class VisitService {
 	@Autowired
 	VetRepository vetRepository;
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 	@Autowired
-	VetService vetService;
+	DoctorService vetService;
 
 	public VisitDTO getById(long id) {
 		Visit result = visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
-		return modelMapper.map(result, VisitDTO.class);
+		return mapper.toDto(result);
 	}
 	
 	public Page<VisitDTO> findAll(Pageable pageable) {
 		Page<Visit> result = visitRepository.findAll(pageable); 
-		Page<VisitDTO> pageOfDTOs = result.map(mapToDto);
+		Page<VisitDTO> pageOfDTOs = result.map(mapper::toDto);
 		return pageOfDTOs;
 	}
 
-	public VisitDTO addNew(Long vetId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, VetNotActiveException {
+	public VisitDTO addNew(Long vetId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		// throws, if epoch is before now
 		if(epochInSeconds - System.currentTimeMillis()/1000 < 0) {
 			throw new NewVisitNotPossibleException("Creating new Visit failed: provided epoch time is not in the future.");
@@ -68,7 +65,7 @@ public class VisitService {
 		throwIfPatientBusyAt(epochInSeconds, patientId);
 		
 		// throws, if Vet is not active
-		Vet vet = getVetOrThrowIfNotActive(vetId);
+		Doctor vet = getVetOrThrowIfNotActive(vetId);
 		
 		/*
 		 *  throws, if:
@@ -85,11 +82,11 @@ public class VisitService {
 		
 		Visit result = visitRepository.saveAndFlush(
 				new Visit.VisitBuilder(vet, patient, epochInSeconds).build());
-		return mapToDto.apply(result);
+		return mapper.toDto(result);
 	}
 	
 	// TODO tests...
-	public Map<VetDTO, List<Long>> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
+	public List<SingleCheckResultDTO> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
 		// decodes validated epoch start
 		long start = Long.decode(epochStart);
 		// decodes validated epoch end
@@ -98,17 +95,18 @@ public class VisitService {
 		long interval = Long.decode(intervalStr);
 		
 		// finds Vets with matching AnimalType and MedSpecialty
-		List<Vet> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
-		
-		// creates map with Vet as a key, and free slots as a value (epoch time)
-		Map<VetDTO, List<Long>> result = new HashMap<>();
-		for(Vet v: matchingVets) {
-			result.computeIfAbsent(modelMapper.map(v, VetDTO.class), k -> new ArrayList<>()).addAll(findFreeSlotsForVet(v, start, end, interval));
+		List<Doctor> matchingVets = vetService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
+
+		// creates list of SingleCheckResultDTO and populates it with Vets and their free times
+		List<SingleCheckResultDTO> result = new ArrayList<>();
+		for(Doctor vet: matchingVets) {
+			result.add(new SingleCheckResultDTO(mapper.toDto(vet), findFreeSlotsForVet(vet, start, end, interval)));
 		}
+			
 		return result;
 	}
 	
-	public List<Long> findFreeSlotsForVet(Vet vet, Long epochStart, Long epochEnd, Long interval) throws SearchRequestInvalidException {
+	public List<Long> findFreeSlotsForVet(Doctor vet, Long epochStart, Long epochEnd, Long interval) throws SearchRequestInvalidException {
 		// validate epochs' values
 		if(epochStart >= epochEnd) {
 			throw new SearchRequestInvalidException("Searching request not valid: epoch start should be less than epoch end.");
@@ -164,7 +162,7 @@ public class VisitService {
 	 * @return
 	 * @throws NewVisitNotPossibleException
 	 */
-	private Patient getPatientOrThowIfAnimalTypeNotCompatibleWithVet(Long patientId, Vet vet) throws NewVisitNotPossibleException {
+	private Patient getPatientOrThowIfAnimalTypeNotCompatibleWithVet(Long patientId, Doctor vet) throws NewVisitNotPossibleException {
 		Patient patient = patientRepository.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
 		if(!vet.getAnimalTypes().contains(patient.getAnimalType())) {
 			throw new NewVisitNotPossibleException("Doctor does not have animalType: " + patient.getAnimalType());
@@ -172,10 +170,10 @@ public class VisitService {
 		return patient;
 	}
 
-	private Vet getVetOrThrowIfNotActive(Long vetId) throws VetNotActiveException {
-		Vet vet = vetRepository.findById(vetId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + vetId + " has not been found."));
+	private Doctor getVetOrThrowIfNotActive(Long vetId) throws DoctorNotActiveException {
+		Doctor vet = vetRepository.findById(vetId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + vetId + " has not been found."));
 		if(!vet.isActive()) {
-			throw new VetNotActiveException("Creating Visit failed. Vet with id " + vetId + " is not active.");
+			throw new DoctorNotActiveException("Creating Visit failed. Vet with id " + vetId + " is not active.");
 		}
 		return vet;
 	}
@@ -241,6 +239,4 @@ public class VisitService {
 		return true;
 	}
 	
-	private Function<Visit, VisitDTO> mapToDto = entity -> modelMapper.map(entity, VisitDTO.class);
-
 }

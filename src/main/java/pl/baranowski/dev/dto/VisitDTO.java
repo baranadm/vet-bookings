@@ -3,7 +3,7 @@ package pl.baranowski.dev.dto;
 public class VisitDTO {
 
 	private long id;
-	private VetDTO vet;
+	private DoctorDTO vet;
 	private PatientDTO patient;
 	private long epoch;
 	private Boolean isConfirmed;
@@ -11,14 +11,14 @@ public class VisitDTO {
 	public VisitDTO() {
 	}
 
-	public VisitDTO(VetDTO vet, PatientDTO patient, long epoch, Boolean isConfirmed) {
+	public VisitDTO(DoctorDTO vet, PatientDTO patient, long epoch, Boolean isConfirmed) {
 		this.vet = vet;
 		this.patient = patient;
 		this.epoch = epoch;
 		this.isConfirmed = isConfirmed;
 	}
 
-	public VisitDTO(long id, VetDTO vet, PatientDTO patient, long epoch, Boolean confirmed) {
+	public VisitDTO(long id, DoctorDTO vet, PatientDTO patient, long epoch, Boolean confirmed) {
 		this.id = id;
 		this.vet = vet;
 		this.patient = patient;
@@ -38,11 +38,11 @@ public class VisitDTO {
 		this.id = id;
 	}
 
-	public VetDTO getVet() {
+	public DoctorDTO getVet() {
 		return vet;
 	}
 
-	public void setVet(VetDTO vet) {
+	public void setVet(DoctorDTO vet) {
 		this.vet = vet;
 	}
 

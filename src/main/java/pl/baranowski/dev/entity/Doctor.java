@@ -24,7 +24,7 @@ import javax.persistence.OneToMany;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-public class Vet {
+public class Doctor {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -48,26 +48,26 @@ public class Vet {
 	
 	@ManyToMany
 	@JoinTable(
-			name="vets_to_med_specialities",
-			joinColumns = @JoinColumn(name="vet_id"),
+			name="doctors_to_med_specialities",
+			joinColumns = @JoinColumn(name="doctor_id"),
 			inverseJoinColumns = @JoinColumn(name="med_speciality_id")
 	)
 	private Set<MedSpecialty> medSpecialties = new HashSet<>();
 	
 	@ManyToMany
 	@JoinTable(
-			name="vets_to_animal_types",
-			joinColumns = @JoinColumn(name="vet_id"),
+			name="doctors_to_animal_types",
+			joinColumns = @JoinColumn(name="doctor_id"),
 			inverseJoinColumns = @JoinColumn(name="animal_type_id")
 	)
 	private Set<AnimalType> animalTypes = new HashSet<>();
 	
 	@JsonIgnore
-	@OneToMany(mappedBy = "vet")
+	@OneToMany(mappedBy = "doctor")
 	private Set<Visit> visits = new HashSet<>();
 
 	
-	public Vet() {
+	public Doctor() {
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class Vet {
 	 * @param hourlyRate - scale is automatically set to 2
 	 * @param nip
 	 */
-	public Vet(String name, String surname, BigDecimal hourlyRate, String nip) {
+	public Doctor(String name, String surname, BigDecimal hourlyRate, String nip) {
 		this.name = name;
 		this.surname = surname;
 		this.hourlyRate = hourlyRate.setScale(2);
@@ -92,7 +92,7 @@ public class Vet {
 	 * @param hourlyRate - scale is automatically set to 2
 	 * @param nip
 	 */
-	public Vet(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
+	public Doctor(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
 		this(name, surname, hourlyRate, nip);
 		this.id = id;
 	}
@@ -245,7 +245,7 @@ public class Vet {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Vet other = (Vet) obj;
+		Doctor other = (Doctor) obj;
 		if (active == null) {
 			if (other.active != null)
 				return false;
@@ -281,9 +281,8 @@ public class Vet {
 
 	@Override
 	public String toString() {
-		return "Vet [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
-				+ nip + ", active=" + active + ", medSpecialties=" + medSpecialties + ", animalTypes=" + animalTypes
-				+ ", visits=" + visits + "]";
+		return "Doctor [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
+				+ nip + ", active=" + active + "]";
 	}
 	
 }

@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
-import pl.baranowski.dev.entity.Vet;
+import pl.baranowski.dev.entity.Doctor;
 
-public interface VetRepository extends JpaRepository<Vet, Long>{
+public interface VetRepository extends JpaRepository<Doctor, Long>{
 
-	List<Vet> findByNip(String nip);
-	List<Vet> findByAnimalTypesAndMedSpecialties(AnimalType animalType, MedSpecialty medSpecialty);
+	List<Doctor> findByNip(String nip);
+	List<Doctor> findByAnimalTypesAndMedSpecialties(AnimalType animalType, MedSpecialty medSpecialty);
 
 }

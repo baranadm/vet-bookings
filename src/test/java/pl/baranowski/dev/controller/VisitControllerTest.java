@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -32,6 +31,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -50,27 +50,28 @@ import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.PatientDTO;
-import pl.baranowski.dev.dto.SearchRequestDTO;
-import pl.baranowski.dev.dto.VetDTO;
+import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Vet;
+import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
-import pl.baranowski.dev.service.VetService;
+import pl.baranowski.dev.mapper.CustomMapper;
+import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = VisitController.class)
+@Import(CustomMapper.class)
 class VisitControllerTest {
 
 	@Autowired
 	MockMvc mockMvc;
-	
 	@Autowired
 	ObjectMapper objectMapper;
-	
+	@Autowired
+	CustomMapper mapper;
 	@Autowired
 	VisitController visitController;
 	
@@ -78,10 +79,10 @@ class VisitControllerTest {
 	VisitService visitService;
 	
 	@MockBean
-	VetService vetService;
+	DoctorService vetService;
 	
 	AnimalTypeDTO animalType = new AnimalTypeDTO(3L, "Wielbłąd");
-	VetDTO vet = new VetDTO(1L, "Robert", "Kupicha", "600", "1111111111");
+	DoctorDTO vet = new DoctorDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
 	PatientDTO patient = new PatientDTO(2L, "Maniek", animalType, 8, "Lucyna Brzoza", "brzozazlasuobok@gmail.com");
 	
 	@BeforeEach
@@ -345,7 +346,8 @@ class VisitControllerTest {
 		assertCorrectJSONResult(expected, result);
 	}
 
-	// TODO repair tests
+	// TODO test service calls
+	// TODO repair test - feature works and returns correct response, but in test result is empty
 	@Test
 	void findFreeSlots_correctServiceCallAndReturns200WithResponseBody() throws JsonProcessingException, Exception {
 		// 2100-01-25 10:00:00
@@ -367,65 +369,65 @@ class VisitControllerTest {
 
 		// setting up Vet1:
 		Patient catPatient = new Patient(11L, "Kicia", cats, 7, "Lucyna", "lu@cy.na");
-		Vet vet1 = new Vet(51L, "First", "One", new BigDecimal(100), "1111111111");
+		Doctor vet1 = new Doctor(51L, "First", "One", new BigDecimal(100), "1111111111");
 		vet1.addAnimalType(cats);
 		vet1.addMedSpecialty(urologist);
 		vet1.addVisit(new Visit.VisitBuilder(vet1, catPatient, mondayH11Y2100).build().withId(1L));
 		vet1.addVisit(new Visit.VisitBuilder(vet1, catPatient, mondayH14Y2100).build().withId(2L));
+		
 		// setting up Vet2:
-		Vet vet2 = new Vet(52L, "Second", "One", new BigDecimal(100), "1181328620");
+		Doctor vet2 = new Doctor(52L, "Second", "One", new BigDecimal(100), "1181328620");
 		vet1.addAnimalType(cats);
 		vet1.addMedSpecialty(urologist);
 		vet1.addVisit(new Visit.VisitBuilder(vet2, catPatient, mondayH10Y2100).build().withId(3L));
 		vet1.addVisit(new Visit.VisitBuilder(vet2, catPatient, mondayH12Y2100).build().withId(4L));
 		
-		// preparing request body
-		SearchRequestDTO requestBody = new SearchRequestDTO(
-				cats.getName(), 
-				urologist.getName(), 
-				mondayH10Y2100.toString(), 
-				mondayH15Y2100.toString(),
-				"3600");//plus 5 hours
-		
 		// expected Map of Vets with free slots list (e.g. Vet1: 10:00, 11:00; Vet2: 12:00, 13:00 etc.)
-		Map<VetDTO, List<Long>> expected = new HashMap<>();
+		Map<DoctorDTO, List<Long>> expected = new HashMap<>();
 		// expected values for Vet1
-		VetDTO vet1dto = mapToDto.apply(vet1);
+		DoctorDTO vet1dto = mapper.toDto(vet1);
 		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH10Y2100);
 		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH12Y2100);
 		expected.computeIfAbsent(vet1dto, k -> new ArrayList<>()).add(mondayH13Y2100);
 		
 		// expected values for Vet2
-		VetDTO vet2dto = mapToDto.apply(vet2);
+		DoctorDTO vet2dto = mapper.toDto(vet2);
 		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH11Y2100);
 		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH13Y2100);
 		expected.computeIfAbsent(vet2dto, k -> new ArrayList<>()).add(mondayH14Y2100);
 		
 		// mocking vetService return values
-		List<Vet> vetRepoResult = new ArrayList<>();
+		List<Doctor> vetRepoResult = new ArrayList<>();
 		vetRepoResult.add(vet1);
 		vetRepoResult.add(vet2);
 		given(vetService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), urologist.getName())).willReturn(vetRepoResult);
 		
+		// times: start and end
+		String start = mondayH10Y2100.toString();
+		String end = mondayH15Y2100.toString();
+		
 		// mocking visitService return value for Vet1
 		given(visitService.findFreeSlotsForVet(
 				vet1,
-				Long.decode(requestBody.getEpochStart()), 
-				Long.decode(requestBody.getEpochEnd()),
+				Long.decode(start), 
+				Long.decode(end),
 				3600L))
 			.willReturn(expected.get(vet1dto));
 		
 		// mocking visitService return value for Vet2
 		given(visitService.findFreeSlotsForVet(
 				vet2, 
-				Long.decode(requestBody.getEpochStart()), 
-				Long.decode(requestBody.getEpochEnd()),
+				Long.decode(start), 
+				Long.decode(end),
 				3600L))
 			.willReturn(expected.get(vet2dto));
 		
 		MvcResult result = mockMvc.perform(get("/visit/check")
-				.content(objectMapper.writeValueAsString(requestBody))
-				.contentType("application/json;charset=UTF-8"))
+				.param("animalTypeName", cats.getName())
+				.param("medSpecialtyName", urologist.getName())
+				.param("epochStart", start)
+				.param("epochEnd", end)
+				.param("interval", "3600"))
 			.andExpect(content().contentType("application/json;charset=UTF-8"))
 			.andExpect(status().isOk())
 			.andReturn();
@@ -433,12 +435,6 @@ class VisitControllerTest {
 		assertCorrectJSONResult(expected, result);
 	}
 	
-	private Function<Vet, VetDTO> mapToDto = entity -> {
-		VetDTO dto = new VetDTO(entity.getId(), entity.getName(), entity.getSurname(), entity.getHourlyRate().toPlainString(), entity.getNip(), entity.getActive());
-		dto.setAnimalTypes(entity.getAnimalTypes());
-		dto.setMedSpecialties(entity.getMedSpecialties());
-		return dto;
-	};
 	private void mockMvcPerformAndExpect(NewVisitDTO requestDTO, ResultMatcher httpStatusMatcher, String field)
 			throws Exception, JsonProcessingException {
 		mockMvc.perform(post("/visit/")

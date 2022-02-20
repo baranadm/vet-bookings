@@ -2,25 +2,24 @@ package pl.baranowski.dev.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
 @Service
 public class MedSpecialtyService {
 	
 	@Autowired
-	ModelMapper modelMapper;
+	CustomMapper mapper;
 	
 	@Autowired
 	MedSpecialtyRepository medSpecialtyRepository;
@@ -32,30 +31,26 @@ public class MedSpecialtyService {
 	public MedSpecialtyDTO getById(Long id) {
 		Optional<MedSpecialty> result = medSpecialtyRepository.findById(id);
 		MedSpecialty medSpecialty = result.orElseThrow(() -> new EntityNotFoundException("med specialty not found"));
-		return mapToDTO.apply(medSpecialty);
+		return mapper.toDto(medSpecialty);
 	}
 	
 	public List<MedSpecialtyDTO> findByName(String specialty) {
-		return medSpecialtyRepository.findByName(specialty).stream().map(mapToDTO).collect(Collectors.toList());
+		return medSpecialtyRepository.findByName(specialty).stream().map(mapper::toDto).collect(Collectors.toList());
 	}
 	
 	public List<MedSpecialtyDTO> findAll() {
-		return medSpecialtyRepository.findAll().stream().map(mapToDTO).collect(Collectors.toList());
+		return medSpecialtyRepository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
 	}
 
 	public MedSpecialtyDTO addNew(MedSpecialtyDTO medSpecialtyDTO) throws MedSpecialtyAllreadyExistsException {
-		MedSpecialty ms = mapToEntity.apply(medSpecialtyDTO);
+		MedSpecialty ms = mapper.toEntity(medSpecialtyDTO);
 		if(!findByName(ms.getName()).isEmpty()) {
 			throw new MedSpecialtyAllreadyExistsException();
 		}
 		MedSpecialty result = medSpecialtyRepository
 				.saveAndFlush(ms);
-		MedSpecialtyDTO resultDTO = mapToDTO.apply(result);
+		MedSpecialtyDTO resultDTO = mapper.toDto(result);
 		return resultDTO;
 	}
-	
-	private Function<MedSpecialty, MedSpecialtyDTO> mapToDTO = entity -> modelMapper.map(entity, MedSpecialtyDTO.class);
-	private Function<MedSpecialtyDTO, MedSpecialty> mapToEntity = dto -> modelMapper.map(dto, MedSpecialty.class);
-	
 	
 }

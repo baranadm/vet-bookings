@@ -10,7 +10,7 @@ import pl.baranowski.dev.constraint.NipConstraint;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 
-public class VetDTO {
+public class DoctorDTO {
 	
 	private Long id;
 	
@@ -19,114 +19,115 @@ public class VetDTO {
 	
 	@NotBlank
 	private String surname;
-	
+
 	@HourlyRateConstraint
 	private String hourlyRate;
-	
+
 	@NipConstraint
 	private String nip;
-	
+
 	private Boolean active = true;
-	
+
 	private Set<MedSpecialty> medSpecialties = new HashSet<>();
+
 	private Set<AnimalType> animalTypes = new HashSet<>();
 
-	public VetDTO() {
+	public DoctorDTO() {
 	}
-	
-	public VetDTO(String name, String surname, String hourlyRate, String nip) {
-		this.name = name;
-		this.surname = surname;
-		this.hourlyRate = hourlyRate;
-		this.nip = nip;
-	}
-	
-	public VetDTO(Long id, String name, String surname, String hourlyRate, String nip) {
-		this.id = id;
-		this.name = name;
-		this.surname = surname;
-		this.hourlyRate = hourlyRate;
-		this.nip = nip;
-	}
-	
-	public VetDTO(Long id, String name, String surname, String hourlyRate, String nip, Boolean active) {
-		this.id = id;
-		this.name = name;
-		this.surname = surname;
-		this.hourlyRate = hourlyRate;
-		this.nip = nip;
-		this.active = active;
+
+	public DoctorDTO(Builder builder) {
+		this.id = builder.id;
+		this.name = builder.name;
+		this.surname = builder.surname;
+		this.hourlyRate = builder.hourlyRate;
+		this.nip = builder.nip;
+		this.active = builder.active;
+		this.medSpecialties = builder.medSpecialties;
+		this.animalTypes = builder.animalTypes;
 	}
 
 	public Long getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-
 	public String getName() {
 		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getSurname() {
 		return surname;
 	}
 
-	public void setSurname(String surname) {
-		this.surname = surname;
-	}
-
 	public String getHourlyRate() {
 		return hourlyRate;
-	}
-	
-//	public Double getHourlyRateAsDouble() {
-//		return Double.parseDouble(hourlyRate);
-//	}
-
-	public void setHourlyRate(String hourlyRate) {
-		this.hourlyRate = hourlyRate;
-	}
-	
-	public void setHourlyRateFromDouble(Double hourlyRate) {
-		this.hourlyRate = hourlyRate.toString();
 	}
 
 	public String getNip() {
 		return nip;
 	}
 
-	public void setNip(String nip) {
-		this.nip = nip;
-	}
-
 	public Boolean getActive() {
 		return active;
 	}
-	public void setActive(Boolean active) {
-		this.active = active;
-	}
-	
+
 	public Set<MedSpecialty> getMedSpecialties() {
 		return medSpecialties;
-	}
-
-	public void setMedSpecialties(Set<MedSpecialty> medSpecialties) {
-		this.medSpecialties = medSpecialties;
 	}
 
 	public Set<AnimalType> getAnimalTypes() {
 		return animalTypes;
 	}
 
-	public void setAnimalTypes(Set<AnimalType> animalTypes) {
-		this.animalTypes = animalTypes;
+
+	public static class Builder {
+		private Long id; // optional
+		private final String name; // required
+		private final String surname; // required
+		private String hourlyRate; // optional
+		private String nip; // optional
+		private Boolean active = true; // optional, default = true;
+		private Set<MedSpecialty> medSpecialties = new HashSet<>(); // optional
+		private Set<AnimalType> animalTypes = new HashSet<>(); // optional
+		
+		public Builder(String name, String surname) {
+			this.name = name;
+			this.surname = surname;
+		}
+		
+		public Builder id(Long id) {
+			this.id = id;
+			return this;
+		}
+		
+		public Builder hourlyRate(String hourlyRate) {
+			this.hourlyRate = hourlyRate;
+			return this;
+		}
+		
+		public Builder nip(String nip) {
+			this.nip = nip;
+			return this;
+		}
+		
+		public Builder active(Boolean active) {
+			this.active = active;
+			return this;
+		}
+		
+		public Builder medSpecialties(Set<MedSpecialty> medSpecialties) {
+			this.medSpecialties = medSpecialties;
+			return this;
+		}
+		
+		public Builder animalTypes(Set<AnimalType> animalTypes) {
+			this.animalTypes = animalTypes;
+			return this;
+		}
+		
+		public DoctorDTO build() {
+			return new DoctorDTO(this);
+		}
+		
 	}
 	@Override
 	public int hashCode() {
@@ -147,7 +148,7 @@ public class VetDTO {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		VetDTO other = (VetDTO) obj;
+		DoctorDTO other = (DoctorDTO) obj;
 		if (active == null) {
 			if (other.active != null)
 				return false;
@@ -178,7 +179,7 @@ public class VetDTO {
 	
 	@Override
 	public String toString() {
-		return "VetDTO [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
+		return "DoctorDTO [id=" + id + ", name=" + name + ", surname=" + surname + ", hourlyRate=" + hourlyRate + ", nip="
 				+ nip + ", active=" + active + "]";
 	}
 	

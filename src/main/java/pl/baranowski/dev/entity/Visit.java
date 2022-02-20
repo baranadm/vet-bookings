@@ -15,8 +15,8 @@ public class Visit {
 	private Long id;
 	
 	@ManyToOne
-	@JoinColumn(name = "vet_id")
-	private Vet vet; // required
+	@JoinColumn(name = "doctor_id")
+	private Doctor doctor; // required
 	
 	@ManyToOne
 	@JoinColumn(name = "patient_id")
@@ -29,8 +29,8 @@ public class Visit {
 	public Visit() {
 	}
 	
-	public Visit(VisitBuilder visitBuilder) {
-		this.vet = visitBuilder.vet;
+	private Visit(VisitBuilder visitBuilder) {
+		this.doctor = visitBuilder.doctor;
 		this.patient = visitBuilder.patient;
 		this.epoch = visitBuilder.epoch;
 		this.duration = visitBuilder.duration;
@@ -41,8 +41,8 @@ public class Visit {
 		return id;
 	}
 
-	public Vet getVet() {
-		return vet;
+	public Doctor getDoctor() {
+		return doctor;
 	}
 
 	public Patient getPatient() {
@@ -67,14 +67,14 @@ public class Visit {
 	}
 	
 	public static class VisitBuilder {
-		private final Vet vet; // required
+		private final Doctor doctor; // required
 		private final Patient patient; // required
 		private final long epoch; // required
 		private long duration = 3600; // optional, default = 3600
 		private Boolean isConfirmed = false; // optional, default = false
 		
-		public VisitBuilder(Vet vet, Patient patient, long epoch) {
-			this.vet = vet;
+		public VisitBuilder(Doctor doctor, Patient patient, long epoch) {
+			this.doctor = doctor;
 			this.patient = patient;
 			this.epoch = epoch;
 		}
@@ -103,7 +103,7 @@ public class Visit {
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((isConfirmed == null) ? 0 : isConfirmed.hashCode());
 		result = prime * result + ((patient == null) ? 0 : patient.hashCode());
-		result = prime * result + ((vet == null) ? 0 : vet.hashCode());
+		result = prime * result + ((doctor == null) ? 0 : doctor.hashCode());
 		return result;
 	}
 
@@ -135,17 +135,17 @@ public class Visit {
 				return false;
 		} else if (!patient.equals(other.patient))
 			return false;
-		if (vet == null) {
-			if (other.vet != null)
+		if (doctor == null) {
+			if (other.doctor != null)
 				return false;
-		} else if (!vet.equals(other.vet))
+		} else if (!doctor.equals(other.doctor))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Visit [id=" + id + ", vet=" + vet + ", patient=" + patient + ", epoch=" + epoch + ", duration="
+		return "Visit [id=" + id + ", doctor=" + doctor + ", patient=" + patient + ", epoch=" + epoch + ", duration="
 				+ duration + ", isConfirmed=" + isConfirmed + "]";
 	}
 	

@@ -1,6 +1,6 @@
 package pl.baranowski.dev.exception;
 
-public class VetNotActiveException extends Exception {
+public class DoctorNotActiveException extends Exception {
 
 	/**
 	 * 
@@ -9,11 +9,11 @@ public class VetNotActiveException extends Exception {
 
 	private String customMessage;
 
-	public VetNotActiveException() {
+	public DoctorNotActiveException() {
 		customMessage = "";
 	}
 	
-	public VetNotActiveException(String customMessage) {
+	public DoctorNotActiveException(String customMessage) {
 		this.customMessage = customMessage;
 	}
 
@@ -29,7 +29,7 @@ public class VetNotActiveException extends Exception {
 		this.customMessage = customMessage;
 	}
 	
-	public VetNotActiveException withCustomMessage(String message) {
+	public DoctorNotActiveException withCustomMessage(String message) {
 		this.setCustomMessage(message);
 		return this;
 	}

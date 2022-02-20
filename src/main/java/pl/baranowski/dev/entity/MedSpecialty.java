@@ -22,7 +22,7 @@ public class MedSpecialty {
 
 	@JsonIgnore
 	@ManyToMany(mappedBy = "medSpecialties")
-	private Set<Vet> entitledVets = new HashSet<>();
+	private Set<Doctor> entitledVets = new HashSet<>();
 
 	public MedSpecialty() {
 	}
