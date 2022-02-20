@@ -41,7 +41,7 @@ public class Doctor {
 	private Boolean active = true;
 
     @ElementCollection
-    @CollectionTable(name="listOfWorikngDays")
+    @CollectionTable(name="listOfWorkingDays")
 	private final List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
 	private final Integer worksFromHour = 9;
 	private final Integer worksTillHour = 16;
