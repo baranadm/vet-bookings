@@ -43,8 +43,12 @@ public class VisitService {
 	DoctorService doctorService;
 
 	public VisitDTO getById(long id) {
-		Visit result = visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
+		Visit result = findByIdOrThrow(id);
 		return mapper.toDto(result);
+	}
+
+	private Visit findByIdOrThrow(long id) {
+		return visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
 	}
 	
 	public Page<VisitDTO> findAll(Pageable pageable) {
@@ -54,36 +58,153 @@ public class VisitService {
 	}
 
 	public VisitDTO addNew(Long doctorId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
-		// throws, if epoch is before now
+		throwIfEpochIsNotInFuture(epochInSeconds);
+
+		Doctor doctor = getDoctorOrThrowIfNotFound(doctorId);
+		throwIfDoctorBusyAt(epochInSeconds, doctorId);
+		throwIfDoctorIsInactive(doctorId, doctor);
+		throwIfDoctorDoesNotWorkAtEpoch(epochInSeconds, doctor);
+		
+		Patient patient = getPatientOrThowIfNotFound(patientId, doctor);
+		throwIfPatientBusyAt(epochInSeconds, patientId);
+		throwIfAnimalTypeNotMatch(doctor, patient);
+		
+		Visit newVisit = buildNewVisit(epochInSeconds, doctor, patient);
+		
+		Visit result = visitRepository.saveAndFlush(
+				newVisit);
+		return mapper.toDto(result);
+	}
+
+	private Visit buildNewVisit(Long epochInSeconds, Doctor doctor, Patient patient) {
+		return new Visit.VisitBuilder(doctor, patient, epochInSeconds).build();
+	}
+
+	private void throwIfAnimalTypeNotMatch(Doctor doctor, Patient patient) throws NewVisitNotPossibleException {
+		if(!doctor.getAnimalTypes().contains(patient.getAnimalType())) {
+			throw new NewVisitNotPossibleException("Doctor does not have animalType: " + patient.getAnimalType());
+		}
+	}
+
+	private void throwIfDoctorIsInactive(Long doctorId, Doctor doctor) throws DoctorNotActiveException {
+		if(!doctor.isActive()) {
+			throw new DoctorNotActiveException("Creating Visit failed. Doctor with id " + doctorId + " is not active.");
+		}
+	}
+
+	private void throwIfEpochIsNotInFuture(Long epochInSeconds) throws NewVisitNotPossibleException {
 		if(epochInSeconds - System.currentTimeMillis()/1000 < 0) {
 			throw new NewVisitNotPossibleException("Creating new Visit failed: provided epoch time is not in the future.");
 		}
-		// throws, if Doctor is busy at epoch
-		throwIfDoctorBusyAt(epochInSeconds, doctorId);
+	}
+	
+	/* Checks, if Doctor has any visits at epoch. If so, throws exception.
+	 * Unconfirmed visits are also considered.
+	 * TODO checking, if Doctor is not on vacation
+	 */
+	private void throwIfDoctorBusyAt(long time, long doctorId) throws NewVisitNotPossibleException {
+		List<Visit> result = visitRepository.findByEpochAndDoctorId(time, doctorId);
+		if(result.size() >= 1) {
+			String errorMessage = generateMessageWithArrayOfVisits("Doctor", time, doctorId, result);
+			throw new NewVisitNotPossibleException(errorMessage);
+		}
+	}
+	
+	private String generateMessageWithArrayOfVisits(String field, long time, long id, List<Visit> result) {
+		StringBuilder message = new StringBuilder(field + " with id " + id + "is busy at time " + time + ". ");
+		message.append("Enrolled visits: [");
+		result.forEach(visit -> message.append(visit.getId().toString() + ", "));
+		// replaces last ", " to "]"
+		message.replace(message.length()-2, message.length() -1, "]");
+		return message.toString();
+	}
 
-		// throws, if Patient is busy at epoch
-		throwIfPatientBusyAt(epochInSeconds, patientId);
+	/*
+	 * Checks, if Patient has any visits at epoch.
+	 * Unconfirmed visits are also considered.
+	 */
+	private void throwIfPatientBusyAt(long time, long patientId) throws NewVisitNotPossibleException {
+		List<Visit> result = visitRepository.findByEpochAndPatientId(time, patientId);
+		if(result.size() >= 1) {
+			String errorMessage = generateMessageWithArrayOfVisits("Patient", time, patientId, result);
+			throw new NewVisitNotPossibleException(errorMessage);
+		}
+	}
+
+	private Doctor getDoctorOrThrowIfNotFound(Long doctorId) throws DoctorNotActiveException {
+		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found."));
 		
-		// throws, if Doctor is not active
-		Doctor doctor = getDoctorOrThrowIfNotActive(doctorId);
+		return doctor;
+	}
+
+	private void throwIfDoctorDoesNotWorkAtEpoch(Long epochInSeconds, Doctor doctor) throws NewVisitNotPossibleException {
+		if(!doesDoctorWorkAtEpoch(doctor, epochInSeconds)) {
+			throwWithMessage();
+		}
+	}
+	
+	private void throwWithMessage() throws NewVisitNotPossibleException {
+		throw new NewVisitNotPossibleException("Creating new Visit failed: time is: outside working hours, outside of working days, or not at the top of the hour.");
+	}
+	
+	private Boolean doesDoctorWorkAtEpoch(Doctor doctor, long epochInSeconds) {
+		int worksFromHour = doctor.getWorksFrom();
+		int worksUntilHour = doctor.getWorksTill();
+		List<DayOfWeek> doctorWorkingDays = doctor.getWorkingDays();
 		
-		/*
-		 *  throws, if:
-		 *  - epochInSeconds is outside Doctor's working days 
-		 *  - epochInSeconds is outside Doctor's working hours
-		 *  - epochInSeconds is not at the top of the hour (e.g. 10:00:01 is not correct)
-		 */
-		if(!isTimeOk(epochInSeconds, doctor.getWorksFrom(), doctor.getWorksTill(), doctor.getWorkingDays())) {
-			throw new NewVisitNotPossibleException("Creating new Visit failed: time is: outside working hours, outside of working days, or not at the top of the hour.");
+		ZonedDateTime zoned = convertToZonedDateTime(epochInSeconds);
+		
+		long defaultVisitTimeInSeconds = 60*60; // 1 hour
+		
+		if(isZonedAtTopHour(zoned)) {
+			return false;
 		}
 
-		// throws, if Doctor does not have Patient's AnimalType
-		Patient patient = getPatientOrThowIfAnimalTypeNotCompatibleWithDoctor(patientId, doctor);
+		if(!doesDoctorWorksAtDate(doctorWorkingDays, zoned)) {
+			return false;
+		}
+		if(doesDoctorWorksAtTime(worksFromHour, worksUntilHour, zoned)) {
+			return false;
+		}
 		
-		Visit result = visitRepository.saveAndFlush(
-				new Visit.VisitBuilder(doctor, patient, epochInSeconds).build());
-		return mapper.toDto(result);
+		// checks, if visit will end after till (after the end of working day)
+		long secondsToWorkingDayEnd = preciseEndOfWorkingDay(worksUntilHour, zoned) - zoned.toEpochSecond();
+		if(secondsToWorkingDayEnd > 0 && secondsToWorkingDayEnd < defaultVisitTimeInSeconds) {
+			return false;
+		}
+		return true;
 	}
+
+	private ZonedDateTime convertToZonedDateTime(long epochInSeconds) {
+		Instant instant =  Instant.ofEpochSecond(epochInSeconds);
+		ZonedDateTime zoned = instant.atZone(ZoneId.systemDefault());
+		return zoned;
+	}
+	
+	private boolean isZonedAtTopHour(ZonedDateTime zoned) {
+		return zoned.getSecond() != 0 || zoned.getMinute() != 0;
+	}
+
+	private boolean doesDoctorWorksAtDate(List<DayOfWeek> doctorWorkingDays, ZonedDateTime zoned) {
+		return doctorWorkingDays.contains(zoned.getDayOfWeek());
+	}
+
+	private boolean doesDoctorWorksAtTime(int worksFromHour, int worksUntilHour, ZonedDateTime zoned) {
+		return zoned.getHour()<worksFromHour || zoned.getHour()>=worksUntilHour;
+	}
+
+	private long preciseEndOfWorkingDay(int worksUntilHour, ZonedDateTime zoned) {
+		return zoned.withHour(worksUntilHour).withMinute(0).withSecond(0).withNano(0).toEpochSecond();
+	}
+	
+	private Patient getPatientOrThowIfNotFound(Long patientId, Doctor doctor) throws NewVisitNotPossibleException {
+		Patient patient = patientRepository.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
+		
+		return patient;
+	}
+	
+
+
 	
 	// TODO tests...
 	public List<SingleCheckResultDTO> findFreeSlots(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd, String intervalStr) throws SearchRequestInvalidException {
@@ -155,88 +276,9 @@ public class VisitService {
 		return result;
 	}
 
-	/**
-	 * Returns Patient or throws, if Doctor is not compatible with Patient's AnimalType
-	 * @param patientId
-	 * @param doctor
-	 * @return
-	 * @throws NewVisitNotPossibleException
-	 */
-	private Patient getPatientOrThowIfAnimalTypeNotCompatibleWithDoctor(Long patientId, Doctor doctor) throws NewVisitNotPossibleException {
-		Patient patient = patientRepository.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
-		if(!doctor.getAnimalTypes().contains(patient.getAnimalType())) {
-			throw new NewVisitNotPossibleException("Doctor does not have animalType: " + patient.getAnimalType());
-		}
-		return patient;
-	}
 
-	private Doctor getDoctorOrThrowIfNotActive(Long doctorId) throws DoctorNotActiveException {
-		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found."));
-		if(!doctor.isActive()) {
-			throw new DoctorNotActiveException("Creating Visit failed. Doctor with id " + doctorId + " is not active.");
-		}
-		return doctor;
-	}
-
-	/*
-	 * Checks, if Doctor has any visits at epoch. If so, throws exception.
-	 * Unconfirmed visits are also considered.
-	 * TODO checking, if Doctor is not on vacation
-	 */
-	private void throwIfDoctorBusyAt(long time, long doctorId) throws NewVisitNotPossibleException {
-		List<Visit> result = visitRepository.findByEpochAndDoctorId(time, doctorId);
-		if(result.size() >= 1) {
-			String errorMessage = generateMessageWithArrayOfVisits("Doctor", time, doctorId, result);
-			throw new NewVisitNotPossibleException(errorMessage);
-		}
-	}
 	
-	/*
-	 * Checks, if Patient has any visits at epoch.
-	 * Unconfirmed visits are also considered.
-	 */
-	private void throwIfPatientBusyAt(long time, long patientId) throws NewVisitNotPossibleException {
-		List<Visit> result = visitRepository.findByEpochAndPatientId(time, patientId);
-		if(result.size() >= 1) {
-			String errorMessage = generateMessageWithArrayOfVisits("Patient", time, patientId, result);
-			throw new NewVisitNotPossibleException(errorMessage);
-		}
-	}
 
-	private String generateMessageWithArrayOfVisits(String field, long time, long id, List<Visit> result) {
-		StringBuilder message = new StringBuilder(field + " with id " + id + "is busy at time " + time + ". ");
-		message.append("Enrolled visits: [");
-		result.forEach(visit -> message.append(visit.getId().toString() + ", "));
-		// replaces last ", " to "]"
-		message.replace(message.length()-2, message.length() -1, "]");
-		return message.toString();
-	}
-
-	private Boolean isTimeOk(long epochInSeconds, int from, int till, List<DayOfWeek> workingDays) {
-		Instant instant =  Instant.ofEpochSecond(epochInSeconds);
-		ZonedDateTime zoned = instant.atZone(ZoneId.systemDefault());
-		long defaultVisitTimeInSeconds = 60*60; // 1 hour
-		
-		// checks, if epoch is not at the top of the hour
-		if(zoned.getSecond() != 0 || zoned.getMinute() != 0)
-			return false;
-
-		// checks, if epoch is outside working day
-		if(!workingDays.contains(zoned.getDayOfWeek())) {
-			return false;
-		}
-		
-		// checks if epoch is outside working hours
-		if(zoned.getHour()<from || zoned.getHour()>=till) {
-			return false;
-		}
-		
-		// checks, if visit will end after till (after the end of working day)
-		long secondsToWorkingDayEnd = zoned.withHour(till).withMinute(0).withSecond(0).withNano(0).toEpochSecond() - zoned.toEpochSecond();
-		if(secondsToWorkingDayEnd > 0 && secondsToWorkingDayEnd < defaultVisitTimeInSeconds) {
-			return false;
-		}
-		return true;
-	}
+	
 	
 }
