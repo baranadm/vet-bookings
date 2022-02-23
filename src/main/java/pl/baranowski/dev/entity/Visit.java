@@ -7,6 +7,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+
 @Entity
 public class Visit {
 
@@ -22,21 +25,97 @@ public class Visit {
 	@JoinColumn(name = "patient_id")
 	private Patient patient; // required
 	
-	private long epoch; // required
+	private long epochInSeconds; // required
 	private long duration = 3600; // optional, default = 3600
 	private Boolean isConfirmed = false; // optional, default = false
 	
 	public Visit() {
 	}
 	
-	private Visit(VisitBuilder visitBuilder) {
+	private Visit(VisitBuilder visitBuilder) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		this.doctor = visitBuilder.doctor;
 		this.patient = visitBuilder.patient;
-		this.epoch = visitBuilder.epoch;
+		this.epochInSeconds = visitBuilder.epoch;
 		this.duration = visitBuilder.duration;
 		this.isConfirmed = visitBuilder.isConfirmed;
+		validateVisit();
+		doctor.addVisit(this);
+		patient.addVisit(this);
 	}
 
+	private void validateVisit() throws NewVisitNotPossibleException, DoctorNotActiveException {
+		validateEpoch();
+		validateDoctor();
+		validatePatient();
+		validateAnimalTypeMatching();
+		
+	}
+
+	private void validateEpoch() throws NewVisitNotPossibleException {
+		throwIfEpochIsNotInFuture();
+		throwIfEpochIsNotAtTheTopOfTheHour();
+	}
+
+	private void throwIfEpochIsNotInFuture() throws NewVisitNotPossibleException {
+		if(epochInSeconds - System.currentTimeMillis()/1000 < 0) {
+			throw new NewVisitNotPossibleException("Creating new Visit failed: provided epoch time is not in the future.");
+		}
+	}
+
+	private void throwIfEpochIsNotAtTheTopOfTheHour() throws NewVisitNotPossibleException {
+		if(epochInSeconds % 3600 != 0) {
+			throw new NewVisitNotPossibleException("Time should be at exact hour (at the top of the hour).");
+		}
+	}
+
+	private void validateDoctor() throws DoctorNotActiveException, NewVisitNotPossibleException {
+		throwIfDoctorIsInactive();
+		throwIfDoctorIsBusyAtEpoch();
+		throwIfDoctorDoesNotWorkAtEpoch();
+	}
+	
+	private void throwIfDoctorIsInactive() throws DoctorNotActiveException {
+		if(!doctor.isActive()) {
+			throw new DoctorNotActiveException("Creating Visit failed. Doctor with id " + doctor.getId() + " is not active.");
+		}
+	}
+	
+	private void throwIfDoctorIsBusyAtEpoch() throws NewVisitNotPossibleException {
+		if(doctor.hasVisitsAtEpoch(epochInSeconds)) {
+			throw new NewVisitNotPossibleException("Doctor with id " + doctor.getId() + " is busy at provided time.");
+		}
+	}
+
+	private void throwIfDoctorDoesNotWorkAtEpoch() throws NewVisitNotPossibleException {
+		if(!doctor.worksAt(epochInSeconds)) {
+			throw new NewVisitNotPossibleException("Doctor with id " + doctor.getId() + " does not work at given time.");
+		}
+	}
+
+	private void validatePatient() throws NewVisitNotPossibleException {
+		throwIfPatientBusyAtEpoch();
+	}
+	
+	/*
+	 * Checks, if Patient has any visits at epoch.
+	 * Unconfirmed visits are also considered.
+	 */
+	private void throwIfPatientBusyAtEpoch() throws NewVisitNotPossibleException {
+		if(patient.hasVisitsAt(epochInSeconds)) {
+			throw new NewVisitNotPossibleException("Patient has another visit at this time.");
+		}
+	}
+
+	private void validateAnimalTypeMatching() throws NewVisitNotPossibleException {
+		if(!animalTypeMatches()) {
+			throw new NewVisitNotPossibleException("Patient's animal type does not match Doctor's animal types");
+		}
+	}
+
+	private boolean animalTypeMatches() {
+		return doctor.getAnimalTypes().contains(patient.getAnimalType());
+	}
+	
 	public Long getId() {
 		return id;
 	}
@@ -50,7 +129,7 @@ public class Visit {
 	}
 
 	public long getEpoch() {
-		return epoch;
+		return epochInSeconds;
 	}
 	
 	public long getDuration() {
@@ -89,7 +168,7 @@ public class Visit {
 			return this;
 		}
 		
-		public Visit build() {
+		public Visit build() throws NewVisitNotPossibleException, DoctorNotActiveException {
 			return new Visit(this);
 		}
 	}
@@ -99,7 +178,7 @@ public class Visit {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + (int) (duration ^ (duration >>> 32));
-		result = prime * result + (int) (epoch ^ (epoch >>> 32));
+		result = prime * result + (int) (epochInSeconds ^ (epochInSeconds >>> 32));
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((isConfirmed == null) ? 0 : isConfirmed.hashCode());
 		result = prime * result + ((patient == null) ? 0 : patient.hashCode());
@@ -118,7 +197,7 @@ public class Visit {
 		Visit other = (Visit) obj;
 		if (duration != other.duration)
 			return false;
-		if (epoch != other.epoch)
+		if (epochInSeconds != other.epochInSeconds)
 			return false;
 		if (id == null) {
 			if (other.id != null)
@@ -145,7 +224,7 @@ public class Visit {
 
 	@Override
 	public String toString() {
-		return "Visit [id=" + id + ", doctor=" + doctor + ", patient=" + patient + ", epoch=" + epoch + ", duration="
+		return "Visit [id=" + id + ", doctor=" + doctor + ", patient=" + patient + ", epoch=" + epochInSeconds + ", duration="
 				+ duration + ", isConfirmed=" + isConfirmed + "]";
 	}
 	

@@ -61,11 +61,11 @@ class PatientServiceTest {
 	void getById() {
 		//whenEntityExists - returnsDTO
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
-		assertEquals(mapper.toDto(patient), patientService.getById(patient.getId()));
+		assertEquals(mapper.toDto(patient), patientService.getDto(patient.getId()));
 		
 		//whenEntityDoesNotExists - throwsEntityNotFoundException
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> patientService.getById(patient.getId()));
+		assertThrows(EntityNotFoundException.class, () -> patientService.getDto(patient.getId()));
 	}
 	
 	@Test

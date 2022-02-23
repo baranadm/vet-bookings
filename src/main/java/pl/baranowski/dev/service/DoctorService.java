@@ -46,9 +46,14 @@ public class DoctorService {
 		
 	}
 
-	public DoctorDTO getById(long validatedId) throws EntityNotFoundException {
-		Doctor doctor = doctorRepository.findById(validatedId).orElseThrow(EntityNotFoundException::new);
+	public DoctorDTO getDto(long doctorId) throws EntityNotFoundException {
+		Doctor doctor = get(doctorId);
 		return mapper.toDto(doctor);
+	}
+
+	protected Doctor get(long doctorId) {
+		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(EntityNotFoundException::new);
+		return doctor;
 	}
 	
 	// TODO tests for below method

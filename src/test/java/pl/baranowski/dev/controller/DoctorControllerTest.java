@@ -99,7 +99,7 @@ public class DoctorControllerTest {
 	@Test
 	void getById_whenValidId_returns200AndEntry() throws Exception {
 		DoctorDTO expected = this.mostowiak;
-		given(doctorService.getById(expected.getId())).willReturn(expected);
+		given(doctorService.getDto(expected.getId())).willReturn(expected);
 		
 		MvcResult result = mockMvc.perform(get("/doctor/{id}", expected.getId()))
 				.andExpect(status().isOk()).andReturn();
@@ -122,7 +122,7 @@ public class DoctorControllerTest {
 	@Test
 	void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
 		ErrorDTO expected = new ErrorDTO(new EntityNotFoundException(), HttpStatus.NOT_FOUND);
-		given(doctorService.getById(1L)).willThrow(EntityNotFoundException.class);
+		given(doctorService.getDto(1L)).willThrow(EntityNotFoundException.class);
 		
 		MvcResult result = mockMvc.perform(get("/doctor/{id}", 1L))
 				.andExpect(status().isNotFound()).andReturn();

@@ -29,116 +29,69 @@ public class Doctor {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
-	
-	private String name;
-	
-	private String surname;
-	
+	private final String name;
+	private final String surname;
 	private BigDecimal hourlyRate;
-	
-	private String nip;
-	
+	private final String nip;
 	private Boolean active = true;
-
     @ElementCollection
     @CollectionTable(name="listOfWorkingDays")
-	private final List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
-	private final Integer worksFromHour = 9;
-	private final Integer worksTillHour = 16;
-	
+	private List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+	private Integer worksFromHour = 9;
+	private Integer worksTillHour = 16;
 	@ManyToMany
 	@JoinTable(
 			name="doctors_to_med_specialities",
 			joinColumns = @JoinColumn(name="doctor_id"),
 			inverseJoinColumns = @JoinColumn(name="med_speciality_id")
 	)
-	private Set<MedSpecialty> medSpecialties = new HashSet<>();
-	
+	private final Set<MedSpecialty> medSpecialties = new HashSet<>();
 	@ManyToMany
 	@JoinTable(
 			name="doctors_to_animal_types",
 			joinColumns = @JoinColumn(name="doctor_id"),
 			inverseJoinColumns = @JoinColumn(name="animal_type_id")
 	)
-	private Set<AnimalType> animalTypes = new HashSet<>();
-	
+	private final Set<AnimalType> animalTypes = new HashSet<>();
 	@JsonIgnore
 	@OneToMany(mappedBy = "doctor")
-	private Set<Visit> visits = new HashSet<>();
+	private final Set<Visit> visits = new HashSet<>();
 
 	
-	public Doctor() {
-	}
-	
-	/**
-	 * 
-	 * @param name
-	 * @param surname
-	 * @param hourlyRate - scale is automatically set to 2
-	 * @param nip
-	 */
-	public Doctor(String name, String surname, BigDecimal hourlyRate, String nip) {
-		this.name = name;
-		this.surname = surname;
-		this.hourlyRate = hourlyRate.setScale(2);
-		this.nip = nip;
-	}
-
-	/**
-	 *  
-	 * @param id
-	 * @param name
-	 * @param surname
-	 * @param hourlyRate - scale is automatically set to 2
-	 * @param nip
-	 */
-	public Doctor(Long id, String name, String surname, BigDecimal hourlyRate, String nip) {
-		this(name, surname, hourlyRate, nip);
-		this.id = id;
+	private Doctor(Builder builder) {
+		this.id = builder.id;
+		this.name = builder.name;
+		this.surname = builder.surname;
+		this.hourlyRate = builder.hourlyRate.setScale(2);
+		this.nip = builder.nip;
+		this.active = builder.active;
+		this.workingDays = builder.workingDays;
+		this.worksFromHour = builder.worksFromHour;
+		this.worksTillHour = builder.worksTillHour;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public String getSurname() {
 		return surname;
-	}
-
-	public void setSurname(String surname) {
-		this.surname = surname;
 	}
 
 	public BigDecimal getHourlyRate() {
 		return hourlyRate;
 	}
 
-	/**
-	 * 
-	 * @param hourlyRate - scale automatically set to 2
-	 */
 	public void setHourlyRate(BigDecimal hourlyRate) {
 		this.hourlyRate = hourlyRate.setScale(2);
 	}
 
-	/**
-	 * 
-	 * @param hourlyRate - scale automatically set to 2
-	 */
 	public void setHourlyRateFromString(String hourlyRate) {
 		this.hourlyRate = BigDecimal.valueOf(Double.parseDouble(hourlyRate)).setScale(2);
 	}
 
 	public String getNip() {
 		return nip;
-	}
-
-	public void setNip(String nip) {
-		this.nip = nip;
 	}
 
 	public Long getId() {
@@ -160,15 +113,15 @@ public class Doctor {
 	public Boolean isActive() {
 		return active;
 	}
-
-	public Set<MedSpecialty> getMedSpecialties() {
-		return medSpecialties;
-	}
-
+	
 	public Set<AnimalType> getAnimalTypes() {
 		return animalTypes;
 	}
 	
+	public Set<MedSpecialty> getMedSpecialties() {
+		return medSpecialties;
+	}
+
 	public boolean addMedSpecialty(MedSpecialty ms) {
 		return medSpecialties.add(ms);
 	}
@@ -189,38 +142,63 @@ public class Doctor {
 		return visits.remove(visit);
 	}
 	
+	public Integer getWorksFromHour() {
+		return worksFromHour;
+	}
+
+	public void setWorksFromHour(Integer worksFromHour) {
+		this.worksFromHour = worksFromHour;
+	}
+
+	public Integer getWorksTillHour() {
+		return worksTillHour;
+	}
+
+	public void setWorksTillHour(Integer worksTillHour) {
+		this.worksTillHour = worksTillHour;
+	}
+
 	public List<DayOfWeek> getWorkingDays() {
 		return workingDays;
 	}
 
-	public Integer getWorksFrom() {
-		return worksFromHour;
+	public void setWorkingDays(List<DayOfWeek> workingDays) {
+		this.workingDays = workingDays;
 	}
 
-	public Integer getWorksTill() {
-		return worksTillHour;
+	public boolean isAvailableAt(long epochInSeconds) {
+		return worksAt(epochInSeconds) && !hasVisitsAtEpoch(epochInSeconds);
+	}
+
+	public boolean worksAt(long epochInSeconds) {
+		ZonedDateTime zonedStart = toZonedDateTime(epochInSeconds);
+		return worksAtTime(zonedStart) && worksAtDate(zonedStart);
 	}
 	
-	/**
-	 *  Checks, if Doctor is busy at epoch start with given duration
-	 * @param start - epoch, seconds, inclusive
-	 * @param dur - seconds
-	 * @return true, if busy
-	 */
-	public boolean isBusyAt(long start, long dur) {
-		// checks, if time is inside working hours
-		Instant instantStart = Instant.ofEpochSecond(start);
-		ZonedDateTime zonedStart = ZonedDateTime.ofInstant(instantStart, ZoneId.systemDefault());
-		if(zonedStart.getHour() < worksFromHour) {
-			return true; // start before working time = busy
-		} else if (zonedStart.getHour() + dur/60/60 > worksTillHour){
-			return true; // end after working time = busy
-		}
-		// checks, if there is another visit at epoch
-		boolean isBusy = visits.stream().anyMatch(visit -> 
-								(start >= visit.getEpoch() && start < visit.getEpoch() + visit.getDuration()) 
-								|| (start + dur <= visit.getEpoch() + visit.getDuration() && start + dur > visit.getEpoch()));
-		return isBusy;
+	private ZonedDateTime toZonedDateTime(long epochInSeconds) {
+		Instant instant = Instant.ofEpochSecond(epochInSeconds);
+		ZonedDateTime zoned = ZonedDateTime.ofInstant(instant, ZoneId.systemDefault());
+		return zoned;
+	}
+
+	private boolean worksAtTime(ZonedDateTime zonedStart) {
+		boolean afterStartOfWorkingHours = zonedStart.getHour() >= worksFromHour;
+		boolean beforeEndOfWorkingHours = zonedStart.getHour() <= worksTillHour;
+		return afterStartOfWorkingHours && beforeEndOfWorkingHours;
+	}
+	
+	private boolean worksAtDate(ZonedDateTime zonedStart) {
+		return workingDays.contains(zonedStart.getDayOfWeek());
+	}
+
+	
+	public boolean hasVisitsAtEpoch(long epochInSeconds) {
+		return visits.stream().anyMatch(visit -> 
+								{
+									boolean isEpochAfterVisitStart = epochInSeconds >= visit.getEpoch();
+									boolean isEpochAfterVisitEnd = epochInSeconds < visit.getEpoch() + visit.getDuration();
+									return isEpochAfterVisitStart && isEpochAfterVisitEnd;
+								});
 	}
 
 	@Override
@@ -235,7 +213,6 @@ public class Doctor {
 		result = prime * result + ((surname == null) ? 0 : surname.hashCode());
 		return result;
 	}
-	
 
 	@Override
 	public boolean equals(Object obj) {
@@ -285,4 +262,52 @@ public class Doctor {
 				+ nip + ", active=" + active + "]";
 	}
 	
+	public static class Builder {
+		private Long id;
+		private final String name;
+		private final String surname;
+		private BigDecimal hourlyRate;
+		private final String nip;
+		private Boolean active = true;
+		private List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+		private Integer worksFromHour = 9;
+		private Integer worksTillHour = 16;
+		
+		public Builder(String name, String surname, BigDecimal hourlyRate, String nip) {
+			this.name = name;
+			this.surname = surname;
+			this.hourlyRate = hourlyRate;
+			this.nip = nip;
+		}
+		
+		public Builder id(Long id) {
+			this.id = id;
+			return this;
+		}
+		
+		public Builder active(Boolean active) {
+			this.active = active;
+			return this;
+		}
+		
+		public Builder workingDays(List<DayOfWeek> workingDays) {
+			this.workingDays = workingDays;
+			return this;
+		}
+		
+		public Builder worksFromHour(Integer worksFromHour) {
+			this.worksFromHour = worksFromHour;
+			return this;
+		}
+		
+		public Builder worksTillHour(Integer worksTillHour) {
+			this.worksTillHour = worksTillHour;
+			return this;
+		}
+		
+		public Doctor build() {
+			return new Doctor(this);
+		}
+		
+	}
 }

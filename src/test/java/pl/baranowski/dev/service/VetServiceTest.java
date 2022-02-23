@@ -26,15 +26,15 @@ import org.springframework.data.domain.Pageable;
 
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.entity.AnimalType;
-import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Doctor;
+import pl.baranowski.dev.entity.MedSpecialty;
+import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
-import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
+import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
 @SpringBootTest
 class DoctorServiceTest {
@@ -53,8 +53,8 @@ class DoctorServiceTest {
 	
 	@Autowired
 	CustomMapper mapper;
-	
-	private final Doctor mostowiak = new Doctor(1L, "Marek", "Mostówiak", new BigDecimal(150.0), "1181328620");
+
+	private final Doctor mostowiak = new Doctor.Builder("Mark", "Most-o-wiack", new BigDecimal(150), "1181328620").id(1L).build();
 	private List<DoctorDTO> doctorsList;
 	
 	@BeforeEach
@@ -79,7 +79,7 @@ class DoctorServiceTest {
 		Long id = 1L;
 		Optional<Doctor> expected = Optional.of(mostowiak);
 		given(doctorRepository.findById(id)).willReturn(expected);
-		DoctorDTO result = doctorService.getById(id);
+		DoctorDTO result = doctorService.getDto(id);
 		assertEquals(mapper.toDto(expected.get()), result);
 	}
 
@@ -89,7 +89,7 @@ class DoctorServiceTest {
 		
 		given(doctorRepository.findById(id)).willReturn(Optional.empty());
 
-		assertThrows(EntityNotFoundException.class, () -> doctorService.getById(id));
+		assertThrows(EntityNotFoundException.class, () -> doctorService.getDto(id));
 	}
 	
 	@Test
@@ -161,19 +161,19 @@ class DoctorServiceTest {
 	
 	@Test
 	void addAnimalType_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws DoctorNotActiveException, DoubledSpecialtyException {
-		Doctor catsDoctor = new Doctor(mostowiak.getId(), mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip());
-		assertEquals(mostowiak, catsDoctor);
-
+		Doctor mostowiakWithCats = new Doctor.Builder(mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip()).id(mostowiak.getId()).build();
+		assertEquals(mostowiak, mostowiakWithCats);
 		AnimalType pet = new AnimalType(1L, "Cats");
-		catsDoctor.addAnimalType(pet);
+
+		mostowiakWithCats.addAnimalType(pet);
 		
 		given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
 		given(animalTypeRepository.findById(pet.getId())).willReturn(Optional.ofNullable(pet));
-		given(doctorRepository.saveAndFlush(catsDoctor)).willReturn(catsDoctor);
+		given(doctorRepository.saveAndFlush(mostowiakWithCats)).willReturn(mostowiakWithCats);
 		
 		DoctorDTO result = doctorService.addAnimalType(mostowiak.getId(), pet.getId());
 		
-		assertEquals(mapper.toDto(catsDoctor), result);
+		assertEquals(mapper.toDto(mostowiakWithCats), result);
 	}
 	
 	@Test
@@ -219,23 +219,21 @@ class DoctorServiceTest {
 		
 	}
 	
-	
-	
 	@Test
 	void addMedSpecialty_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws DoctorNotActiveException, DoubledSpecialtyException {
-		Doctor cardioDoctor = new Doctor(mostowiak.getId(), mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip());
-		assertEquals(mostowiak, cardioDoctor);
+		Doctor cardioMostowiak = new Doctor.Builder(mostowiak.getName(), mostowiak.getSurname(), mostowiak.getHourlyRate(), mostowiak.getNip()).id(mostowiak.getId()).build();
+		assertEquals(mostowiak, cardioMostowiak);
 
 		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
-		cardioDoctor.addMedSpecialty(ms);
+		cardioMostowiak.addMedSpecialty(ms);
 		
 		given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
 		given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.ofNullable(ms));
-		given(doctorRepository.saveAndFlush(cardioDoctor)).willReturn(cardioDoctor);
+		given(doctorRepository.saveAndFlush(cardioMostowiak)).willReturn(cardioMostowiak);
 		
 		DoctorDTO result = doctorService.addMedSpecialty(mostowiak.getId(), ms.getId());
 		
-		assertEquals(mapper.toDto(cardioDoctor), result);
+		assertEquals(mapper.toDto(cardioMostowiak), result);
 	}
 	
 	@Test

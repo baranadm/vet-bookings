@@ -69,13 +69,13 @@ class PatientControllerTest {
 
 	@Test
 	void getById_whenEntityExists_callsCorrectlyAndReturnsDTO() throws Exception {
-		given(patientService.getById(patientDTO.getId())).willReturn(patientDTO);
+		given(patientService.getDto(patientDTO.getId())).willReturn(patientDTO);
 		MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
 				.andExpect(status().isOk())
 				.andReturn();
 		
 		ArgumentCaptor<Long> idCaptor = ArgumentCaptor.forClass(Long.class);
-		verify(patientService, times(1)).getById(idCaptor.capture());
+		verify(patientService, times(1)).getDto(idCaptor.capture());
 		
 		// verifies business call
 		assertEquals(patientDTO.getId(), idCaptor.getValue());
@@ -85,7 +85,7 @@ class PatientControllerTest {
 	@Test
 	void getById_whenEntityDoNotExists_throwsEntityNotFoundException() throws Exception {
 		EntityNotFoundException expectedException = new EntityNotFoundException("test");
-		given(patientService.getById(patientDTO.getId())).willThrow(expectedException);
+		given(patientService.getDto(patientDTO.getId())).willThrow(expectedException);
 		MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
 				.andExpect(status().isNotFound())
 				.andReturn();
@@ -99,7 +99,7 @@ class PatientControllerTest {
 	void getById_whenInvalidId_throwsNumberFormatException() throws Exception {
 		String invalidId = "a";
 		NumberFormatException expectedException = generateNumberFormatExceptionForString(invalidId);
-		given(patientService.getById(patientDTO.getId())).willThrow(expectedException);
+		given(patientService.getDto(patientDTO.getId())).willThrow(expectedException);
 		MvcResult result = mockMvc.perform(get("/patient/{id}", invalidId))
 				.andExpect(status().isBadRequest())
 				.andReturn();

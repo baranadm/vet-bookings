@@ -24,12 +24,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import pl.baranowski.dev.dto.AvailableSlotsAtTheDoctorDTO;
 import pl.baranowski.dev.dto.NewVisitDTO;
-import pl.baranowski.dev.dto.SingleCheckResultDTO;
 import pl.baranowski.dev.dto.VisitDTO;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
-import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.exception.InvalidEpochTimeException;
+import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
@@ -46,28 +46,13 @@ public class VisitController {
 	@Autowired
 	DoctorService doctorService;
 	
-	/*
-	 * should produce result like: (array of JSON-serialized objects)
-	 * [{
-	 * 	"doctor" : {
-	 * 		"id": 12,
-	 * 		"name": "Robert",
-	 * 		"surname": "Kubica"
-	 * 	}
-	 * 	"epochFreeTimes": [1645072294, ....]
-	 * }
-	 * {
-	 * 	...
-	 * }]
-	 */
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
-	public @ResponseBody List<SingleCheckResultDTO> findFreeSlots(
+	public @ResponseBody List<AvailableSlotsAtTheDoctorDTO> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
 			@RequestParam("medSpecialtyName") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
 			@RequestParam("epochStart") @NotBlank(message="Invalid search criteria: epochStart should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochStart,
-			@RequestParam("epochEnd") @NotBlank(message="Invalid search criteria: epochEnd should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochEnd,
-			@RequestParam("interval") @NotBlank(message="Invalid search criteria: interval should not be empty.")	@Pattern(regexp = "[0-9]+", message = "Invalid interval format - only digits allowed") String interval) throws SearchRequestInvalidException {
-		return visitService.findFreeSlots(animalTypeName, medSpecialtyName, epochStart, epochEnd, interval);
+			@RequestParam("epochEnd") @NotBlank(message="Invalid search criteria: epochEnd should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochEnd) throws InvalidEpochTimeException {
+		return visitService.findAvailableSlotsAtTheDoctorsWithParams(animalTypeName, medSpecialtyName, epochStart, epochEnd);
 	}
 	
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")

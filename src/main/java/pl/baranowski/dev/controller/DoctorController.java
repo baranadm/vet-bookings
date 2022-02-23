@@ -40,7 +40,7 @@ public class DoctorController {
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
 	public @ResponseBody DoctorDTO getById(@PathVariable String id) throws NumberFormatException {
-		return doctorService.getById(Long.decode(id));
+		return doctorService.getDto(Long.decode(id));
 	}
 	
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")

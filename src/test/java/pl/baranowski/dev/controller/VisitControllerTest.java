@@ -369,14 +369,14 @@ class VisitControllerTest {
 
 		// setting up Doctor1:
 		Patient catPatient = new Patient(11L, "Kicia", cats, 7, "Lucyna", "lu@cy.na");
-		Doctor doctor1 = new Doctor(51L, "First", "One", new BigDecimal(100), "1111111111");
+		Doctor doctor1 = new Doctor.Builder("First", "One", new BigDecimal(100), "1111111111").id(51L).build();
 		doctor1.addAnimalType(cats);
 		doctor1.addMedSpecialty(urologist);
 		doctor1.addVisit(new Visit.VisitBuilder(doctor1, catPatient, mondayH11Y2100).build().withId(1L));
 		doctor1.addVisit(new Visit.VisitBuilder(doctor1, catPatient, mondayH14Y2100).build().withId(2L));
 		
 		// setting up Doctor2:
-		Doctor doctor2 = new Doctor(52L, "Second", "One", new BigDecimal(100), "1181328620");
+		Doctor doctor2 = new Doctor.Builder("Second", "One", new BigDecimal(100), "1181328620").id(52L).build();
 		doctor1.addAnimalType(cats);
 		doctor1.addMedSpecialty(urologist);
 		doctor1.addVisit(new Visit.VisitBuilder(doctor2, catPatient, mondayH10Y2100).build().withId(3L));

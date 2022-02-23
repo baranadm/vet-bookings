@@ -32,7 +32,7 @@ public class PatientController {
 	
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
 	public @ResponseBody PatientDTO getById(@PathVariable String id) {
-		return patientService.getById(Long.decode(id));
+		return patientService.getDto(Long.decode(id));
 	}
 	
 	@GetMapping(value="/", produces = "application/json;charset=UTF-8")

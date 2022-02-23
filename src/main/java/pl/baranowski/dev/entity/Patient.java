@@ -104,6 +104,18 @@ public class Patient {
 	public void setOwnerEmail(String ownerEmail) {
 		this.ownerEmail = ownerEmail;
 	}
+	
+	public Set<Visit> getVisits() {
+		return visits;
+	}
+	
+	public boolean addVisit(Visit visit) {
+		return visits.add(visit);
+	}
+
+	public boolean hasVisitsAt(long epochInSeconds) {
+		return visits.stream().filter(visit -> visit.getEpoch() == epochInSeconds).count() > 0;
+	}
 
 	@Override
 	public int hashCode() {

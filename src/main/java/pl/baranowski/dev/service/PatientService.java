@@ -36,9 +36,14 @@ public class PatientService {
 		return result.map(entity -> mapper.toDto(entity));
 	}
 	
-	public PatientDTO getById(Long id) {
-		Patient result = patientRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Patient with id " + id + " has not been found."));
+	public PatientDTO getDto(Long patientId) {
+		Patient result = get(patientId);
 		return mapper.toDto(result);
+	}
+
+	protected Patient get(Long patientId) {
+		Patient result = patientRepo.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
+		return result;
 	}
 
 	public PatientDTO addNew(NewPatientDTO newDTO) throws PatientAllreadyExistsException {

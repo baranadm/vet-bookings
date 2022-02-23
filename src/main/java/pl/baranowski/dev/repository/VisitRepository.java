@@ -9,7 +9,7 @@ import pl.baranowski.dev.entity.Visit;
 public interface VisitRepository extends JpaRepository<Visit, Long>{
 
 	public List<Visit> findByDoctorId(long doctorId);
-	public List<Visit> findByEpochAndDoctorId(long epoch, long doctorId);
-	public List<Visit> findByEpochAndPatientId(long epoch, long patientId);
+	public List<Visit> findByEpochInSecondsAndDoctorId(long epochInSeconds, long doctorId);
+	public List<Visit> findByEpochInSecondsAndPatientId(long epochInSeconds, long patientId);
 
 }

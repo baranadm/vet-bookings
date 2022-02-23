@@ -60,7 +60,6 @@ class VisitServiceTest {
 	@MockBean
 	PatientRepository patientRepository;
 
-	// Below we present to You our todays Heroes:
 	long mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 	AnimalType animalType = new AnimalType(1L, "Owad");
 	MedSpecialty medSpecialty = new MedSpecialty(2L, "Czółkolog");
@@ -289,13 +288,6 @@ class VisitServiceTest {
 		// if start < now
 		final long startBeforeNow = System.currentTimeMillis()/1000 - 1;
 		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForDoctor(doctor, startBeforeNow, endEqual, 3600L));
-	}
-	
-	@Test
-	void genTopHoursBetween() {
-		long start = mondayH10Y2100 + 30*60; // 2100-01-25 10:30:00;
-		long end = mondayH10Y2100 + 24*60*60 - 30*60; // 2100-01-26 9:30:00;
-		assertEquals(23, visitService.createTimeSlots(start, end, 3600L).size());
 	}
 	
 }
