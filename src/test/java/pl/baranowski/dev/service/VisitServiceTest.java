@@ -10,9 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
@@ -30,16 +28,15 @@ import org.springframework.data.domain.Pageable;
 
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
-import pl.baranowski.dev.exception.SearchRequestInvalidException;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.mapper.CustomMapper;
-import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
+import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VisitRepository;
 
 
@@ -60,15 +57,20 @@ class VisitServiceTest {
 	@MockBean
 	PatientRepository patientRepository;
 
-	long mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
-	AnimalType animalType = new AnimalType(1L, "Owad");
-	MedSpecialty medSpecialty = new MedSpecialty(2L, "Czółkolog");
-	Doctor doctor = new Doctor(3L, "Kazik", "Montana", new BigDecimal(220), "1111111111");
-	Patient patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
-	Visit visit = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100).build().withId(13L);
+	private long mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
+	private AnimalType animalType;
+	private MedSpecialty medSpecialty;
+	private Doctor doctor;
+	private Patient patient;
+	private Visit visit;
 	
 	@BeforeEach
 	void setUp() throws Exception {
+		animalType = new AnimalType(1L, "Owad");
+		medSpecialty = new MedSpecialty(2L, "Czółkolog");
+		doctor = new Doctor.Builder("Kazik", "Montana", new BigDecimal(220), "1111111111").id(3L).build();
+		patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
+		visit = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100).build().withId(13L);
 	}
 
 	@Test
@@ -175,7 +177,7 @@ class VisitServiceTest {
 	void addNew_whenDoctorOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() {
 		// Doctor IS BUSY
 		// mocking, that there is another visit at that time for chosen Doctor
-		given(visitRepository.findByEpochAndDoctorId(visit.getEpoch(), visit.getDoctor().getId()))
+		given(visitRepository.findByEpochInSecondsAndDoctorId(visit.getEpoch(), visit.getDoctor().getId()))
 			.willReturn(Collections.singletonList(visit));
 
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
@@ -185,7 +187,7 @@ class VisitServiceTest {
 		
 		// PATIENT IS BUSY
 		// mocking, that there is another visit at that time for chosen Patient
-		given(visitRepository.findByEpochAndPatientId(visit.getEpoch(), visit.getPatient().getId()))
+		given(visitRepository.findByEpochInSecondsAndPatientId(visit.getEpoch(), visit.getPatient().getId()))
 		.willReturn(Collections.singletonList(visit));
 
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
@@ -196,7 +198,7 @@ class VisitServiceTest {
 	
 	@Test
 	void addNew_whenDoctorIsNotActive_throwsDoctorNotActiveException() {
-		Doctor inactiveDoctor = new Doctor(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
+		Doctor inactiveDoctor = new Doctor.Builder("Mały", "Zenek", new BigDecimal(100), "1111111111").id(3L).build();
 		inactiveDoctor.setActive(false);
 		given(doctorRepository.findById(inactiveDoctor.getId())).willReturn(Optional.of(inactiveDoctor));
 		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
@@ -206,7 +208,7 @@ class VisitServiceTest {
 	
 	@Test
 	void addNew_whenDoctorDoesNotHavePatientsAnimalType_throwsNewVisitNotPossibleException() {
-		Doctor catsDoctor = new Doctor(3L, "Mały", "Zenek", new BigDecimal(100), "1111111111");
+		Doctor catsDoctor = new Doctor.Builder("Mały", "Zenek", new BigDecimal(100), "1111111111").id(3L).build();
 		catsDoctor.addAnimalType(new AnimalType(1L, "Kot"));
 		
 		given(doctorRepository.findById(catsDoctor.getId())).willReturn(Optional.of(catsDoctor));
@@ -245,49 +247,6 @@ class VisitServiceTest {
 		long epochMondayDuringWorkPlus2min = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 15, 02, 00), ZoneId.systemDefault()).toEpochSecond();
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayDuringWorkPlus2min));
 
-	}
-	
-	@Test
-	void findFreeSlotsForDoctor_correctCallToRepositoryAndReturnValue() throws SearchRequestInvalidException {
-		// Doctor's working hours: 9-16 (so last visit is at 15:00)
-		// date: 2100-01-25
-		Visit first = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100).build().withId(1L); // 10:00
-		Visit second = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100 +60*60).build().withId(2L); // 11:00
-		Visit third = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100 +2*60*60).build().withId(3L); // 12:00
-		Visit fourth = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100 +4*60*60).build().withId(4L); // 14:00
-		
-		doctor.addVisit(first);
-		doctor.addVisit(second);
-		doctor.addVisit(third);
-		doctor.addVisit(fourth);
-		
-		List<Long> expected = new ArrayList<>();
-		expected.add(mondayH10Y2100 - 60*60); // 9:00
-		expected.add(mondayH10Y2100 + 3*60*60); // 13:00
-		expected.add(mondayH10Y2100 + 5*60*60); // 15:00
-		
-		// mocking repository result
-		given(doctorRepository.findById(doctor.getId())).willReturn(Optional.of(doctor));
-		
-		// searching start: 2100-01-25 5:00, end 2100-01-25 18:00
-		List<Long> result = visitService.findFreeSlotsForDoctor(doctor, mondayH10Y2100 - 5*60*60, mondayH10Y2100 + 8*60*60, 3600L);
-		assertEquals(expected, result);
-		
-	}
-
-	@Test
-	void findFreeSlotsForDoctor_epochsValidation_throwSearchRequestInvalidException() {
-		// if start = end
-		final long start = mondayH10Y2100;
-		final long endEqual = start;
-		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForDoctor(doctor, start, endEqual, 3600L));
-		
-		//if start > end
-		final long endBefore = start - 1;
-		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForDoctor(doctor, start, endBefore, 3600L));
-		// if start < now
-		final long startBeforeNow = System.currentTimeMillis()/1000 - 1;
-		assertThrows(SearchRequestInvalidException.class, () -> visitService.findFreeSlotsForDoctor(doctor, startBeforeNow, endEqual, 3600L));
 	}
 	
 }
