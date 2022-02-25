@@ -55,7 +55,11 @@ class VisitServiceTest {
 	@MockBean
 	DoctorRepository doctorRepository;
 	@MockBean
+	DoctorService doctorService;
+	@MockBean
 	PatientRepository patientRepository;
+	@MockBean
+	PatientService patientService;
 
 	private long mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 	private AnimalType animalType;
@@ -69,6 +73,8 @@ class VisitServiceTest {
 		animalType = new AnimalType(1L, "Owad");
 		medSpecialty = new MedSpecialty(2L, "Czółkolog");
 		doctor = new Doctor.Builder("Kazik", "Montana", new BigDecimal(220), "1111111111").id(3L).build();
+		doctor.addAnimalType(animalType);
+		doctor.addMedSpecialty(medSpecialty);
 		patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
 		visit = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100).build().withId(13L);
 	}
@@ -127,6 +133,8 @@ class VisitServiceTest {
 		assertEquals(emptyDTOPage, result);
 	}
 	
+	
+	// TODO correct this one
 	@Test
 	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, DoctorNotActiveException {
 		// new Visit without id
@@ -161,47 +169,56 @@ class VisitServiceTest {
 		/* Doctor - not found
 		 * Patient - found
 		 */
-		given(doctorRepository.findById(1L)).willReturn(Optional.empty());
-		given(patientRepository.findById(2L)).willReturn(Optional.of(patient));
-		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, mondayH10Y2100));
+		given(doctorService.get(1L)).willThrow(new EntityNotFoundException());
+		given(patientService.get(patient.getId())).willReturn(patient);
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, patient.getId(), mondayH10Y2100));
 
 		/* Doctor - found
 		 * Patient - not found
 		 */
-		given(doctorRepository.findById(1L)).willReturn(Optional.of(doctor));
-		given(patientRepository.findById(2L)).willReturn(Optional.empty());
-		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, 2L, mondayH10Y2100));
+		given(doctorService.get(doctor.getId())).willReturn(doctor);
+		given(patientService.get(2L)).willThrow(new EntityNotFoundException());
+		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(doctor.getId(), 2L, mondayH10Y2100));
 	}
 	
 	@Test
-	void addNew_whenDoctorOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() {
-		// Doctor IS BUSY
-		// mocking, that there is another visit at that time for chosen Doctor
-		given(visitRepository.findByEpochInSecondsAndDoctorId(visit.getEpoch(), visit.getDoctor().getId()))
-			.willReturn(Collections.singletonList(visit));
-
-		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
-				visit.getDoctor().getId(), 
-				visit.getPatient().getId(), 
-				visit.getEpoch()));
+	void addNew_whenDoctorOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() throws NewVisitNotPossibleException, DoctorNotActiveException {
+		// given
+		AnimalType dog = new AnimalType("Dog");
+		Doctor doctorJohn = new Doctor.Builder("John", "Scott", new BigDecimal(456), "1111111111").id(1L).build();
+		doctorJohn.addAnimalType(dog);
+		Patient patientRon = new Patient(2L, "Ron", dog, 123, "Harry P.", "i@like.sl");
 		
-		// PATIENT IS BUSY
-		// mocking, that there is another visit at that time for chosen Patient
-		given(visitRepository.findByEpochInSecondsAndPatientId(visit.getEpoch(), visit.getPatient().getId()))
-		.willReturn(Collections.singletonList(visit));
-
+		given(doctorService.get(doctorJohn.getId())).willReturn(doctorJohn);
+		given(patientService.get(patientRon.getId())).willReturn(patientRon);
+		
+		//when doctor is busy
+		Visit visitAt10 = new Visit.VisitBuilder(doctorJohn, patientRon, mondayH10Y2100).build();
+		doctorJohn.addVisit(visitAt10);
+		
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
-				visit.getDoctor().getId(), 
-				visit.getPatient().getId(), 
-				visit.getEpoch()));
+				doctorJohn.getId(), 
+				patientRon.getId(), 
+				mondayH10Y2100));
+		
+		// when patient is busy
+		Long mondayH11Y2100 = mondayH10Y2100 + 3600;
+		
+		Visit visitAt11 = new Visit.VisitBuilder(doctorJohn, patientRon, mondayH11Y2100).build();
+		patientRon.addVisit(visitAt11);
+		
+		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
+				doctorJohn.getId(), 
+				patientRon.getId(), 
+				mondayH11Y2100));
 	}
 	
 	@Test
 	void addNew_whenDoctorIsNotActive_throwsDoctorNotActiveException() {
 		Doctor inactiveDoctor = new Doctor.Builder("Mały", "Zenek", new BigDecimal(100), "1111111111").id(3L).build();
 		inactiveDoctor.setActive(false);
-		given(doctorRepository.findById(inactiveDoctor.getId())).willReturn(Optional.of(inactiveDoctor));
-		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
+		given(doctorService.get(inactiveDoctor.getId())).willReturn(inactiveDoctor);
+		given(patientService.get(patient.getId())).willReturn(patient);
 		
 		assertThrows(DoctorNotActiveException.class, () -> visitService.addNew(inactiveDoctor.getId(), patient.getId(), mondayH10Y2100));
 	}
@@ -211,8 +228,8 @@ class VisitServiceTest {
 		Doctor catsDoctor = new Doctor.Builder("Mały", "Zenek", new BigDecimal(100), "1111111111").id(3L).build();
 		catsDoctor.addAnimalType(new AnimalType(1L, "Kot"));
 		
-		given(doctorRepository.findById(catsDoctor.getId())).willReturn(Optional.of(catsDoctor));
-		given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
+		given(doctorService.get(catsDoctor.getId())).willReturn(catsDoctor);
+		given(patientService.get(patient.getId())).willReturn(patient);
 		
 		// patient's animalType = Owad, catsDoctor animalType = "Kot"
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(catsDoctor.getId(), patient.getId(), mondayH10Y2100));
@@ -220,12 +237,16 @@ class VisitServiceTest {
 	
 	@Test
 	void addNew_whenEpochNotInFuture_throwsNewVisitNotPossibleException() {
+		given(doctorService.get(doctor.getId())).willReturn(doctor);
+		given(patientService.get(patient.getId())).willReturn(patient);
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(doctor.getId(), patient.getId(), System.currentTimeMillis()/1000 - 60)); // now - 1 minute
 	}
 	
 	@Test
 	void addNew_whenEpochIsOutsideDoctorsWorkingHoursOrDays_throwsNewVisitNotPossibleException() {
-		given(doctorRepository.findById(doctor.getId())).willReturn(Optional.of(doctor));
+		given(doctorService.get(doctor.getId())).willReturn(doctor);
+		given(patientService.get(patient.getId())).willReturn(patient);
+		
 		long epochMondayBeforeWork = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 8, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayBeforeWork));
 		
@@ -238,7 +259,8 @@ class VisitServiceTest {
 	
 	@Test
 	void addNew_whenEpochIsNotAtTheTopOfTheHour_throwsNewVisitNotPossibleException() {
-		given(doctorRepository.findById(doctor.getId())).willReturn(Optional.of(doctor));
+		given(doctorService.get(doctor.getId())).willReturn(doctor);
+		given(patientService.get(doctor.getId())).willReturn(patient);
 		// 1sec after the top of the hour
 		long epochMondayDuringWorkPlus1s = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 15, 00, 01), ZoneId.systemDefault()).toEpochSecond();
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayDuringWorkPlus1s));

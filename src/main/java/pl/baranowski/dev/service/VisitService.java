@@ -18,6 +18,7 @@ import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.manager.VisitsManager;
 import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.model.AvailableSlotsAtTheDoctor;
 import pl.baranowski.dev.model.AvailableSlotsFinder;
@@ -41,6 +42,8 @@ public class VisitService {
 	DoctorService doctorService;
 	@Autowired
 	PatientService patientService;
+	@Autowired
+	VisitsManager visitsManager;
 
 	public VisitDTO getById(long id) {
 		Visit result = findByIdOrThrow(id);
@@ -60,10 +63,18 @@ public class VisitService {
 	public VisitDTO addNew(Long doctorId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		Doctor doctor = doctorService.get(doctorId);
 		Patient patient = patientService.get(patientId);
-		Visit newVisit = buildNewVisit(epochInSeconds, doctor, patient);
-		
-		Visit result = visitRepository.saveAndFlush(newVisit);
-		return mapper.toDto(result);
+
+		/*----------------------
+		 * czy jest sens tworzyć visitsManager w celu walidacji wizyty i dopisywania wizyt do doktorów/pacjentów?
+		 * czy nie lepiej zrobić to po prostu w visitsService
+		 * 
+		 * czy w ogóle trzeba ręcznie dopisywać wizyty do doktórów i pacjentów? i tak JPA zapisuje to w bazie danych.
+		 * 
+		 * jak napisać tę funkcjonalność tak, aby było łatwo robić testy
+		 */
+		Visit newVisit = visitsManager.createNewVisit(doctor, patient, epochInSeconds);
+		Visit newVisitDto = visitRepository.saveAndFlush(newVisit);
+		return mapper.toDto(newVisitDto);
 	}
 
 	private Visit buildNewVisit(Long epochInSeconds, Doctor doctor, Patient patient) throws NewVisitNotPossibleException, DoctorNotActiveException {
