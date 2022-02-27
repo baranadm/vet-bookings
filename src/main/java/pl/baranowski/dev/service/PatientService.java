@@ -41,7 +41,7 @@ public class PatientService {
 		return mapper.toDto(result);
 	}
 
-	protected Patient get(Long patientId) {
+	public Patient get(Long patientId) {
 		Patient result = patientRepo.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
 		return result;
 	}

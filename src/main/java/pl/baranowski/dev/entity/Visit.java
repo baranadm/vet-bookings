@@ -13,22 +13,22 @@ public class Visit {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "doctor_id")
 	private Doctor doctor; // required
-	
+
 	@ManyToOne
 	@JoinColumn(name = "patient_id")
 	private Patient patient; // required
-	
+
 	private long epochInSeconds; // required
 	private long duration = 3600; // optional, default = 3600
 	private Boolean isConfirmed = false; // optional, default = false
-	
+
 	public Visit() {
 	}
-	
+
 	private Visit(VisitBuilder visitBuilder) {
 		this.doctor = visitBuilder.doctor;
 		this.patient = visitBuilder.patient;
@@ -36,7 +36,7 @@ public class Visit {
 		this.duration = visitBuilder.duration;
 		this.isConfirmed = visitBuilder.isConfirmed;
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -66,29 +66,30 @@ public class Visit {
 		return this;
 	}
 	
+	// TODO do oddzielnej klasy + testy
 	public static class VisitBuilder {
 		private final Doctor doctor; // required
 		private final Patient patient; // required
 		private final long epoch; // required
 		private long duration = 3600; // optional, default = 3600
 		private Boolean isConfirmed = false; // optional, default = false
-		
+
 		public VisitBuilder(Doctor doctor, Patient patient, long epoch) {
 			this.doctor = doctor;
 			this.patient = patient;
 			this.epoch = epoch;
 		}
-		
+
 		public VisitBuilder duration(long duration) {
 			this.duration = duration;
 			return this;
 		}
-		
+
 		public VisitBuilder isConfirmed(boolean isConfirmed) {
 			this.isConfirmed = isConfirmed;
 			return this;
 		}
-		
+
 		public Visit build() {
 			return new Visit(this);
 		}

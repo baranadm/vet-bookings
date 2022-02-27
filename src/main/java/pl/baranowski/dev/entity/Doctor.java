@@ -53,13 +53,15 @@ public class Doctor {
 			inverseJoinColumns = @JoinColumn(name="animal_type_id")
 	)
 	private final Set<AnimalType> animalTypes = new HashSet<>();
+	
+	// TODO co z tym JsonIgnore?
 	@JsonIgnore
 	@OneToMany(mappedBy = "doctor")
 	private final Set<Visit> visits = new HashSet<>();
 
 	/* -------------------------------
 	 * w celu utworzenia domyślnego konstruktora wymaganego przez JPA musiałem usunąć modyfikator final z niektórych pól
-	 * jak to zrobić lepiej?
+	 * jak to zrobić lepiej? 
 	 * 
 	 */
 	public Doctor() {
