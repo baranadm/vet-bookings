@@ -26,3 +26,6 @@ hs_err_pid*
 # Untracked files:
 postman test runs/
 sketches/
+
+# Untracked Intellij Idea project files
+.idea/
