@@ -71,12 +71,15 @@ public class VisitController {
 	
 	@PostMapping(value="/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
+	// , binding result
+	// TODO dodać loggera
 	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		
 		long doctorId = Long.decode(nv.getDoctorId());
 		long patientId = Long.decode(nv.getPatientId());
 		long epoch = Long.decode(nv.getEpoch());
 		
+		// TODO fasada/manager
 		return visitService.addNew(doctorId, patientId, epoch);
 	}
 	

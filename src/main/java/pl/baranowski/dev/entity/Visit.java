@@ -7,115 +7,36 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
-
 @Entity
 public class Visit {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "doctor_id")
 	private Doctor doctor; // required
-	
+
 	@ManyToOne
 	@JoinColumn(name = "patient_id")
 	private Patient patient; // required
-	
+
 	private long epochInSeconds; // required
 	private long duration = 3600; // optional, default = 3600
 	private Boolean isConfirmed = false; // optional, default = false
-	
+
 	public Visit() {
 	}
-	
-	private Visit(VisitBuilder visitBuilder) throws NewVisitNotPossibleException, DoctorNotActiveException {
+
+	private Visit(VisitBuilder visitBuilder) {
 		this.doctor = visitBuilder.doctor;
 		this.patient = visitBuilder.patient;
 		this.epochInSeconds = visitBuilder.epoch;
 		this.duration = visitBuilder.duration;
 		this.isConfirmed = visitBuilder.isConfirmed;
-		validateVisit();
-		doctor.addVisit(this);
-		patient.addVisit(this);
 	}
 
-	private void validateVisit() throws NewVisitNotPossibleException, DoctorNotActiveException {
-		validateEpoch();
-		validateDoctor();
-		validatePatient();
-		validateAnimalTypeMatching();
-		
-	}
-
-	private void validateEpoch() throws NewVisitNotPossibleException {
-		throwIfEpochIsNotInFuture();
-		throwIfEpochIsNotAtTheTopOfTheHour();
-	}
-
-	private void throwIfEpochIsNotInFuture() throws NewVisitNotPossibleException {
-		if(epochInSeconds - System.currentTimeMillis()/1000 < 0) {
-			throw new NewVisitNotPossibleException("Creating new Visit failed: provided epoch time is not in the future.");
-		}
-	}
-
-	private void throwIfEpochIsNotAtTheTopOfTheHour() throws NewVisitNotPossibleException {
-		if(epochInSeconds % 3600 != 0) {
-			throw new NewVisitNotPossibleException("Time should be at exact hour (at the top of the hour).");
-		}
-	}
-
-	private void validateDoctor() throws DoctorNotActiveException, NewVisitNotPossibleException {
-		throwIfDoctorIsInactive();
-		throwIfDoctorIsBusyAtEpoch();
-		throwIfDoctorDoesNotWorkAtEpoch();
-	}
-	
-	private void throwIfDoctorIsInactive() throws DoctorNotActiveException {
-		if(!doctor.isActive()) {
-			throw new DoctorNotActiveException("Creating Visit failed. Doctor with id " + doctor.getId() + " is not active.");
-		}
-	}
-	
-	private void throwIfDoctorIsBusyAtEpoch() throws NewVisitNotPossibleException {
-		if(doctor.hasVisitsAtEpoch(epochInSeconds)) {
-			throw new NewVisitNotPossibleException("Doctor with id " + doctor.getId() + " is busy at provided time.");
-		}
-	}
-
-	private void throwIfDoctorDoesNotWorkAtEpoch() throws NewVisitNotPossibleException {
-		if(!doctor.worksAt(epochInSeconds)) {
-			throw new NewVisitNotPossibleException("Doctor with id " + doctor.getId() + " does not work at given time.");
-		}
-	}
-
-	private void validatePatient() throws NewVisitNotPossibleException {
-		throwIfPatientBusyAtEpoch();
-	}
-	
-	/*
-	 * Checks, if Patient has any visits at epoch.
-	 * Unconfirmed visits are also considered.
-	 */
-	private void throwIfPatientBusyAtEpoch() throws NewVisitNotPossibleException {
-		if(patient.hasVisitsAt(epochInSeconds)) {
-			throw new NewVisitNotPossibleException("Patient has another visit at this time.");
-		}
-	}
-
-	private void validateAnimalTypeMatching() throws NewVisitNotPossibleException {
-		if(!animalTypeMatches()) {
-			throw new NewVisitNotPossibleException("Patient's animal type does not match Doctor's animal types");
-		}
-	}
-
-	private boolean animalTypeMatches() {
-		return doctor.getAnimalTypes().contains(patient.getAnimalType());
-	}
-	
 	public Long getId() {
 		return id;
 	}
@@ -145,30 +66,31 @@ public class Visit {
 		return this;
 	}
 	
+	// TODO do oddzielnej klasy + testy
 	public static class VisitBuilder {
 		private final Doctor doctor; // required
 		private final Patient patient; // required
 		private final long epoch; // required
 		private long duration = 3600; // optional, default = 3600
 		private Boolean isConfirmed = false; // optional, default = false
-		
+
 		public VisitBuilder(Doctor doctor, Patient patient, long epoch) {
 			this.doctor = doctor;
 			this.patient = patient;
 			this.epoch = epoch;
 		}
-		
+
 		public VisitBuilder duration(long duration) {
 			this.duration = duration;
 			return this;
 		}
-		
+
 		public VisitBuilder isConfirmed(boolean isConfirmed) {
 			this.isConfirmed = isConfirmed;
 			return this;
 		}
-		
-		public Visit build() throws NewVisitNotPossibleException, DoctorNotActiveException {
+
+		public Visit build() {
 			return new Visit(this);
 		}
 	}
