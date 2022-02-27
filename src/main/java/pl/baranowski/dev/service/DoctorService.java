@@ -51,7 +51,7 @@ public class DoctorService {
 		return mapper.toDto(doctor);
 	}
 
-	protected Doctor get(long doctorId) {
+	public Doctor get(long doctorId) {
 		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(EntityNotFoundException::new);
 		return doctor;
 	}

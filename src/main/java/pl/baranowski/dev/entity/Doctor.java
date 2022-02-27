@@ -29,10 +29,10 @@ public class Doctor {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
-	private final String name;
-	private final String surname;
+	private String name;
+	private String surname;
 	private BigDecimal hourlyRate;
-	private final String nip;
+	private String nip;
 	private Boolean active = true;
     @ElementCollection
     @CollectionTable(name="listOfWorkingDays")
@@ -53,10 +53,19 @@ public class Doctor {
 			inverseJoinColumns = @JoinColumn(name="animal_type_id")
 	)
 	private final Set<AnimalType> animalTypes = new HashSet<>();
+	
+	// TODO co z tym JsonIgnore?
 	@JsonIgnore
 	@OneToMany(mappedBy = "doctor")
 	private final Set<Visit> visits = new HashSet<>();
 
+	/* -------------------------------
+	 * w celu utworzenia domyślnego konstruktora wymaganego przez JPA musiałem usunąć modyfikator final z niektórych pól
+	 * jak to zrobić lepiej? 
+	 * 
+	 */
+	public Doctor() {
+	}
 	
 	private Doctor(Builder builder) {
 		this.id = builder.id;

@@ -40,7 +40,7 @@ public class AvailableSlotsFinder {
 		return result;
 	}
 
-	private List<Long> topHoursBetween(EpochFutureTimeRange timeRange) {
+	List<Long> topHoursBetween(EpochFutureTimeRange timeRange) {
 		long oneHourInSeconds = 3600;
 		long secondsToNextTopHour = (timeRange.getStartInSeconds() % oneHourInSeconds);
 		long topHour = (secondsToNextTopHour == 0) ? timeRange.getStartInSeconds() : timeRange.getStartInSeconds() - secondsToNextTopHour + oneHourInSeconds;
