@@ -82,7 +82,7 @@ class VisitControllerTest {
 	DoctorService doctorService;
 	
 	AnimalTypeDTO animalType = new AnimalTypeDTO(3L, "Wielbłąd");
-	DoctorDTO doctor = new DoctorDTO.Builder("Robert", "Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
+	DoctorDTO doctor = new DoctorDTO.Builder().name("Robert").surname("Kupicha").id(1L).hourlyRate("600").nip("1111111111").build();
 	PatientDTO patient = new PatientDTO(2L, "Maniek", animalType, 8, "Lucyna Brzoza", "brzozazlasuobok@gmail.com");
 	
 	@BeforeEach

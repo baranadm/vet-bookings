@@ -13,23 +13,16 @@ import pl.baranowski.dev.entity.MedSpecialty;
 public class DoctorDTO {
 	
 	private Long id;
-	
 	@NotBlank
 	private String name;
-	
 	@NotBlank
 	private String surname;
-
 	@HourlyRateConstraint
 	private String hourlyRate;
-
 	@NipConstraint
 	private String nip;
-
 	private Boolean active = true;
-
 	private Set<MedSpecialty> medSpecialties = new HashSet<>();
-
 	private Set<AnimalType> animalTypes = new HashSet<>();
 
 	public DoctorDTO() {
@@ -78,20 +71,28 @@ public class DoctorDTO {
 		return animalTypes;
 	}
 
+	public static Builder builder() {
+		return new Builder();
+	}
 
 	public static class Builder {
-		private Long id; // optional
-		private final String name; // required
-		private final String surname; // required
-		private String hourlyRate; // optional
-		private String nip; // optional
-		private Boolean active = true; // optional, default = true;
-		private Set<MedSpecialty> medSpecialties = new HashSet<>(); // optional
-		private Set<AnimalType> animalTypes = new HashSet<>(); // optional
-		
-		public Builder(String name, String surname) {
+		private Long id;
+		private String name;
+		private String surname;
+		private String hourlyRate;
+		private String nip;
+		private Boolean active = true;
+		private Set<MedSpecialty> medSpecialties = new HashSet<>();
+		private Set<AnimalType> animalTypes = new HashSet<>();
+
+		public Builder name(String name) {
 			this.name = name;
+			return this;
+		}
+
+		public Builder surname(String surname) {
 			this.surname = surname;
+			return this;
 		}
 		
 		public Builder id(Long id) {

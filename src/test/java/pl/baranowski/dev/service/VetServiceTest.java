@@ -60,11 +60,11 @@ class DoctorServiceTest {
 	@BeforeEach
 	void setUp() throws Exception {
 		doctorsList = new ArrayList<>();
-		
-		doctorsList.add(new DoctorDTO.Builder("Robert", "Kubica").hourlyRate("100000.00").nip("1213141516").build());
-		doctorsList.add(new DoctorDTO.Builder("Mirosław", "Rosomak").hourlyRate("100.00").nip("0987654321").build());
-		doctorsList.add(new DoctorDTO.Builder("Mamadou", "Urghabananandi").hourlyRate("40.00").nip("5566557755").build());
-		doctorsList.add(new DoctorDTO.Builder("C", "J").hourlyRate("123.45").nip("1122334455").build());
+
+		doctorsList.add(new DoctorDTO.Builder().name("Robert").surname("Kubica").hourlyRate("100000").nip("1213141516").build());
+		doctorsList.add(new DoctorDTO.Builder().name("Mirosław").surname("Rosomak").hourlyRate("100.0").nip("0987654321").build());
+		doctorsList.add(new DoctorDTO.Builder().name("Mamadou").surname("Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		doctorsList.add(new DoctorDTO.Builder().name("C").surname("J").hourlyRate("123.45").nip("1122334455").build());
 		
 	}
 

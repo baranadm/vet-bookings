@@ -59,8 +59,10 @@ public class CustomMapper {
 	}
 	
 	public DoctorDTO toDto(Doctor doctor) {
-		DoctorDTO dto = new DoctorDTO.Builder(doctor.getName(), doctor.getSurname())
+		DoctorDTO dto = new DoctorDTO.Builder()
 				.id(doctor.getId())
+				.name(doctor.getName())
+				.surname(doctor.getSurname())
 				.hourlyRate(doctor.getHourlyRate().toPlainString())
 				.nip(doctor.getNip())
 				.active(doctor.getActive())
