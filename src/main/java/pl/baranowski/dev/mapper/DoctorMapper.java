@@ -5,7 +5,10 @@ import org.mapstruct.factory.Mappers;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.entity.Doctor;
 
-@Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR, unmappedTargetPolicy = ReportingPolicy.ERROR)
+@Mapper(componentModel = "spring",
+        injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        unmappedTargetPolicy = ReportingPolicy.ERROR,
+        uses = {AnimalTypeMapper.class, MedSpecialtyMapper.class})
 public interface DoctorMapper {
     DoctorMapper INSTANCE = Mappers.getMapper(DoctorMapper.class);
 

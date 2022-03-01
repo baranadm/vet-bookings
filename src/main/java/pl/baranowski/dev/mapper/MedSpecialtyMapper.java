@@ -8,7 +8,9 @@ import org.mapstruct.factory.Mappers;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
 
-@Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR, unmappedTargetPolicy = ReportingPolicy.ERROR)
+@Mapper(componentModel = "spring",
+        injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+        unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface MedSpecialtyMapper {
     MedSpecialtyMapper INSTANCE = Mappers.getMapper(MedSpecialtyMapper.class);
 
