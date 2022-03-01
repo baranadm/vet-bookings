@@ -8,6 +8,7 @@ import java.time.ZonedDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 
@@ -22,7 +23,7 @@ class DoctorTest {
 		mondayH10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 00, 00), ZoneId.systemDefault()).toEpochSecond();
 		lion = new AnimalType("Lion");
 		patient = new Patient(3L, "Pat", lion, 1, "Somebody", "this@is.email");
-		underTest = new Doctor.Builder("Test", "Doctor", new BigDecimal(1234), "1111111111").build();
+		underTest = new DoctorBuilder().name("Test").surname("Doctor").nip("1111111111").hourlyRate(new BigDecimal(1234)).build();
 		underTest.addAnimalType(lion);
 	}
 

@@ -22,7 +22,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import pl.baranowski.dev.builder.DoctorBuilder;
 
+// TODO pytanie: czy wszystkie pola nie powinny być final? JPA wymaga domyślnego konstruktora - jak to rozwiązać?
 @Entity
 public class Doctor {
 
@@ -41,43 +43,53 @@ public class Doctor {
 	private Integer worksTillHour = 16;
 	@ManyToMany
 	@JoinTable(
-			name="doctors_to_med_specialities",
-			joinColumns = @JoinColumn(name="doctor_id"),
-			inverseJoinColumns = @JoinColumn(name="med_speciality_id")
-	)
-	private final Set<MedSpecialty> medSpecialties = new HashSet<>();
-	@ManyToMany
-	@JoinTable(
 			name="doctors_to_animal_types",
 			joinColumns = @JoinColumn(name="doctor_id"),
 			inverseJoinColumns = @JoinColumn(name="animal_type_id")
 	)
-	private final Set<AnimalType> animalTypes = new HashSet<>();
-	
+	private Set<AnimalType> animalTypes = new HashSet<>();
+	@ManyToMany
+	@JoinTable(
+			name="doctors_to_med_specialities",
+			joinColumns = @JoinColumn(name="doctor_id"),
+			inverseJoinColumns = @JoinColumn(name="med_speciality_id")
+	)
+	private Set<MedSpecialty> medSpecialties = new HashSet<>();
+
 	// TODO co z tym JsonIgnore?
 	@JsonIgnore
 	@OneToMany(mappedBy = "doctor")
-	private final Set<Visit> visits = new HashSet<>();
+	private Set<Visit> visits = new HashSet<>();
 
-	/* -------------------------------
-	 * w celu utworzenia domyślnego konstruktora wymaganego przez JPA musiałem usunąć modyfikator final z niektórych pól
-	 * jak to zrobić lepiej? 
-	 * 
-	 */
-	public Doctor() {
+
+	public Doctor(Long id,
+				  String name,
+				  String surname,
+				  BigDecimal hourlyRate,
+				  String nip,
+				  Boolean active,
+				  List<DayOfWeek> workingDays,
+				  Integer worksFromHour,
+				  Integer worksTillHour,
+				  Set<AnimalType> animalTypes,
+				  Set<MedSpecialty> medSpecialties,
+				  Set<Visit> visits) {
+		this.id = id;
+		this.name = name;
+		this.surname = surname;
+		this.hourlyRate = hourlyRate;
+		this.nip = nip;
+		this.active = active;
+		this.workingDays = workingDays;
+		this.worksFromHour = worksFromHour;
+		this.worksTillHour = worksTillHour;
+		this.animalTypes = animalTypes;
+		this.medSpecialties = medSpecialties;
+		this.visits = visits;
 	}
-	
-	private Doctor(Builder builder) {
-		this.id = builder.id;
-		this.name = builder.name;
-		this.surname = builder.surname;
-		this.hourlyRate = builder.hourlyRate;
-		this.hourlyRate.setScale(2);
-		this.nip = builder.nip;
-		this.active = builder.active;
-		this.workingDays = builder.workingDays;
-		this.worksFromHour = builder.worksFromHour;
-		this.worksTillHour = builder.worksTillHour;
+
+	public static DoctorBuilder builder() {
+		return new DoctorBuilder();
 	}
 
 	public String getName() {
@@ -272,52 +284,4 @@ public class Doctor {
 				+ nip + ", active=" + active + "]";
 	}
 	
-	public static class Builder {
-		private Long id;
-		private final String name;
-		private final String surname;
-		private BigDecimal hourlyRate;
-		private final String nip;
-		private Boolean active = true;
-		private List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
-		private Integer worksFromHour = 9;
-		private Integer worksTillHour = 16;
-		
-		public Builder(String name, String surname, BigDecimal hourlyRate, String nip) {
-			this.name = name;
-			this.surname = surname;
-			this.hourlyRate = hourlyRate;
-			this.nip = nip;
-		}
-		
-		public Builder id(Long id) {
-			this.id = id;
-			return this;
-		}
-		
-		public Builder active(Boolean active) {
-			this.active = active;
-			return this;
-		}
-		
-		public Builder workingDays(List<DayOfWeek> workingDays) {
-			this.workingDays = workingDays;
-			return this;
-		}
-		
-		public Builder worksFromHour(Integer worksFromHour) {
-			this.worksFromHour = worksFromHour;
-			return this;
-		}
-		
-		public Builder worksTillHour(Integer worksTillHour) {
-			this.worksTillHour = worksTillHour;
-			return this;
-		}
-		
-		public Doctor build() {
-			return new Doctor(this);
-		}
-		
-	}
 }

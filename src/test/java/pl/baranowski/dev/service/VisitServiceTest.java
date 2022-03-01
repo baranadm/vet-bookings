@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
@@ -72,7 +73,7 @@ class VisitServiceTest {
 	void setUp() throws Exception {
 		animalType = new AnimalType(1L, "Owad");
 		medSpecialty = new MedSpecialty(2L, "Czółkolog");
-		doctor = new Doctor.Builder("Kazik", "Montana", new BigDecimal(220), "1111111111").id(3L).build();
+		doctor = new DoctorBuilder().name("Kazik").surname("Montana").nip("1111111111").hourlyRate(new BigDecimal(220)).id(3L).build();
 		doctor.addAnimalType(animalType);
 		doctor.addMedSpecialty(medSpecialty);
 		patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
@@ -185,7 +186,7 @@ class VisitServiceTest {
 	void addNew_whenDoctorOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() throws NewVisitNotPossibleException, DoctorNotActiveException {
 		// given
 		AnimalType dog = new AnimalType("Dog");
-		Doctor doctorJohn = new Doctor.Builder("John", "Scott", new BigDecimal(456), "1111111111").id(1L).build();
+		Doctor doctorJohn = new DoctorBuilder().name("John").surname("Scott").nip("1111111111").hourlyRate(new BigDecimal(456)).id(1L).build();
 		doctorJohn.addAnimalType(dog);
 		Patient patientRon = new Patient(2L, "Ron", dog, 123, "Harry P.", "i@like.sl");
 		
@@ -215,7 +216,7 @@ class VisitServiceTest {
 	
 	@Test
 	void addNew_whenDoctorIsNotActive_throwsDoctorNotActiveException() {
-		Doctor inactiveDoctor = new Doctor.Builder("Mały", "Zenek", new BigDecimal(100), "1111111111").id(3L).build();
+		Doctor inactiveDoctor = new DoctorBuilder().name("Mały").surname("Zenek").nip("1111111111").id(3L).hourlyRate(new BigDecimal(100)).build();
 		inactiveDoctor.setActive(false);
 		given(doctorService.get(inactiveDoctor.getId())).willReturn(inactiveDoctor);
 		given(patientService.get(patient.getId())).willReturn(patient);
@@ -225,7 +226,7 @@ class VisitServiceTest {
 	
 	@Test
 	void addNew_whenDoctorDoesNotHavePatientsAnimalType_throwsNewVisitNotPossibleException() {
-		Doctor catsDoctor = new Doctor.Builder("Mały", "Zenek", new BigDecimal(100), "1111111111").id(3L).build();
+		Doctor catsDoctor = new DoctorBuilder().name("Mały").surname("Zenek").nip("1111111111").id(3L).hourlyRate(new BigDecimal(100)).build();
 		catsDoctor.addAnimalType(new AnimalType(1L, "Kot"));
 		
 		given(doctorService.get(catsDoctor.getId())).willReturn(catsDoctor);
