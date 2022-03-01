@@ -10,6 +10,7 @@ public interface DoctorMapper {
     DoctorMapper INSTANCE = Mappers.getMapper(DoctorMapper.class);
 
     DoctorDTO toDto(Doctor doctor);
+
     @InheritInverseConfiguration
     Doctor toEntity(DoctorDTO doctorDTO);
 }

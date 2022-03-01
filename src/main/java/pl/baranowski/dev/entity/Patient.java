@@ -20,19 +20,16 @@ public class Patient {
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
 	private String name;
-	
 	@ManyToOne
 	@JoinColumn(name = "animal_type_id")
 	private AnimalType animalType;
-
-	@JsonIgnore
-	@OneToMany(mappedBy="patient")
-	private Set<Visit> visits = new HashSet<>();
-	
 	private Integer age;
 	private String ownerName;
 	private String ownerEmail;
-	
+	@JsonIgnore
+	@OneToMany(mappedBy="patient")
+	private Set<Visit> visits = new HashSet<>();
+
 	public Patient() {
 	}
 	
