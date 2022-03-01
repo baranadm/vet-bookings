@@ -20,35 +20,28 @@ import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.CustomMapper;
+import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
 
 @Service
 public class DoctorService {
-	
-
-	@Autowired
 	private final DoctorRepository doctorRepository;
-	
-	@Autowired
 	private final AnimalTypeRepository animalTypeRepository;
-	
-	@Autowired
 	MedSpecialtyRepository medSpecialtyRepository;
+	DoctorMapper doctorMapper;
 
-	@Autowired
-	CustomMapper mapper;
-	
-	public DoctorService(DoctorRepository doctorRepository, AnimalTypeRepository animalTypeRepository) {
+	public DoctorService(DoctorRepository doctorRepository, AnimalTypeRepository animalTypeRepository, MedSpecialtyRepository medSpecialtyRepository, DoctorMapper doctorMapper) {
 		this.doctorRepository = doctorRepository;
 		this.animalTypeRepository = animalTypeRepository;
-		
+		this.medSpecialtyRepository = medSpecialtyRepository;
+		this.doctorMapper = doctorMapper;
 	}
 
 	public DoctorDTO getDto(long doctorId) throws EntityNotFoundException {
 		Doctor doctor = get(doctorId);
-		return mapper.toDto(doctor);
+		return doctorMapper.toDto(doctor);
 	}
 
 	public Doctor get(long doctorId) {
@@ -80,7 +73,7 @@ public class DoctorService {
 		Page<Doctor> doctors = doctorRepository.findAll(validatedPageable);
 		Page<DoctorDTO> doctorsDTO = new PageImpl<DoctorDTO>(
 				doctors.toList().stream()
-				.map(mapper::toDto)
+				.map(doctorMapper::toDto)
 				.collect(Collectors.toList()), 
 				doctors.getPageable(), 
 				doctors.getSize());
@@ -92,9 +85,9 @@ public class DoctorService {
 		if(!doctorRepository.findByNip(validatedDoctorDTO.getNip()).isEmpty()) {
 			throw new NIPExistsException(); // NIP duplicated
 		}
-		Doctor doctor = mapper.toEntity(validatedDoctorDTO);
+		Doctor doctor = doctorMapper.toEntity(validatedDoctorDTO);
 		Doctor result = doctorRepository.saveAndFlush(doctor);
-		DoctorDTO resultDTO = mapper.toDto(result);
+		DoctorDTO resultDTO = doctorMapper.toDto(result);
 		return resultDTO;
 	}
 
@@ -137,7 +130,7 @@ public class DoctorService {
 		
 		// if everything is ok, update
 		doctor.addAnimalType(animalType);
-		DoctorDTO result = mapper.toDto(doctorRepository.saveAndFlush(doctor));
+		DoctorDTO result = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));
 		return result;
 	}
 
@@ -168,7 +161,7 @@ public class DoctorService {
 		doctor.addMedSpecialty(ms);
 		
 		// save (update) to DB
-		DoctorDTO result = mapper.toDto(doctorRepository.saveAndFlush(doctor));
+		DoctorDTO result = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));
 		return result;
 	}
 

@@ -31,7 +31,7 @@ import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
-import pl.baranowski.dev.mapper.CustomMapper;
+import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
@@ -52,26 +52,26 @@ class DoctorServiceTest {
 	DoctorService doctorService;
 	
 	@Autowired
-	CustomMapper mapper;
+	DoctorMapper doctorMapper;
 
-	private final Doctor mostowiak = new Doctor.Builder("Mark", "Most-o-wiack", new BigDecimal(150), "1181328620").id(1L).build();
+	private final Doctor mostowiak = new Doctor.Builder("Mark", "Most-o-wiack", new BigDecimal(150).setScale(2), "1181328620").id(1L).build();
 	private List<DoctorDTO> doctorsList;
 	
 	@BeforeEach
 	void setUp() throws Exception {
 		doctorsList = new ArrayList<>();
 
-		doctorsList.add(new DoctorDTO.Builder().name("Robert").surname("Kubica").hourlyRate("100000").nip("1213141516").build());
-		doctorsList.add(new DoctorDTO.Builder().name("Mirosław").surname("Rosomak").hourlyRate("100.0").nip("0987654321").build());
-		doctorsList.add(new DoctorDTO.Builder().name("Mamadou").surname("Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		doctorsList.add(new DoctorDTO.Builder().name("Robert").surname("Kubica").hourlyRate("100000.00").nip("1213141516").build());
+		doctorsList.add(new DoctorDTO.Builder().name("Mirosław").surname("Rosomak").hourlyRate("100.00").nip("0987654321").build());
+		doctorsList.add(new DoctorDTO.Builder().name("Mamadou").surname("Urghabananandi").hourlyRate("40.00").nip("5566557755").build());
 		doctorsList.add(new DoctorDTO.Builder().name("C").surname("J").hourlyRate("123.45").nip("1122334455").build());
 		
 	}
 
 	@Test
 	void test_mappings() {
-		DoctorDTO dto = mapper.toDto(mostowiak);
-		assertEquals(mostowiak, mapper.toEntity(dto));
+		DoctorDTO dto = doctorMapper.toDto(mostowiak);
+		assertEquals(mostowiak, doctorMapper.toEntity(dto));
 	}
 
 	@Test
@@ -80,7 +80,7 @@ class DoctorServiceTest {
 		Optional<Doctor> expected = Optional.of(mostowiak);
 		given(doctorRepository.findById(id)).willReturn(expected);
 		DoctorDTO result = doctorService.getDto(id);
-		assertEquals(mapper.toDto(expected.get()), result);
+		assertEquals(doctorMapper.toDto(expected.get()), result);
 	}
 
 	@Test
@@ -95,7 +95,7 @@ class DoctorServiceTest {
 	@Test
 	void findAll_ifEntitiesFound_returnsPageWithListOfDTOs() {
 		Pageable pageable = PageRequest.of(0, 2);
-		List<Doctor> entitiesDoctorsList = doctorsList.stream().map(mapper::toEntity).collect(Collectors.toList());
+		List<Doctor> entitiesDoctorsList = doctorsList.stream().map(doctorMapper::toEntity).collect(Collectors.toList());
 		Page<Doctor> repoResult = new PageImpl<>(entitiesDoctorsList, pageable, entitiesDoctorsList.size());
 
 		given(doctorRepository.findAll(pageable)).willReturn(repoResult);
@@ -110,7 +110,7 @@ class DoctorServiceTest {
 	void findAll_ifNoEntitiesFound_returnsEmptyPage() {
 		Pageable pageable = PageRequest.of(0, 2);
 		Page<Doctor> repoResult = new PageImpl<Doctor>(Collections.emptyList(), pageable, 0);
-		Page<DoctorDTO> expected = repoResult.map(mapper::toDto);
+		Page<DoctorDTO> expected = repoResult.map(doctorMapper::toDto);
 		
 		given(doctorRepository.findAll(pageable)).willReturn(repoResult);
 		assertPagesEquals(expected, doctorService.findAll(pageable));
@@ -119,8 +119,8 @@ class DoctorServiceTest {
 	@Test
 	void addNew_ifOK_returnDTO() throws NIPExistsException {
 		given(doctorRepository.saveAndFlush(mostowiak)).willReturn(mostowiak);
-		DoctorDTO expected = mapper.toDto(mostowiak);
-		DoctorDTO result = doctorService.addNew(mapper.toDto(mostowiak));
+		DoctorDTO expected = doctorMapper.toDto(mostowiak);
+		DoctorDTO result = doctorService.addNew(doctorMapper.toDto(mostowiak));
 		assertEquals(expected, result);
 	}
 	
@@ -128,7 +128,7 @@ class DoctorServiceTest {
 	void addNew_ifNipExists_throwNIPExistsException() {
 		// simulation of existing NIP in database
 		given(doctorRepository.findByNip(mostowiak.getNip())).willReturn(Collections.singletonList(mostowiak));
-		assertThrows(NIPExistsException.class, () -> doctorService.addNew(mapper.toDto(mostowiak)));
+		assertThrows(NIPExistsException.class, () -> doctorService.addNew(doctorMapper.toDto(mostowiak)));
 	}
 	
 	@Test
@@ -173,7 +173,7 @@ class DoctorServiceTest {
 		
 		DoctorDTO result = doctorService.addAnimalType(mostowiak.getId(), pet.getId());
 		
-		assertEquals(mapper.toDto(mostowiakWithCats), result);
+		assertEquals(doctorMapper.toDto(mostowiakWithCats), result);
 	}
 	
 	@Test
@@ -233,7 +233,7 @@ class DoctorServiceTest {
 		
 		DoctorDTO result = doctorService.addMedSpecialty(mostowiak.getId(), ms.getId());
 		
-		assertEquals(mapper.toDto(cardioMostowiak), result);
+		assertEquals(doctorMapper.toDto(cardioMostowiak), result);
 	}
 	
 	@Test
@@ -281,7 +281,7 @@ class DoctorServiceTest {
 
 	@Test
 	void testMappings() {
-		assertEquals(mostowiak, mapper.toEntity(mapper.toDto(mostowiak)));
+		assertEquals(mostowiak, doctorMapper.toEntity(doctorMapper.toDto(mostowiak)));
 	}
 	private void assertPagesEquals(Page<DoctorDTO> expected, Page<DoctorDTO> result) {
 		assertEquals(expected.get().collect(Collectors.toList()), result.get().collect(Collectors.toList()));

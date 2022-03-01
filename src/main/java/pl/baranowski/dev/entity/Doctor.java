@@ -71,7 +71,8 @@ public class Doctor {
 		this.id = builder.id;
 		this.name = builder.name;
 		this.surname = builder.surname;
-		this.hourlyRate = builder.hourlyRate.setScale(2);
+		this.hourlyRate = builder.hourlyRate;
+		this.hourlyRate.setScale(2);
 		this.nip = builder.nip;
 		this.active = builder.active;
 		this.workingDays = builder.workingDays;
