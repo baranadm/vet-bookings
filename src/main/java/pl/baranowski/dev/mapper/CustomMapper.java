@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 
 import org.springframework.stereotype.Component;
 
+import pl.baranowski.dev.builder.DoctorBuilder;
+import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.AvailableSlotsAtTheDoctorDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
@@ -36,7 +38,7 @@ public class CustomMapper {
 	}
 	
 	public Doctor toEntity(DoctorDTO dto) {
-		Doctor doctor = new Doctor.Builder(dto.getName(), dto.getSurname(), new BigDecimal(dto.getHourlyRate()), dto.getNip()).id(dto.getId()).build();
+		Doctor doctor = new DoctorBuilder().name(dto.getName()).surname(dto.getSurname()).nip(dto.getNip()).id(dto.getId()).hourlyRate(new BigDecimal(dto.getHourlyRate())).build();
 		doctor.setActive(dto.getActive());
 		return doctor;
 	}
@@ -59,7 +61,7 @@ public class CustomMapper {
 	}
 	
 	public DoctorDTO toDto(Doctor doctor) {
-		DoctorDTO dto = new DoctorDTO.Builder()
+		DoctorDTO dto = new DoctorDTOBuilder()
 				.id(doctor.getId())
 				.name(doctor.getName())
 				.surname(doctor.getSurname())

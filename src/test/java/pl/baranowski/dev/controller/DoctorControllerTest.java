@@ -37,6 +37,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
@@ -79,16 +80,16 @@ public class DoctorControllerTest {
 	@MockBean
 	DoctorService doctorService;
 	
-	private final DoctorDTO mostowiak = new DoctorDTO.Builder().name("Marek").surname("Mostowiak").id(1L).hourlyRate("150").nip("1181328620").build();
+	private final DoctorDTO mostowiak = new DoctorDTOBuilder().name("Marek").surname("Mostowiak").id(1L).hourlyRate("150").nip("1181328620").build();
 	private List<DoctorDTO> doctorsList;
 	
 	public DoctorControllerTest() {
 		doctorsList = new ArrayList<>();
 		
-		doctorsList.add(new DoctorDTO.Builder().name("Robert").surname("Kubica").hourlyRate("100000").nip("1213141516").build());
-		doctorsList.add(new DoctorDTO.Builder().name("Mirosław").surname("Rosomak").hourlyRate("100.0").nip("0987654321").build());
-		doctorsList.add(new DoctorDTO.Builder().name("Mamadou").surname("Urghabananandi").hourlyRate("40").nip("5566557755").build());
-		doctorsList.add(new DoctorDTO.Builder().name("C").surname("J").hourlyRate("123.45").nip("1122334455").build());
+		doctorsList.add(new DoctorDTOBuilder().name("Robert").surname("Kubica").hourlyRate("100000").nip("1213141516").build());
+		doctorsList.add(new DoctorDTOBuilder().name("Mirosław").surname("Rosomak").hourlyRate("100.0").nip("0987654321").build());
+		doctorsList.add(new DoctorDTOBuilder().name("Mamadou").surname("Urghabananandi").hourlyRate("40").nip("5566557755").build());
+		doctorsList.add(new DoctorDTOBuilder().name("C").surname("J").hourlyRate("123.45").nip("1122334455").build());
 	}
 	
 	@Test // request: @GET /{id}
@@ -261,7 +262,7 @@ public class DoctorControllerTest {
 	
 	@Test
 	void addNew_whenValidRequestBody_returns201AndEntry() throws JsonProcessingException, Exception {
-		DoctorDTO requestDTO = new DoctorDTO.Builder()
+		DoctorDTO requestDTO = new DoctorDTOBuilder()
 				.name(mostowiak.getName())
 				.surname(mostowiak.getSurname())
 				.id(mostowiak.getId())
@@ -300,7 +301,7 @@ public class DoctorControllerTest {
 
 	@Test
 	void addNew_whenAllFieldsNotValid_returns400AndErrorForEveryField() throws JsonProcessingException, Exception {
-		DoctorDTO requestDTO = new DoctorDTO.Builder().name("").surname("").hourlyRate("a1").nip("1111111112").build();
+		DoctorDTO requestDTO = new DoctorDTOBuilder().name("").surname("").hourlyRate("a1").nip("1111111112").build();
 		
 		mockMvc.perform(post("/doctor/")
 				.contentType("application/json")

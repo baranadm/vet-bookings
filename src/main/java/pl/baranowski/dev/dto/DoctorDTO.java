@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.validation.constraints.NotBlank;
 
+import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.constraint.HourlyRateConstraint;
 import pl.baranowski.dev.constraint.NipConstraint;
 import pl.baranowski.dev.entity.AnimalType;
@@ -22,21 +23,24 @@ public class DoctorDTO {
 	@NipConstraint
 	private String nip;
 	private Boolean active = true;
-	private Set<MedSpecialty> medSpecialties = new HashSet<>();
 	private Set<AnimalType> animalTypes = new HashSet<>();
+	private Set<MedSpecialty> medSpecialties = new HashSet<>();
 
-	public DoctorDTO() {
-	}
-
-	public DoctorDTO(Builder builder) {
-		this.id = builder.id;
-		this.name = builder.name;
-		this.surname = builder.surname;
-		this.hourlyRate = builder.hourlyRate;
-		this.nip = builder.nip;
-		this.active = builder.active;
-		this.medSpecialties = builder.medSpecialties;
-		this.animalTypes = builder.animalTypes;
+	public DoctorDTO(Long id,
+					 String name,
+					 String surname,
+					 String hourlyRate,
+					 String nip,
+					 Boolean active,
+					 Set<AnimalType> animalTypes, Set<MedSpecialty> medSpecialties) {
+		this.id = id;
+		this.name = name;
+		this.surname = surname;
+		this.hourlyRate = hourlyRate;
+		this.nip = nip;
+		this.active = active;
+		this.animalTypes = animalTypes;
+		this.medSpecialties = medSpecialties;
 	}
 
 	public Long getId() {
@@ -71,65 +75,10 @@ public class DoctorDTO {
 		return animalTypes;
 	}
 
-	public static Builder builder() {
-		return new Builder();
+	public static DoctorDTOBuilder builder() {
+		return new DoctorDTOBuilder();
 	}
 
-	public static class Builder {
-		private Long id;
-		private String name;
-		private String surname;
-		private String hourlyRate;
-		private String nip;
-		private Boolean active = true;
-		private Set<MedSpecialty> medSpecialties = new HashSet<>();
-		private Set<AnimalType> animalTypes = new HashSet<>();
-
-		public Builder name(String name) {
-			this.name = name;
-			return this;
-		}
-
-		public Builder surname(String surname) {
-			this.surname = surname;
-			return this;
-		}
-		
-		public Builder id(Long id) {
-			this.id = id;
-			return this;
-		}
-		
-		public Builder hourlyRate(String hourlyRate) {
-			this.hourlyRate = hourlyRate;
-			return this;
-		}
-		
-		public Builder nip(String nip) {
-			this.nip = nip;
-			return this;
-		}
-		
-		public Builder active(Boolean active) {
-			this.active = active;
-			return this;
-		}
-		
-		public Builder medSpecialties(Set<MedSpecialty> medSpecialties) {
-			this.medSpecialties = medSpecialties;
-			return this;
-		}
-		
-		public Builder animalTypes(Set<AnimalType> animalTypes) {
-			this.animalTypes = animalTypes;
-			return this;
-		}
-		
-		public DoctorDTO build() {
-			return new DoctorDTO(this);
-		}
-		
-	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Patient;
@@ -46,13 +47,13 @@ class AvailableSlotsFinderTest {
 		cat = new AnimalType("Cat");
 		patient = new Patient("Luis", cat, 12, "Lionel Messi", "me@ss.i");
 
-		neurologist = new Doctor.Builder("John", "Wayne", new BigDecimal(40), "1111111111").build();
+		neurologist = new DoctorBuilder().name("John").surname("Wayne").nip("1111111111").hourlyRate(new BigDecimal(40)).build();
 		neurologist.addAnimalType(cat);
 		neurologist.addVisit(new Visit.VisitBuilder(neurologist, patient, MONDAY_11).build());
 		neurologist.addVisit(new Visit.VisitBuilder(neurologist, patient, MONDAY_12).build());
 		doctors.add(neurologist);
-		
-		cardiologist = new Doctor.Builder("Max", "Payne", new BigDecimal(140), "1181328620").build();
+
+		cardiologist = new DoctorBuilder().name("Max").surname("Payne").nip("1181328620").hourlyRate(new BigDecimal(140)).build();
 		cardiologist.addAnimalType(cat);
 		cardiologist.addVisit(new Visit.VisitBuilder(cardiologist, patient, MONDAY_10).build());
 		cardiologist.addVisit(new Visit.VisitBuilder(cardiologist, patient, MONDAY_13).build());
