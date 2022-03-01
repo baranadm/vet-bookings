@@ -22,9 +22,9 @@ public class DoctorDTO {
 	private String hourlyRate;
 	@NipConstraint
 	private String nip;
-	private Boolean active = true;
-	private Set<AnimalType> animalTypes = new HashSet<>();
-	private Set<MedSpecialty> medSpecialties = new HashSet<>();
+	private Boolean active;
+	private Set<AnimalTypeDTO> animalTypes;
+	private Set<MedSpecialtyDTO> medSpecialties;
 
 	public DoctorDTO(Long id,
 					 String name,
@@ -32,13 +32,13 @@ public class DoctorDTO {
 					 String hourlyRate,
 					 String nip,
 					 Boolean active,
-					 Set<AnimalType> animalTypes, Set<MedSpecialty> medSpecialties) {
+					 Set<AnimalTypeDTO> animalTypes, Set<MedSpecialtyDTO> medSpecialties) {
 		this.id = id;
 		this.name = name;
 		this.surname = surname;
 		this.hourlyRate = hourlyRate;
 		this.nip = nip;
-		this.active = active;
+		this.active = active == null ? true : false;
 		this.animalTypes = animalTypes;
 		this.medSpecialties = medSpecialties;
 	}
@@ -67,11 +67,11 @@ public class DoctorDTO {
 		return active;
 	}
 
-	public Set<MedSpecialty> getMedSpecialties() {
+	public Set<MedSpecialtyDTO> getMedSpecialties() {
 		return medSpecialties;
 	}
 
-	public Set<AnimalType> getAnimalTypes() {
+	public Set<AnimalTypeDTO> getAnimalTypes() {
 		return animalTypes;
 	}
 

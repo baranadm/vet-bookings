@@ -28,7 +28,6 @@ import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
-import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 

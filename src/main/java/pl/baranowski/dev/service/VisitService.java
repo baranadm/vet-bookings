@@ -17,7 +17,7 @@ import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 import pl.baranowski.dev.manager.Reception;
-import pl.baranowski.dev.mapper.CustomMapper;
+import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.model.AvailableSlotsAtTheDoctor;
 import pl.baranowski.dev.model.AvailableSlotsFinder;
 import pl.baranowski.dev.model.EpochFutureTimeRange;
@@ -26,12 +26,12 @@ import pl.baranowski.dev.repository.VisitRepository;
 @Service
 public class VisitService {
 
-	private final CustomMapper mapper;
+	private final VisitMapper mapper;
 	private final VisitRepository visitRepository;
 	private final DoctorService doctorService;
 	private final PatientService patientService;
 
-	public VisitService(CustomMapper mapper, VisitRepository visitRepository, DoctorService doctorService, PatientService patientService) {
+	public VisitService(VisitMapper mapper, VisitRepository visitRepository, DoctorService doctorService, PatientService patientService) {
 		this.mapper = mapper;
 		this.visitRepository = visitRepository;
 		this.doctorService = doctorService;

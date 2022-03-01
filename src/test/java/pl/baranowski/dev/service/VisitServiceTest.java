@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import pl.baranowski.dev.builder.DoctorBuilder;
+import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
@@ -35,7 +36,6 @@ import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
-import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VisitRepository;
@@ -77,7 +77,7 @@ class VisitServiceTest {
 		doctor.addAnimalType(animalType);
 		doctor.addMedSpecialty(medSpecialty);
 		patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
-		visit = new Visit.VisitBuilder(doctor, patient, mondayH10Y2100).build().withId(13L);
+		visit = new VisitBuilder().doctor(doctor).patient(patient).epoch(mondayH10Y2100).build().withId(13L);
 	}
 
 	@Test
@@ -139,7 +139,7 @@ class VisitServiceTest {
 	@Test
 	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, DoctorNotActiveException {
 		// new Visit without id
-		Visit newVisit = new Visit.VisitBuilder(visit.getDoctor(), visit.getPatient(), visit.getEpoch()).build();
+		Visit newVisit = new VisitBuilder().doctor(visit.getDoctor()).patient(visit.getPatient()).epoch(visit.getEpoch()).build();
 
 		// adds Patient's Animal Type to Doctor
 		visit.getDoctor().addAnimalType(visit.getPatient().getAnimalType());
@@ -194,7 +194,7 @@ class VisitServiceTest {
 		given(patientService.get(patientRon.getId())).willReturn(patientRon);
 		
 		//when doctor is busy
-		Visit visitAt10 = new Visit.VisitBuilder(doctorJohn, patientRon, mondayH10Y2100).build();
+		Visit visitAt10 = new VisitBuilder().doctor(doctorJohn).patient(patientRon).epoch(mondayH10Y2100).build();
 		doctorJohn.addVisit(visitAt10);
 		
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(
@@ -205,7 +205,7 @@ class VisitServiceTest {
 		// when patient is busy
 		Long mondayH11Y2100 = mondayH10Y2100 + 3600;
 		
-		Visit visitAt11 = new Visit.VisitBuilder(doctorJohn, patientRon, mondayH11Y2100).build();
+		Visit visitAt11 = new VisitBuilder().doctor(doctorJohn).patient(patientRon).epoch(mondayH11Y2100).build();
 		patientRon.addVisit(visitAt11);
 		
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(

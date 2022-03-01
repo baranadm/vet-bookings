@@ -1,5 +1,7 @@
 package pl.baranowski.dev.entity;
 
+import pl.baranowski.dev.builder.VisitBuilder;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -13,28 +15,30 @@ public class Visit {
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)
 	private Long id;
-
 	@ManyToOne
 	@JoinColumn(name = "doctor_id")
-	private Doctor doctor; // required
-
+	private Doctor doctor;
 	@ManyToOne
 	@JoinColumn(name = "patient_id")
-	private Patient patient; // required
-
-	private long epochInSeconds; // required
-	private long duration = 3600; // optional, default = 3600
-	private Boolean isConfirmed = false; // optional, default = false
+	private Patient patient;
+	private long epochInSeconds;
+	private long duration;
+	private Boolean isConfirmed;
 
 	public Visit() {
 	}
 
-	private Visit(VisitBuilder visitBuilder) {
-		this.doctor = visitBuilder.doctor;
-		this.patient = visitBuilder.patient;
-		this.epochInSeconds = visitBuilder.epoch;
-		this.duration = visitBuilder.duration;
-		this.isConfirmed = visitBuilder.isConfirmed;
+	public Visit(Long id, Doctor doctor, Patient patient, long epochInSeconds, long duration, Boolean isConfirmed) {
+		this.id = id;
+		this.doctor = doctor;
+		this.patient = patient;
+		this.epochInSeconds = epochInSeconds;
+		this.duration = duration;
+		this.isConfirmed = isConfirmed;
+	}
+
+	public static VisitBuilder builder() {
+		return new VisitBuilder();
 	}
 
 	public Long getId() {
@@ -66,35 +70,6 @@ public class Visit {
 		return this;
 	}
 	
-	// TODO do oddzielnej klasy + testy
-	public static class VisitBuilder {
-		private final Doctor doctor; // required
-		private final Patient patient; // required
-		private final long epoch; // required
-		private long duration = 3600; // optional, default = 3600
-		private Boolean isConfirmed = false; // optional, default = false
-
-		public VisitBuilder(Doctor doctor, Patient patient, long epoch) {
-			this.doctor = doctor;
-			this.patient = patient;
-			this.epoch = epoch;
-		}
-
-		public VisitBuilder duration(long duration) {
-			this.duration = duration;
-			return this;
-		}
-
-		public VisitBuilder isConfirmed(boolean isConfirmed) {
-			this.isConfirmed = isConfirmed;
-			return this;
-		}
-
-		public Visit build() {
-			return new Visit(this);
-		}
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;

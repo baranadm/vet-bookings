@@ -1,6 +1,8 @@
 package pl.baranowski.dev.builder;
 
+import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
+import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 
@@ -14,8 +16,8 @@ public class DoctorDTOBuilder {
     private String hourlyRate;
     private String nip;
     private Boolean active = true;
-    private Set<MedSpecialty> medSpecialties = new HashSet<>();
-    private Set<AnimalType> animalTypes = new HashSet<>();
+    private Set<MedSpecialtyDTO> medSpecialties = new HashSet<>();
+    private Set<AnimalTypeDTO> animalTypes = new HashSet<>();
 
     public DoctorDTOBuilder name(String name) {
         this.name = name;
@@ -47,13 +49,13 @@ public class DoctorDTOBuilder {
         return this;
     }
 
-    public DoctorDTOBuilder medSpecialties(Set<MedSpecialty> medSpecialties) {
-        this.medSpecialties = medSpecialties;
+    public DoctorDTOBuilder medSpecialties(Set<MedSpecialtyDTO> medSpecialtyDTOs) {
+        this.medSpecialties = medSpecialtyDTOs;
         return this;
     }
 
-    public DoctorDTOBuilder animalTypes(Set<AnimalType> animalTypes) {
-        this.animalTypes = animalTypes;
+    public DoctorDTOBuilder animalTypes(Set<AnimalTypeDTO> animalTypesDTOs) {
+        this.animalTypes = animalTypesDTOs;
         return this;
     }
 

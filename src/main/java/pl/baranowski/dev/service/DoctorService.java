@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +18,6 @@ import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.exception.DoubledSpecialtyException;
 import pl.baranowski.dev.exception.NIPExistsException;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;

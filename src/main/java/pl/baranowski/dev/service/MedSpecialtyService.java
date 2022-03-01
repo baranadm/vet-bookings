@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
-import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
 @Service

@@ -11,15 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -53,12 +46,6 @@ import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
-import pl.baranowski.dev.entity.AnimalType;
-import pl.baranowski.dev.entity.MedSpecialty;
-import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Doctor;
-import pl.baranowski.dev.entity.Visit;
-import pl.baranowski.dev.mapper.CustomMapper;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 

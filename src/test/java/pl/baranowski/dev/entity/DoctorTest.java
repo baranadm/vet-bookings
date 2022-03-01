@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import pl.baranowski.dev.builder.DoctorBuilder;
+import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
 
@@ -30,7 +31,7 @@ class DoctorTest {
 	@Test
 	void hasVisitsAtEpoch() throws NewVisitNotPossibleException, DoctorNotActiveException {
 		//given
-		Visit newVisit = new Visit.VisitBuilder(underTest, patient, mondayH10Y2100).build();
+		Visit newVisit = new VisitBuilder().doctor(underTest).patient(patient).epoch(mondayH10Y2100).build();
 		//when
 		Boolean hasVisits = underTest.hasVisitsAtEpoch(mondayH10Y2100);
 		//then

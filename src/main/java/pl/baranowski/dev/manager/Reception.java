@@ -1,5 +1,6 @@
 package pl.baranowski.dev.manager;
 
+import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
@@ -21,7 +22,7 @@ public class Reception {
 		Doctor doctor = doctorService.get(doctorId);
 		Patient patient = patientService.get(patientId);
 
-		Visit visit = new Visit.VisitBuilder(doctor, patient, epochInSeconds).build();
+		Visit visit = new VisitBuilder().doctor(doctor).patient(patient).epoch(epochInSeconds).build();
 		validateVisit(visit);
 		
 		return visit;
