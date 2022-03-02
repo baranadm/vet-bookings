@@ -2,6 +2,8 @@ package pl.baranowski.dev.controller;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,9 +30,10 @@ import pl.baranowski.dev.service.DoctorService;
 @RestController
 @RequestMapping("/doctor")
 public class DoctorController {
-	
 	public static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 5);
-	@Autowired
+	private static final Logger LOGGER = LoggerFactory.getLogger(AnimalTypeController.class);
+
+
 	private final DoctorService doctorService;
 
 	public DoctorController(DoctorService doctorService) {
@@ -40,7 +43,12 @@ public class DoctorController {
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
 	public @ResponseBody DoctorDTO getById(@PathVariable String id) throws NumberFormatException {
-		return doctorService.getDto(Long.decode(id));
+		LOGGER.info("Received GET request - /id with 'id'='{}'", id);
+
+		DoctorDTO doctorDTO = doctorService.getDto(Long.decode(id));
+
+		LOGGER.info("Returning response: {}",doctorDTO);
+		return doctorDTO;
 	}
 	
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
