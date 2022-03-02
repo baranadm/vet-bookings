@@ -36,6 +36,7 @@ import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 import pl.baranowski.dev.repository.VisitRepository;
@@ -49,7 +50,7 @@ class VisitServiceTest {
 	VisitService visitService;
 	
 	@Autowired
-	CustomMapper mapper;
+	VisitMapper mapper;
 
 	@MockBean
 	VisitRepository visitRepository;

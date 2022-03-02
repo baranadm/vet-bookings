@@ -38,7 +38,7 @@ public class DoctorDTO {
 		this.surname = surname;
 		this.hourlyRate = hourlyRate;
 		this.nip = nip;
-		this.active = active == null ? true : false;
+		this.active = active == null ? true : active;
 		this.animalTypes = animalTypes;
 		this.medSpecialties = medSpecialties;
 	}

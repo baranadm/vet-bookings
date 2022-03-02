@@ -21,6 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
 // TODO check, if repo is not considering "Cat" and "Cats" are equal (contains != equals!!). If so, findByName should be repaired
@@ -31,7 +32,7 @@ class AnimalTypeServiceTest {
 	AnimalTypeService animalTypeService;
 	
 	@Autowired
-	CustomMapper mapper;
+	AnimalTypeMapper mapper;
 	
 	@MockBean
 	AnimalTypeRepository animalTypeRepository;

@@ -4,12 +4,16 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.ap.internal.util.Collections;
 import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.builder.DoctorDTOBuilder;
+import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
+import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.MedSpecialty;
 
 import java.math.BigDecimal;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,16 +46,20 @@ class DoctorMapperTest {
         assertEquals(doctor.getHourlyRate(), new BigDecimal(doctorDTO.getHourlyRate()));
         assertEquals(doctor.getNip(), doctorDTO.getNip());
         assertEquals(doctor.getActive(), doctorDTO.getActive());
-        assertEquals(doctor.getAnimalTypes(), doctorDTO.getAnimalTypes());
-        assertEquals(doctor.getMedSpecialties(), doctorDTO.getMedSpecialties());
+
+        Set<AnimalType> animalTypes = doctorDTO.getAnimalTypes().stream().map(AnimalTypeMapper.INSTANCE::toEntity).collect(Collectors.toSet());
+        assertEquals(doctor.getAnimalTypes(), animalTypes);
+
+        Set<MedSpecialty> medSpecialties = doctorDTO.getMedSpecialties().stream().map(MedSpecialtyMapper.INSTANCE::toEntity).collect(Collectors.toSet());
+        assertEquals(doctor.getMedSpecialties(), medSpecialties);
 
     }
 
     @Test
     void toEntity_allFieldsValid() {
         // given
-        AnimalType animalType = new AnimalType(1L, "Dog");
-        MedSpecialty medSpecialty = new MedSpecialty("Cardiologist");
+        AnimalTypeDTO animalTypeDTO = new AnimalTypeDTO(1L, "Dog");
+        MedSpecialtyDTO medSpecialtyDTO = new MedSpecialtyDTO("Cardiologist");
         DoctorDTO doctorDTO = new DoctorDTOBuilder()
                 .id(4L)
                 .name("Mark")
@@ -59,8 +67,8 @@ class DoctorMapperTest {
                 .hourlyRate("1234.00")
                 .nip("1111111111")
                 .active(true)
-                .animalTypes(Collections.asSet(animalType))
-                .medSpecialties(Collections.asSet(medSpecialty))
+                .animalTypes(Collections.asSet(animalTypeDTO))
+                .medSpecialties(Collections.asSet(medSpecialtyDTO))
                 .build();
 
 
@@ -73,7 +81,13 @@ class DoctorMapperTest {
         assertEquals(new BigDecimal(doctorDTO.getHourlyRate()), doctor.getHourlyRate());
         assertEquals(doctorDTO.getNip(), doctor.getNip());
         assertEquals(doctorDTO.getActive(), doctor.getActive());
-        assertEquals(doctorDTO.getAnimalTypes(), doctor.getAnimalTypes());
-        assertEquals(doctorDTO.getMedSpecialties(), doctor.getMedSpecialties());
+
+        Set<AnimalTypeDTO> animalTypeDTOs = doctor.getAnimalTypes().stream().map(AnimalTypeMapper.INSTANCE::toDto).collect(
+                Collectors.toSet());
+        assertEquals(doctorDTO.getAnimalTypes(), animalTypeDTOs);
+
+        Set<MedSpecialtyDTO> medSpecialtyDTOs = doctor.getMedSpecialties().stream().map(MedSpecialtyMapper.INSTANCE::toDto).collect(
+                Collectors.toSet());
+        assertEquals(doctorDTO.getMedSpecialties(), medSpecialtyDTOs);
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
 @Service
@@ -20,7 +21,7 @@ public class AnimalTypeService {
 	private final AnimalTypeRepository animalTypeRepo;
 	
 	@Autowired
-	CustomMapper mapper;
+	AnimalTypeMapper mapper;
 	
 	public AnimalTypeService(AnimalTypeRepository animalTypeRepo) {
 		this.animalTypeRepo = animalTypeRepo;

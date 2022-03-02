@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,8 @@ public class VisitService {
 		AvailableSlotsFinder slotsFinder = new AvailableSlotsFinder(matchingDoctors, timeRange);
 		List<AvailableSlotsAtTheDoctor> availableSlots = slotsFinder.find();
 		
-		List<AvailableSlotsAtTheDoctorDTO> availableSlotsDTO = availableSlots.stream().map(mapper::toDto).collect(Collectors.toList());
+//		List<AvailableSlotsAtTheDoctorDTO> availableSlotsDTO = availableSlots.stream().map(mapper::toDto).collect(Collectors.toList());
+		List<AvailableSlotsAtTheDoctorDTO> availableSlotsDTO = Collections.emptyList();
 		return availableSlotsDTO;
 	}
 

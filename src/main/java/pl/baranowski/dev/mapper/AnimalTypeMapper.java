@@ -7,7 +7,7 @@ import org.mapstruct.factory.Mappers;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
 
-@Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR)
+@Mapper(config = MapperCentralConfig.class)
 public interface AnimalTypeMapper {
     AnimalTypeMapper INSTANCE = Mappers.getMapper(AnimalTypeMapper.class);
 

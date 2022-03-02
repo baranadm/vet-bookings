@@ -56,7 +56,8 @@ class VisitMapperTest {
 
         VisitDTO visitDTO = new VisitDTO(3L, doctorDTO, patientDTO, mondayH10Y2100, true, 3600L);
         //when
-        Visit visit = VisitMapper.INSTANCE.toEntity(new VisitDTO());
+        Visit visit = VisitMapper.INSTANCE.toEntity(visitDTO);
+        System.out.println(visit);
         //then
         assertEquals(visitDTO.getId(), visit.getId());
         assertEquals(visitDTO.getDoctor(), DoctorMapper.INSTANCE.toDto(visit.getDoctor()));

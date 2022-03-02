@@ -21,6 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.mapper.MedSpecialtyMapper;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
 @SpringBootTest
@@ -33,7 +34,7 @@ class MedSpecialtyServiceTest {
 	MedSpecialtyService medSpecialtyService;
 	
 	@Autowired
-	CustomMapper mapper;
+	MedSpecialtyMapper mapper;
 	
 	MedSpecialty cardio = new MedSpecialty(1L, "Kardiolog");
 	MedSpecialty uro = new MedSpecialty(2l, "Urolog");

@@ -5,7 +5,8 @@ import org.mapstruct.factory.Mappers;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Visit;
 
-@Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR, unmappedTargetPolicy = ReportingPolicy.ERROR, uses = {DoctorMapper.class, PatientMapper.class})
+@Mapper(config = MapperCentralConfig.class,
+        uses = {DoctorMapper.class, PatientMapper.class})
 public interface VisitMapper {
     VisitMapper INSTANCE = Mappers.getMapper(VisitMapper.class);
 

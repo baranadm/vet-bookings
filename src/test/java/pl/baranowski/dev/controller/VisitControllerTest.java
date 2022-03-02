@@ -46,12 +46,12 @@ import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
+import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = VisitController.class)
-@Import(CustomMapper.class)
 class VisitControllerTest {
 
 	@Autowired
@@ -59,7 +59,7 @@ class VisitControllerTest {
 	@Autowired
 	ObjectMapper objectMapper;
 	@Autowired
-	CustomMapper mapper;
+	VisitMapper mapper;
 	@Autowired
 	VisitController visitController;
 	

@@ -1,14 +1,11 @@
 package pl.baranowski.dev.mapper;
 
-import org.mapstruct.InheritInverseConfiguration;
-import org.mapstruct.InjectionStrategy;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.Patient;
 
-@Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR)
+@Mapper(config = MapperCentralConfig.class)
 public interface PatientMapper {
     PatientMapper INSTANCE = Mappers.getMapper(PatientMapper.class);
 

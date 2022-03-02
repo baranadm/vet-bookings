@@ -28,6 +28,7 @@ import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.mapper.PatientMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
 
@@ -41,7 +42,7 @@ class PatientServiceTest {
 	AnimalTypeRepository animalTypeRepository;
 	
 	@Autowired
-	CustomMapper mapper;
+	PatientMapper mapper;
 	
 	@Autowired
 	PatientService patientService;
