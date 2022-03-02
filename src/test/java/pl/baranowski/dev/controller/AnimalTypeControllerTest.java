@@ -69,14 +69,14 @@ class AnimalTypeControllerTest {
 	@Test
 	void testFindAll_respondsToRequest() throws Exception {
 		given(animalTypeService.findAll()).willReturn(animalTypesDTOList);
-		mockMvc.perform(get("/animalTypes/all")).andExpect(status().isOk());
+		mockMvc.perform(get("/animalTypes/")).andExpect(status().isOk());
 	}
 
 	@Test
 	void testFindAll_returnsEntries() throws Exception {
 		given(animalTypeService.findAll()).willReturn(animalTypesDTOList);
 		
-		MvcResult result = mockMvc.perform(get("/animalTypes/all")).andExpect(status().isOk()).andReturn();
+		MvcResult result = mockMvc.perform(get("/animalTypes/")).andExpect(status().isOk()).andReturn();
 
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(animalTypesDTOList));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());

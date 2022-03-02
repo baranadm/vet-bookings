@@ -36,9 +36,9 @@ public class AnimalTypeController {
 		this.animalTypeService = animalTypeService;
 	}
 
-	@GetMapping(value="/all", produces="application/json;charset=UTF-8")
+	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	public @ResponseBody List<AnimalTypeDTO> findAll() {
-		LOGGER.info("Received GET request - /all");
+		LOGGER.info("Received GET request - / (findAll)");
 
 		List<AnimalTypeDTO> animalTypeDTOs = animalTypeService.findAll();
 
