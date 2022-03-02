@@ -68,4 +68,11 @@ public class AnimalTypeDTO {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "AnimalTypeDTO{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				'}';
+	}
 }

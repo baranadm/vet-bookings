@@ -19,6 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -67,14 +69,14 @@ class AnimalTypeControllerTest {
 	@Test
 	void testFindAll_respondsToRequest() throws Exception {
 		given(animalTypeService.findAll()).willReturn(animalTypesDTOList);
-		mockMvc.perform(get("/animalType/all")).andExpect(status().isOk());
+		mockMvc.perform(get("/animalTypes/all")).andExpect(status().isOk());
 	}
 
 	@Test
 	void testFindAll_returnsEntries() throws Exception {
 		given(animalTypeService.findAll()).willReturn(animalTypesDTOList);
 		
-		MvcResult result = mockMvc.perform(get("/animalType/all")).andExpect(status().isOk()).andReturn();
+		MvcResult result = mockMvc.perform(get("/animalTypes/all")).andExpect(status().isOk()).andReturn();
 
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(animalTypesDTOList));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
@@ -87,7 +89,7 @@ class AnimalTypeControllerTest {
 	@Test
 	void testFindById_whenValidId_respondsToRequest() throws Exception {
 		given(animalTypeService.findById(1L)).willReturn(new AnimalTypeDTO());
-		mockMvc.perform(get("/animalType/{id}", 1L)).andExpect(status().isOk());
+		mockMvc.perform(get("/animalTypes/{id}", 1L)).andExpect(status().isOk());
 	}
 	
 	@Test
@@ -95,7 +97,7 @@ class AnimalTypeControllerTest {
 		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Wiewiórka");
 		given(animalTypeService.findById(1L)).willReturn(expected);
 		
-		MvcResult result = mockMvc.perform(get("/animalType/{id}", 1L)).andExpect(status().isOk()).andReturn();
+		MvcResult result = mockMvc.perform(get("/animalTypes/{id}", 1L)).andExpect(status().isOk()).andReturn();
 
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
@@ -105,7 +107,7 @@ class AnimalTypeControllerTest {
 	
 	@Test
 	void testFindById_whenInvalidId_returns400AndThrowsException() throws Exception {
-		mockMvc.perform(get("/animalType/{id}", "aaa")).andExpect(status().isBadRequest()).andReturn();
+		mockMvc.perform(get("/animalTypes/{id}", "aaa")).andExpect(status().isBadRequest()).andReturn();
 	}
 
 	@Test
@@ -113,7 +115,7 @@ class AnimalTypeControllerTest {
 		EntityNotFoundException expectedException = new EntityNotFoundException();
 		given(animalTypeService.findById(1L)).willThrow(EntityNotFoundException.class);
 		
-		MvcResult result = mockMvc.perform(get("/animalType/{id}", 1L))
+		MvcResult result = mockMvc.perform(get("/animalTypes/{id}", 1L))
 				.andExpect(status().isNotFound())
 				.andReturn();
 		
@@ -124,12 +126,12 @@ class AnimalTypeControllerTest {
 	
 	@Test
 	void testFindByName_respondsToRequest() throws Exception {
-		mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk());
+		mockMvc.perform(get("/animalTypes/find").param("name", "Wiewiórka")).andExpect(status().isOk());
 	}
 
 	@Test
 	void testFindByName_whenNameNotEmpty_correctBusinessCalls() throws Exception {
-		mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk());
+		mockMvc.perform(get("/animalTypes/find").param("name", "Wiewiórka")).andExpect(status().isOk());
 		
 		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 		verify(animalTypeService, times(1)).findByName(captor.capture());
@@ -140,7 +142,7 @@ class AnimalTypeControllerTest {
 	void testFindByName_whenNameIsNotEmpty_returnsEntries() throws Exception {
 		AnimalTypeDTO expected = new AnimalTypeDTO(1L, "Wiewiórka");
 		given(animalTypeService.findByName(expected.getName())).willReturn(Collections.singletonList(expected));
-		MvcResult result = mockMvc.perform(get("/animalType/find").param("name", "Wiewiórka")).andExpect(status().isOk()).andReturn();
+		MvcResult result = mockMvc.perform(get("/animalTypes/find").param("name", "Wiewiórka")).andExpect(status().isOk()).andReturn();
 		
 		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(Collections.singletonList(expected)));
 		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
@@ -153,7 +155,7 @@ class AnimalTypeControllerTest {
 		EmptyFieldException ex = new EmptyFieldException("name");
 		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
 		
-		MvcResult result = mockMvc.perform(get("/animalType/find").param("name", "")).andExpect(status().isBadRequest()).andReturn();
+		MvcResult result = mockMvc.perform(get("/animalTypes/find").param("name", "")).andExpect(status().isBadRequest()).andReturn();
 		assertCorrectJSONResult(expected, result);
 	}
 	
@@ -161,7 +163,7 @@ class AnimalTypeControllerTest {
 	void testAddNew_respondsToRequest() throws JsonProcessingException, Exception {
 		AnimalTypeDTO dto = new AnimalTypeDTO("Wiewiórka");
 		mockMvc.perform(
-				post("/animalType/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
+				post("/animalTypes/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
 				.andExpect(status().isCreated());
 	}
 
@@ -170,7 +172,7 @@ class AnimalTypeControllerTest {
 		AnimalTypeDTO dto = new AnimalTypeDTO("Wiewiórka");
 
 		mockMvc.perform(
-				post("/animalType/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
+				post("/animalTypes/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
 				.andExpect(status().isCreated());
 
 		ArgumentCaptor<AnimalTypeDTO> animalTypeCaptor = ArgumentCaptor.forClass(AnimalTypeDTO.class);
@@ -187,7 +189,7 @@ class AnimalTypeControllerTest {
 		given(animalTypeService.addNew(dto)).willReturn(expected);
 
 		mockMvc.perform(
-				post("/animalType/new")
+				post("/animalTypes/new")
 				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(dto)))
 		.andExpect(status().isCreated())
@@ -206,7 +208,7 @@ class AnimalTypeControllerTest {
 		
 		// when name is empty
 		MvcResult emptyResult = mockMvc
-				.perform(post("/animalType/new")
+				.perform(post("/animalTypes/new")
 						.contentType("application/json")
 						.content(objectMapper.writeValueAsString(emptyNameDto)))
 				.andExpect(status().isBadRequest()).andReturn();
@@ -223,7 +225,7 @@ class AnimalTypeControllerTest {
 		// mocking service method
 		given(animalTypeService.addNew(requestDto)).willThrow(AnimalTypeAllreadyExistsException.class);
 
-		MvcResult result = mockMvc.perform(post("/animalType/new").contentType("application/json")
+		MvcResult result = mockMvc.perform(post("/animalTypes/new").contentType("application/json")
 				.content(objectMapper.writeValueAsString(requestDto))).andReturn();
 		
 		assertCorrectJSONResult(expectedError, result);
