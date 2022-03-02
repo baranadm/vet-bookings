@@ -4,7 +4,7 @@ import org.mapstruct.InjectionStrategy;
 import org.mapstruct.MapperConfig;
 import org.mapstruct.ReportingPolicy;
 
-@MapperConfig(injectionStrategy = InjectionStrategy.FIELD,
+@MapperConfig(injectionStrategy = InjectionStrategy.CONSTRUCTOR,
         unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface MapperCentralConfig {
 }
