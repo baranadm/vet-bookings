@@ -17,6 +17,7 @@ import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.manager.Reception;
 import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.model.AvailableSlotsAtTheDoctor;
@@ -55,14 +56,14 @@ public class VisitService {
 		return pageOfDTOs;
 	}
 
-	public VisitDTO addNew(Long doctorId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
+	public VisitDTO addNew(Long doctorId, Long patientId, Long epochInSeconds) throws Exception {
 		Reception reception = new Reception(doctorService, patientService);
 		Visit possibleVisit = reception.createNewVisitIfPossible(doctorId, patientId, epochInSeconds);
 		Visit savedVisit = visitRepository.save(possibleVisit);
 		return mapper.toDto(savedVisit);
 	}
 
-	public List<AvailableSlotsAtTheDoctorDTO> findAvailableSlotsAtTheDoctorsWithParams(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd) throws InvalidEpochTimeException {
+	public List<AvailableSlotsAtTheDoctorDTO> findAvailableSlotsAtTheDoctorsWithParams(String animalTypeName, String medSpecialtyName, String epochStart, String epochEnd) throws InvalidEpochTimeException, NotFoundException {
 		List<Doctor> matchingDoctors = findDoctorsWithSpecialities(animalTypeName, medSpecialtyName);
 		EpochFutureTimeRange timeRange = EpochFutureTimeRange.fromStrings(epochStart, epochEnd);		
 		AvailableSlotsFinder slotsFinder = new AvailableSlotsFinder(matchingDoctors, timeRange);
@@ -73,7 +74,7 @@ public class VisitService {
 		return availableSlotsDTO;
 	}
 
-	private List<Doctor> findDoctorsWithSpecialities(String animalTypeName, String medSpecialtyName) {
+	private List<Doctor> findDoctorsWithSpecialities(String animalTypeName, String medSpecialtyName) throws NotFoundException {
 		return doctorService.findByAnimalTypeNameAndMedSpecialtyName(animalTypeName, medSpecialtyName);
 	}
 	

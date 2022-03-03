@@ -36,6 +36,7 @@ import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.PatientRepository;
@@ -138,7 +139,7 @@ class VisitServiceTest {
 	
 	// TODO correct this one
 	@Test
-	void addNew_correctCallToRepositoryAndDTOReturnValue() throws NewVisitNotPossibleException, DoctorNotActiveException {
+	void addNew_correctCallToRepositoryAndDTOReturnValue() throws Exception {
 		// new Visit without id
 		Visit newVisit = new VisitBuilder().doctor(visit.getDoctor()).patient(visit.getPatient()).epoch(visit.getEpoch()).build();
 
@@ -167,11 +168,11 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_whenNoDoctorOrPatient_throwsEntityNotFoundException() {
+	void addNew_whenNoDoctorOrPatient_throwsEntityNotFoundException() throws NotFoundException {
 		/* Doctor - not found
 		 * Patient - found
 		 */
-		given(doctorService.get(1L)).willThrow(new EntityNotFoundException());
+		given(doctorService.get(1L)).willThrow(new NotFoundException("Doctor not found."));
 		given(patientService.get(patient.getId())).willReturn(patient);
 		assertThrows(EntityNotFoundException.class, () -> visitService.addNew(1L, patient.getId(), mondayH10Y2100));
 
@@ -184,7 +185,7 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_whenDoctorOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() throws NewVisitNotPossibleException, DoctorNotActiveException {
+	void addNew_whenDoctorOrPatientHasAllreadyVisitAtEpoch_throwsNewVisitNotPossibleException() throws NewVisitNotPossibleException, DoctorNotActiveException, NotFoundException {
 		// given
 		AnimalType dog = new AnimalType("Dog");
 		Doctor doctorJohn = new DoctorBuilder().name("John").surname("Scott").nip("1111111111").hourlyRate(new BigDecimal(456)).id(1L).build();
@@ -216,7 +217,7 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_whenDoctorIsNotActive_throwsDoctorNotActiveException() {
+	void addNew_whenDoctorIsNotActive_throwsDoctorNotActiveException() throws NotFoundException {
 		Doctor inactiveDoctor = new DoctorBuilder().name("Mały").surname("Zenek").nip("1111111111").id(3L).hourlyRate(new BigDecimal(100)).build();
 		inactiveDoctor.setActive(false);
 		given(doctorService.get(inactiveDoctor.getId())).willReturn(inactiveDoctor);
@@ -226,7 +227,7 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_whenDoctorDoesNotHavePatientsAnimalType_throwsNewVisitNotPossibleException() {
+	void addNew_whenDoctorDoesNotHavePatientsAnimalType_throwsNewVisitNotPossibleException() throws NotFoundException {
 		Doctor catsDoctor = new DoctorBuilder().name("Mały").surname("Zenek").nip("1111111111").id(3L).hourlyRate(new BigDecimal(100)).build();
 		catsDoctor.addAnimalType(new AnimalType(1L, "Kot"));
 		
@@ -238,14 +239,14 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_whenEpochNotInFuture_throwsNewVisitNotPossibleException() {
+	void addNew_whenEpochNotInFuture_throwsNewVisitNotPossibleException() throws NotFoundException {
 		given(doctorService.get(doctor.getId())).willReturn(doctor);
 		given(patientService.get(patient.getId())).willReturn(patient);
 		assertThrows(NewVisitNotPossibleException.class, () -> visitService.addNew(doctor.getId(), patient.getId(), System.currentTimeMillis()/1000 - 60)); // now - 1 minute
 	}
 	
 	@Test
-	void addNew_whenEpochIsOutsideDoctorsWorkingHoursOrDays_throwsNewVisitNotPossibleException() {
+	void addNew_whenEpochIsOutsideDoctorsWorkingHoursOrDays_throwsNewVisitNotPossibleException() throws NotFoundException {
 		given(doctorService.get(doctor.getId())).willReturn(doctor);
 		given(patientService.get(patient.getId())).willReturn(patient);
 		
@@ -260,7 +261,7 @@ class VisitServiceTest {
 	}
 	
 	@Test
-	void addNew_whenEpochIsNotAtTheTopOfTheHour_throwsNewVisitNotPossibleException() {
+	void addNew_whenEpochIsNotAtTheTopOfTheHour_throwsNewVisitNotPossibleException() throws NotFoundException {
 		given(doctorService.get(doctor.getId())).willReturn(doctor);
 		given(patientService.get(doctor.getId())).willReturn(patient);
 		// 1sec after the top of the hour

@@ -22,9 +22,12 @@ public class DoctorDTO {
 	private String hourlyRate;
 	@NipConstraint
 	private String nip;
-	private Boolean active;
+	private Boolean active; // default = true
 	private Set<AnimalTypeDTO> animalTypes;
 	private Set<MedSpecialtyDTO> medSpecialties;
+
+	public DoctorDTO() {
+	}
 
 	public DoctorDTO(Long id,
 					 String name,
