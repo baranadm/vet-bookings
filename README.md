@@ -1,5 +1,11 @@
 # vet-bookings
 
+## Mentoring:
+- poprawić testy - nie porównywać Stringów, tylko obiekty
+- dodać Logger
+- zastosować mapper zamiast robić swój
+- nie rzucać RuntimeException!! - zrobione nowe Exceptiony - dobrze? implements/extends
+
 ## It is a simple REST API which allows booking an appointments in Veterinary Clinic.
 
 API has been deployed on Heroku: [https://vet-bookings.herokuapp.com/](https://vet-bookings.herokuapp.com/)  

@@ -20,15 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
-import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
-import pl.baranowski.dev.exception.DoubledSpecialtyException;
-import pl.baranowski.dev.exception.EmptyFieldException;
-import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
-import pl.baranowski.dev.exception.NIPExistsException;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
-import pl.baranowski.dev.exception.PatientAllreadyExistsException;
-import pl.baranowski.dev.exception.SearchRequestInvalidException;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.exception.*;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
@@ -36,7 +28,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	// TODO clean-up
 
 	// BAD REQUEST
-	
+	@SuppressWarnings("deprecation")
+	@ExceptionHandler(BadRequestException.class)
+	protected ResponseEntity<Object> handleBadRequestException(BadRequestException exception) {
+		ErrorDTO error = new ErrorDTO(exception);
+		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
+	}
+
 	@SuppressWarnings("deprecation")
 	@ExceptionHandler(value= {
 		ConstraintViolationException.class,
@@ -49,10 +47,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+
 		MultiFieldsErrorDTO mfErrorDTO = new MultiFieldsErrorDTO();
 		for (FieldError e : ex.getBindingResult().getFieldErrors()) {
 			mfErrorDTO.addFieldError(new FieldValidationError(e.getField(), e.getDefaultMessage()));
 		}
+
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON_UTF8).body(mfErrorDTO);
 
 //		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
@@ -112,7 +112,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(EmptyFieldException.class)
 	ResponseEntity<Object> handleEmptyFieldException(EmptyFieldException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		error.setMessage(ex.getMessage());
 		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
 	}
 
@@ -130,6 +129,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 	
 	// NOT FOUND
+
+	@SuppressWarnings("deprecation")
+	@ExceptionHandler(NotFoundException.class)
+	protected ResponseEntity<Object> handleNotFoundException(NotFoundException exception) {
+		ErrorDTO error = new ErrorDTO(exception);
+		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
+	}
 	
 	@SuppressWarnings("deprecation")
 	@ExceptionHandler(EntityNotFoundException.class)
@@ -139,7 +145,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	}
 
 	// FORBIDDEN
-	
+	@SuppressWarnings("deprecation")
+	@ExceptionHandler(ForbiddenException.class)
+	protected ResponseEntity<Object> handleForbiddenException(ForbiddenException exception) {
+		ErrorDTO error = new ErrorDTO(exception);
+		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
+	}
+
 	@ExceptionHandler(DoubledSpecialtyException.class)
 	ResponseEntity<Object> handleDoubledSpecialtyException(DoubledSpecialtyException ex, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);

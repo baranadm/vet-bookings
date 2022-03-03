@@ -1,6 +1,9 @@
 package pl.baranowski.dev.dto;
 
 import org.springframework.http.HttpStatus;
+import pl.baranowski.dev.exception.ExceptionMessageAndStatusAble;
+
+import java.util.Objects;
 
 public class ErrorDTO {
 	private String exceptionClassName;
@@ -9,7 +12,12 @@ public class ErrorDTO {
 
 	public ErrorDTO() {
 	}
-	
+
+	public ErrorDTO(ExceptionMessageAndStatusAble exception) {
+		this.exceptionClassName = exception.getClass().getSimpleName();
+		this.httpStatus = exception.getHttpStatus();
+		this.message = exception.getMessage();
+	}
 	public ErrorDTO(Exception ex, HttpStatus httpStatus) {
 		this.exceptionClassName = ex.getClass().getSimpleName();
 		this.message = ex.getLocalizedMessage();
@@ -45,5 +53,29 @@ public class ErrorDTO {
 	public void setExceptionClassName(String exceptionClassName) {
 		this.exceptionClassName = exceptionClassName;
 	}
-	
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		ErrorDTO errorDTO = (ErrorDTO) o;
+		return Objects.equals(exceptionClassName,
+							  errorDTO.exceptionClassName) && httpStatus == errorDTO.httpStatus && Objects.equals(
+				message,
+				errorDTO.message);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(exceptionClassName, httpStatus, message);
+	}
+
+	@Override
+	public String toString() {
+		return "ErrorDTO{" +
+				"exceptionClassName='" + exceptionClassName + '\'' +
+				", httpStatus=" + httpStatus +
+				", message='" + message + '\'' +
+				'}';
+	}
 }

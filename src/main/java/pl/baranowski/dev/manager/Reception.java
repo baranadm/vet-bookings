@@ -6,6 +6,7 @@ import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.PatientService;
 
@@ -18,7 +19,7 @@ public class Reception {
 		this.patientService = patientService;
 	}
 
-	public Visit createNewVisitIfPossible(Long doctorId, Long patientId, Long epochInSeconds) throws NewVisitNotPossibleException, DoctorNotActiveException {
+	public Visit createNewVisitIfPossible(Long doctorId, Long patientId, Long epochInSeconds) throws Exception {
 		Doctor doctor = doctorService.get(doctorId);
 		Patient patient = patientService.get(patientId);
 

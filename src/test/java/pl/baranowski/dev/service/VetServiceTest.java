@@ -30,14 +30,13 @@ import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.MedSpecialty;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.exception.DoubledSpecialtyException;
-import pl.baranowski.dev.exception.NIPExistsException;
+import pl.baranowski.dev.exception.*;
 import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
+// TODO jak zmienić nazwę klasy z Vet na Doctor??
 @SpringBootTest
 class DoctorServiceTest {
 
@@ -86,7 +85,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void getById_whenValidId_returnsDTOfromOptional() {
+    void getById_whenValidId_returnsDTOfromOptional() throws NotFoundException {
         Long id = 1L;
         Optional<Doctor> expected = Optional.of(mostowiak);
         given(doctorRepository.findById(id)).willReturn(expected);
@@ -130,7 +129,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void addNew_ifOK_returnDTO() throws NIPExistsException {
+    void addNew_ifOK_returnDTO() throws ForbiddenException {
         given(doctorRepository.saveAndFlush(mostowiak)).willReturn(mostowiak);
         DoctorDTO expected = doctorMapper.toDto(mostowiak);
         DoctorDTO result = doctorService.addNew(doctorMapper.toDto(mostowiak));
@@ -145,7 +144,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void fire_ifEntryExistsAndIsActive_setsActiveToFalse() throws DoctorNotActiveException {
+    void fire_ifEntryExistsAndIsActive_setsActiveToFalse() throws ForbiddenException, NotFoundException {
         Doctor active = mostowiak;
         active.setActive(true);
 
@@ -173,7 +172,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void addAnimalType_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws DoctorNotActiveException, DoubledSpecialtyException {
+    void addAnimalType_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws ForbiddenException, NotFoundException {
         Doctor mostowiakWithCats = new DoctorBuilder().name(mostowiak.getName())
                 .surname(mostowiak.getSurname())
                 .nip(mostowiak.getNip())
@@ -240,7 +239,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void addMedSpecialty_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws DoctorNotActiveException, DoubledSpecialtyException {
+    void addMedSpecialty_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws ForbiddenException, NotFoundException {
         Doctor cardioMostowiak = new DoctorBuilder()
                 .name(mostowiak.getName())
                 .surname(mostowiak.getSurname())

@@ -15,9 +15,7 @@ import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Doctor;
-import pl.baranowski.dev.exception.DoubledSpecialtyException;
-import pl.baranowski.dev.exception.NIPExistsException;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
+import pl.baranowski.dev.exception.*;
 import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
@@ -27,8 +25,8 @@ import pl.baranowski.dev.repository.DoctorRepository;
 public class DoctorService {
 	private final DoctorRepository doctorRepository;
 	private final AnimalTypeRepository animalTypeRepository;
-	MedSpecialtyRepository medSpecialtyRepository;
-	DoctorMapper doctorMapper;
+	private final MedSpecialtyRepository medSpecialtyRepository;
+	private final DoctorMapper doctorMapper;
 
 	public DoctorService(DoctorRepository doctorRepository, AnimalTypeRepository animalTypeRepository, MedSpecialtyRepository medSpecialtyRepository, DoctorMapper doctorMapper) {
 		this.doctorRepository = doctorRepository;
@@ -37,29 +35,30 @@ public class DoctorService {
 		this.doctorMapper = doctorMapper;
 	}
 
-	public DoctorDTO getDto(long doctorId) throws EntityNotFoundException {
+	public DoctorDTO getDto(long doctorId) throws NotFoundException {
 		Doctor doctor = get(doctorId);
 		return doctorMapper.toDto(doctor);
 	}
 
-	public Doctor get(long doctorId) {
-		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(EntityNotFoundException::new);
+	public Doctor get(long doctorId) throws NotFoundException {
+		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new NotFoundException("Doctor with id=" + doctorId + " has not been found."));
 		return doctor;
 	}
-	
+
+	// TODO pytanie: czy get(0) jest ok?
 	// TODO tests for below method
-	public List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName, String medSpecialtyName) {
+	public List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName, String medSpecialtyName) throws NotFoundException {
 		// getting animalType
 		List<AnimalType> ats = animalTypeRepository.findByName(animalTypeName);
 		if(ats.size() < 1) {
-			throw new EntityNotFoundException("Searching error: animalType with name [" + animalTypeName + "] has not been found.");
+			throw new NotFoundException("Searching error: animalType with name [" + animalTypeName + "] has not been found.");
 		}
 		AnimalType at = ats.get(0);
 		
 		// getting medSpecialty
 		List<MedSpecialty> mss = medSpecialtyRepository.findByName(medSpecialtyName);
 		if(mss.size() <1) {
-			throw new EntityNotFoundException("Searching error: medSpecialty with name [" + medSpecialtyName + "] has not been found.");
+			throw new NotFoundException("Searching error: medSpecialty with name [" + medSpecialtyName + "] has not been found.");
 		}
 		MedSpecialty ms = mss.get(0);
 		
@@ -79,9 +78,9 @@ public class DoctorService {
 		
 	}
 
-	public DoctorDTO addNew(DoctorDTO validatedDoctorDTO) throws NIPExistsException {
+	public DoctorDTO addNew(DoctorDTO validatedDoctorDTO) throws ForbiddenException {
 		if(!doctorRepository.findByNip(validatedDoctorDTO.getNip()).isEmpty()) {
-			throw new NIPExistsException(); // NIP duplicated
+			throw new ForbiddenException("NIP allready exists in database.");
 		}
 		Doctor doctor = doctorMapper.toEntity(validatedDoctorDTO);
 		Doctor result = doctorRepository.saveAndFlush(doctor);
@@ -89,17 +88,18 @@ public class DoctorService {
 		return resultDTO;
 	}
 
-	public void fire(Long id) throws DoctorNotActiveException {
+	public DoctorDTO fire(Long id) throws ForbiddenException, NotFoundException {
 		Optional<Doctor> doctorOpt = doctorRepository.findById(id);
 		if(doctorOpt.isPresent()) {
 			Doctor doctor = doctorOpt.get();
 			if(doctor.getActive()) { // if Doctor is active, sets active to false
 				doctor.setActive(false);
+				return DoctorMapper.INSTANCE.toDto(doctor);
 			} else { // if Doctor is inactive, throws exception
-				throw new DoctorNotActiveException().withCustomMessage("Doctor id: " + doctor.getId() + " is not active");
+				throw new ForbiddenException("Doctor id: " + doctor.getId() + " is not active");
 			}
 		} else {
-			throw new EntityNotFoundException("Doctor has not ben found");
+			throw new NotFoundException("Doctor has not ben found");
 		}
 	}
 
@@ -108,22 +108,22 @@ public class DoctorService {
 	// should throw DoubledSpecialtyException if Doctor already has animalType
 	// should throw DoctorIsNotActiveException if Doctor is not active
 	
-	public DoctorDTO addAnimalType(Long doctorId, Long animalTypeId) throws DoctorNotActiveException, DoubledSpecialtyException {
+	public DoctorDTO addAnimalType(Long doctorId, Long animalTypeId) throws NotFoundException, ForbiddenException {
 		
 		// if Doctor not found, throw
-		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found"));
+		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new NotFoundException("Doctor with id " + doctorId + " has not been found"));
 
 		// if Doctor is not active, throw
 		if(!doctor.getActive()) {
-			throw new DoctorNotActiveException().withCustomMessage("Doctor id: " + doctor.getId() + " not found");
+			throw new ForbiddenException("Doctor id: " + doctor.getId() + " not found");
 		}
 		
 		// if animal type not found, throw
-		AnimalType animalType = animalTypeRepository.findById(animalTypeId).orElseThrow(() -> new EntityNotFoundException("animal type with id: " + animalTypeId + " has not been found"));
+		AnimalType animalType = animalTypeRepository.findById(animalTypeId).orElseThrow(() -> new NotFoundException("animal type with id: " + animalTypeId + " has not been found"));
 		
 		// if Doctor has already that animal type specialty, throw
 		if(doctor.getAnimalTypes().contains(animalType)) {
-			throw new DoubledSpecialtyException("animalType", animalType.getName());
+			throw new ForbiddenException("Doctor already has '" + animalType.getName() + "' animal type assigned.");
 		}
 		
 		// if everything is ok, update
@@ -137,26 +137,26 @@ public class DoctorService {
 	// should throw DoubledSpecialtyException if Doctor already has medSpecialty
 	// should throw DoctorIsNotActiveException if Doctor is not active
 
-	public DoctorDTO addMedSpecialty(Long doctorId, Long msId) throws DoubledSpecialtyException, DoctorNotActiveException {
+	public DoctorDTO addMedSpecialty(Long doctorId, Long msId) throws NotFoundException, ForbiddenException {
 		// if no Doctor found, throw
 		Doctor doctor = doctorRepository.findById(doctorId)
 				.orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found."));
 		// if Doctor is not active, throw
 		if(!doctor.getActive()) {
-			throw new DoctorNotActiveException();
+			throw new ForbiddenException("Doctor is not active.");
 		}
 		// if no medSpecialty found, throw
-		MedSpecialty ms = medSpecialtyRepository.findById(msId)
-				.orElseThrow(() -> new EntityNotFoundException("Medical specialty with id " + msId + " has not been found."));
+		MedSpecialty medSpecialty = medSpecialtyRepository.findById(msId)
+				.orElseThrow(() -> new NotFoundException("Medical specialty with id " + msId + " has not been found."));
 		
 		// if Doctor already has this med specialty
 		// since there can't be two medSpecialties with same name, we can check it with .equals()
-		if(doctor.getMedSpecialties().contains(ms)) {
-			throw new DoubledSpecialtyException("medical specialty", ms.getName());
+		if(doctor.getMedSpecialties().contains(medSpecialty)) {
+			throw new ForbiddenException("Doctor allready has '" + medSpecialty + "' medSpecialty assigned.");
 		}
 		
 		// if everything is ok, then add medSpecialty to Doctor
-		doctor.addMedSpecialty(ms);
+		doctor.addMedSpecialty(medSpecialty);
 		
 		// save (update) to DB
 		DoctorDTO result = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));

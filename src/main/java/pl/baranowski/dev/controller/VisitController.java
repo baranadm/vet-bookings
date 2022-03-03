@@ -30,6 +30,7 @@ import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.exception.DoctorNotActiveException;
 import pl.baranowski.dev.exception.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
 
@@ -51,7 +52,7 @@ public class VisitController {
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
 			@RequestParam("medSpecialtyName") @NotBlank(message="Invalid search criteria: medSpecialtyName should not be empty.") String medSpecialtyName,
 			@RequestParam("epochStart") @NotBlank(message="Invalid search criteria: epochStart should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochStart,
-			@RequestParam("epochEnd") @NotBlank(message="Invalid search criteria: epochEnd should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochEnd) throws InvalidEpochTimeException {
+			@RequestParam("epochEnd") @NotBlank(message="Invalid search criteria: epochEnd should not be empty.") @Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed") String epochEnd) throws InvalidEpochTimeException, NotFoundException {
 		return visitService.findAvailableSlotsAtTheDoctorsWithParams(animalTypeName, medSpecialtyName, epochStart, epochEnd);
 	}
 	
@@ -73,7 +74,7 @@ public class VisitController {
 	@ResponseStatus(HttpStatus.CREATED)
 	// , binding result
 	// TODO dodać loggera
-	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws NewVisitNotPossibleException, DoctorNotActiveException {
+	public @ResponseBody VisitDTO addNew(@Valid @RequestBody NewVisitDTO nv) throws Exception {
 		
 		long doctorId = Long.decode(nv.getDoctorId());
 		long patientId = Long.decode(nv.getPatientId());
