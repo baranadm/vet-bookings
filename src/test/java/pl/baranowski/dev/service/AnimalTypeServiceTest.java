@@ -59,7 +59,7 @@ class AnimalTypeServiceTest {
 	
 	@Test
 	void findByName_whenEntitiesExist_returnsListOfDTOs() {
-		given(animalTypeRepository.findByName("Cats")).willReturn(Collections.singletonList(cats));
+		given(animalTypeRepository.findOneByName("Cats")).willReturn(Optional.of(cats));
 		assertEquals(
 				Collections.singletonList(cats).stream().map(mapper::toDto).collect(Collectors.toList()), 
 				animalTypeService.findByName("Cats")
@@ -68,7 +68,7 @@ class AnimalTypeServiceTest {
 	
 	@Test
 	void findByName_whenEntitiesDoNotExist_returnsEmptyList() {
-		given(animalTypeRepository.findByName("ł")).willReturn(Collections.emptyList());
+		given(animalTypeRepository.findOneByName("ł")).willReturn(Optional.empty());
 		assertEquals(Collections.emptyList(), animalTypeService.findByName("ł"));
 	}
 
@@ -86,14 +86,14 @@ class AnimalTypeServiceTest {
 
 	@Test
 	void addNew_whenNoDuplicate_returnsNewDTO() throws AnimalTypeAllreadyExistsException {
-		given(animalTypeRepository.saveAndFlush(dogs)).willReturn(dogs);
+		given(animalTypeRepository.save(dogs)).willReturn(dogs);
 		AnimalTypeDTO dogsDTO = mapper.toDto(dogs);
 		assertEquals(dogsDTO, animalTypeService.addNew(dogsDTO));
 	}
 	
 	@Test
 	void addNew_whenDuplicate_throwsAnimalTypeAllreadyExistsException() {
-		given(animalTypeRepository.findByName(cats.getName())).willReturn(Collections.singletonList(cats));
+		given(animalTypeRepository.findOneByName(cats.getName())).willReturn(Optional.of(cats));
 		assertThrows(AnimalTypeAllreadyExistsException.class , () -> animalTypeService.addNew(mapper.toDto(cats)));
 	}
 }

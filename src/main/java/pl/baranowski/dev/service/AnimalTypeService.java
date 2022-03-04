@@ -41,15 +41,12 @@ public class AnimalTypeService {
 	}
 
 	public AnimalTypeDTO addNew(AnimalTypeDTO dto) throws AnimalTypeAllreadyExistsException {
-		AnimalType animalType = mapper.toEntity(dto);
-		
-		//if database contains this animalType, throw exception
-		if(!findByName(animalType.getName()).isEmpty()) {
+		if(animalTypeRepo.findOneByName(dto.getName()).isPresent()) {
 			throw new AnimalTypeAllreadyExistsException();
 		}
-		AnimalType result = animalTypeRepo.saveAndFlush(animalType);
-		AnimalTypeDTO resultDTO = mapper.toDto(result);
-		return resultDTO;
+		AnimalType newAnimalType = mapper.toEntity(dto);
+		AnimalTypeDTO newAnimalTypeDTO = mapper.toDto(animalTypeRepo.save(newAnimalType));
+		return newAnimalTypeDTO;
 	}
 
 }

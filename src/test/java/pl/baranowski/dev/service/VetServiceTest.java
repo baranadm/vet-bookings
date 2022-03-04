@@ -87,6 +87,7 @@ class DoctorServiceTest {
     @Test
     void getById_whenValidId_returnsDTOfromOptional() throws NotFoundException {
         Long id = 1L;
+        // TODO https://stackoverflow.com/questions/66870778/what-is-difference-here-autowired-and-mockbean
         Optional<Doctor> expected = Optional.of(mostowiak);
         given(doctorRepository.findById(id)).willReturn(expected);
         DoctorDTO result = doctorService.getDto(id);

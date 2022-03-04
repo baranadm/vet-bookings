@@ -27,6 +27,7 @@ import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.mapper.PatientMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
@@ -101,7 +102,7 @@ class PatientServiceTest {
 	
 	@Test
 	void addNew_whenAnimalTypeExistsAndPatientIsDuplicated_throwsPatientAllreadyExistsException() {
-		given(animalTypeRepository.findByName(patient.getAnimalType().getName())).willReturn(Collections.singletonList(patient.getAnimalType()));
+		given(animalTypeRepository.findOneByName(patient.getAnimalType().getName())).willReturn(Optional.of(patient.getAnimalType()));
 
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
 		Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
@@ -111,9 +112,9 @@ class PatientServiceTest {
 	}
 	
 	@Test
-	void addNew_whenNotDuplicatedAndAnimalTypeExists_correctlyCallsBusinessAndReturnsDTO() throws PatientAllreadyExistsException {
+	void addNew_whenNotDuplicatedAndAnimalTypeExists_correctlyCallsBusinessAndReturnsDTO() throws PatientAllreadyExistsException, NotFoundException {
 		// service will find appropriate AnimalType
-		given(animalTypeRepository.findByName(patient.getAnimalType().getName())).willReturn(Collections.singletonList(patient.getAnimalType()));
+		given(animalTypeRepository.findOneByName(patient.getAnimalType().getName())).willReturn(Optional.of(patient.getAnimalType()));
 		
 		// service will not find doubled Patient
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();

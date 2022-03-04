@@ -2,7 +2,7 @@
 
 ## Mentoring:
 - poprawić testy - nie porównywać Stringów, tylko obiekty
-- dodać Logger
+- dodać Logger - każda metoda publiczna
 - zastosować mapper zamiast robić swój
 - nie rzucać RuntimeException!! - zrobione nowe Exceptiony - dobrze? implements/extends
 

@@ -181,6 +181,7 @@ public class DoctorControllerTest {
 		BadRequestException exception = new BadRequestException("Invalid [page] number: " + invalidNumberString);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
+		// TODO https://spring.io/guides/gs/testing-web/
 		MvcResult result = mockMvc.perform(get("/doctors/")
 				.param("page", invalidNumberString)
 				.param("size", "1"))

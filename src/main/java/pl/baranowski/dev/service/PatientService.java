@@ -1,6 +1,5 @@
 package pl.baranowski.dev.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
@@ -16,6 +15,7 @@ import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.mapper.PatientMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
@@ -46,17 +46,11 @@ public class PatientService {
 		return result;
 	}
 
-	public PatientDTO addNew(NewPatientDTO newDTO) throws PatientAllreadyExistsException {
-		// find provided animalType exists, or throw error
-		List<AnimalType> animalTypes = animalTypeRepo.findByName(newDTO.getAnimalTypeName());
+	public PatientDTO addNew(NewPatientDTO newDTO) throws PatientAllreadyExistsException, NotFoundException {
+		AnimalType animalType = findAnimalType(newDTO.getAnimalTypeName());
 
-		// throw error if no animalType found
-		if(animalTypes.size() < 1) {
-			throw new EntityNotFoundException("animal type with name " + newDTO.getAnimalTypeName() + " has not been found");
-		}
-		// .. animalType has been found
-		Patient patient = new Patient(newDTO.getName(), 
-				animalTypes.get(0), // should contain only one record (dulicated names are rejected on creation)
+		Patient patient = new Patient(newDTO.getName(),
+				animalType,
 				Integer.valueOf(newDTO.getAge()), // value validated by @Valid @RequestBody
 				newDTO.getOwnerName(), newDTO.getOwnerEmail());
 		
@@ -64,6 +58,7 @@ public class PatientService {
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
 		Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
 		Optional<Patient> old = patientRepo.findOne(patientExample);
+
 		if(old.isPresent()) {
 			throw new PatientAllreadyExistsException("Patient " + patient.getName() + "allready exists in database, and has id: " + old.get().getId());
 		};
@@ -72,5 +67,10 @@ public class PatientService {
 		
 		return mapper.toDto(result);
 	}
-	
+
+	private AnimalType findAnimalType(String animalTypeName) throws NotFoundException {
+		Optional<AnimalType> result = animalTypeRepo.findOneByName(animalTypeName);
+		return result.orElseThrow(() -> new NotFoundException("Animal type with name '" + animalTypeName + "' has not been found."));
+	}
+
 }

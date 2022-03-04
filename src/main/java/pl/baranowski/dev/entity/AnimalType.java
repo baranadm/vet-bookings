@@ -3,24 +3,24 @@ package pl.baranowski.dev.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 public class AnimalType {
 
+	// TODO - poczytać o Seq Generator
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue
+//	@SequenceGenerator()
+//	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	private Long id;
-	
+
+	@Column(unique = true)
 	private String name;
-	
+
+	// TODO do usunięcia
 	@JsonIgnore
 	@OneToMany(mappedBy = "animalType")
 	private Set<Patient> patientsAsOwners = new HashSet<>();

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.PatientAllreadyExistsException;
 import pl.baranowski.dev.service.PatientService;
 
@@ -46,7 +47,7 @@ public class PatientController {
 	
 	@PostMapping(value="/", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody PatientDTO addNew(@Valid @RequestBody NewPatientDTO newPatient) throws PatientAllreadyExistsException {
+	public @ResponseBody PatientDTO addNew(@Valid @RequestBody NewPatientDTO newPatient) throws PatientAllreadyExistsException, NotFoundException {
 		return patientService.addNew(newPatient);
 	}
 }

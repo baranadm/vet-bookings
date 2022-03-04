@@ -48,22 +48,21 @@ public class DoctorService {
 	// TODO pytanie: czy get(0) jest ok?
 	// TODO tests for below method
 	public List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName, String medSpecialtyName) throws NotFoundException {
-		// getting animalType
-		List<AnimalType> ats = animalTypeRepository.findByName(animalTypeName);
-		if(ats.size() < 1) {
-			throw new NotFoundException("Searching error: animalType with name [" + animalTypeName + "] has not been found.");
-		}
-		AnimalType at = ats.get(0);
-		
-		// getting medSpecialty
-		List<MedSpecialty> mss = medSpecialtyRepository.findByName(medSpecialtyName);
-		if(mss.size() <1) {
-			throw new NotFoundException("Searching error: medSpecialty with name [" + medSpecialtyName + "] has not been found.");
-		}
-		MedSpecialty ms = mss.get(0);
-		
-		List<Doctor> result = doctorRepository.findByAnimalTypesAndMedSpecialties(at, ms);
+		AnimalType animalType = findAnimalType(animalTypeName);
+		MedSpecialty medSpecialty = findMedSpecialty(medSpecialtyName);
+
+		List<Doctor> result = doctorRepository.findByAnimalTypesAndMedSpecialties(animalType, medSpecialty);
 		return result;
+	}
+
+	private AnimalType findAnimalType(String animalTypeName) throws NotFoundException {
+		Optional<AnimalType> result = animalTypeRepository.findOneByName(animalTypeName);
+		return result.orElseThrow(() -> new NotFoundException("Animal type with name '"+animalTypeName+"'has not been found."));
+	}
+
+	private MedSpecialty findMedSpecialty(String medSpecialtyName) throws NotFoundException {
+		Optional<MedSpecialty> result = medSpecialtyRepository.findOneByName(medSpecialtyName);
+		return result.orElseThrow(() -> new NotFoundException("Med specialty with name '"+medSpecialtyName+"' has not been found."));
 	}
 
 	public Page<DoctorDTO> findAll(Pageable validatedPageable) {
