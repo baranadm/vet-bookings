@@ -18,7 +18,6 @@ import pl.baranowski.dev.repository.AnimalTypeRepository;
 @Service
 public class AnimalTypeService {
 
-	@Autowired
 	private final AnimalTypeRepository animalTypeRepo;
 	
 	@Autowired
