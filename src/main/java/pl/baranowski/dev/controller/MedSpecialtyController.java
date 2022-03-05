@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.InvalidParamException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
@@ -36,10 +38,18 @@ public class MedSpecialtyController {
 	}
 
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
-	public @ResponseBody MedSpecialtyDTO getById(@PathVariable String id) {
-		return medSpecialtyService.getById(Long.decode(id));
+	public @ResponseBody MedSpecialtyDTO getById(@PathVariable String id) throws InvalidParamException, NotFoundException {
+		return medSpecialtyService.getById(getIdFromString(id));
 	}
-	
+
+	private Long getIdFromString(String idAsString) throws InvalidParamException {
+		try {
+			return Long.decode(idAsString);
+		} catch(NumberFormatException e) {
+			throw new InvalidParamException("id", idAsString);
+		}
+	}
+
 	@GetMapping(value="/find", produces="application/json;charset=UTF-8")
 	public @ResponseBody List<MedSpecialtyDTO> findByName(@RequestParam("specialty") String name) throws EmptyFieldException {
 		if(name.isEmpty()) {
