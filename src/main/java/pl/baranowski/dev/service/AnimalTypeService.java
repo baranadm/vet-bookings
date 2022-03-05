@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
-import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
@@ -40,9 +40,9 @@ public class AnimalTypeService {
 		return animalTypeRepo.findAll().stream().map(r -> mapper.toDto(r)).collect(Collectors.toList());
 	}
 
-	public AnimalTypeDTO addNew(AnimalTypeDTO dto) throws AnimalTypeAllreadyExistsException {
+	public AnimalTypeDTO addNew(AnimalTypeDTO dto) throws AnimalTypeAlreadyExistsException {
 		if(animalTypeRepo.findOneByName(dto.getName()).isPresent()) {
-			throw new AnimalTypeAllreadyExistsException();
+			throw new AnimalTypeAlreadyExistsException();
 		}
 		AnimalType newAnimalType = mapper.toEntity(dto);
 		AnimalTypeDTO newAnimalTypeDTO = mapper.toDto(animalTypeRepo.save(newAnimalType));

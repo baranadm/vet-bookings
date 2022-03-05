@@ -19,8 +19,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,7 +36,8 @@ import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
-import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.NotFoundException;
+import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
@@ -112,14 +111,14 @@ class AnimalTypeControllerTest {
 
 	@Test
 	void testFindById_whenValidIdAndNoEntry_returns404AndHandlesException() throws Exception {
-		EntityNotFoundException expectedException = new EntityNotFoundException();
-		given(animalTypeService.findById(1L)).willThrow(EntityNotFoundException.class);
+		NotFoundException expectedException = new NotFoundException("Animal type has not been found");
+		given(animalTypeService.findById(1L)).willThrow(expectedException);
 		
 		MvcResult result = mockMvc.perform(get("/animalTypes/{id}", 1L))
 				.andExpect(status().isNotFound())
 				.andReturn();
 		
-		ErrorDTO expected = new ErrorDTO(expectedException, HttpStatus.NOT_FOUND);
+		ErrorDTO expected = new ErrorDTO(expectedException);
 		
 		assertCorrectJSONResult(expected, result);
 	}
@@ -220,10 +219,10 @@ class AnimalTypeControllerTest {
 	@Test
 	void testAddNew_whenNameIsDuplicated_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO requestDto = new AnimalTypeDTO("Wiewiórka");
-		ErrorDTO expectedError = new ErrorDTO(new AnimalTypeAllreadyExistsException(), HttpStatus.BAD_REQUEST);
+		ErrorDTO expectedError = new ErrorDTO(new AnimalTypeAlreadyExistsException(), HttpStatus.BAD_REQUEST);
 
 		// mocking service method
-		given(animalTypeService.addNew(requestDto)).willThrow(AnimalTypeAllreadyExistsException.class);
+		given(animalTypeService.addNew(requestDto)).willThrow(AnimalTypeAlreadyExistsException.class);
 
 		MvcResult result = mockMvc.perform(post("/animalTypes/new").contentType("application/json")
 				.content(objectMapper.writeValueAsString(requestDto))).andReturn();

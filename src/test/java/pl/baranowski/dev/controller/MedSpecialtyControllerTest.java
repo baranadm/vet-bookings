@@ -37,7 +37,7 @@ import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.EmptyFieldException;
-import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
 @ExtendWith(SpringExtension.class)
@@ -163,7 +163,7 @@ class MedSpecialtyControllerTest {
 
 	@Test
 	void findByName_whenNameIsEmpty_returns400andError() throws Exception {
-		ErrorDTO expectedError = new ErrorDTO(new EmptyFieldException("specialty"), HttpStatus.BAD_REQUEST);
+		ErrorDTO expectedError = new ErrorDTO(new EmptyFieldException("specialty"));
 		MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", "")).andExpect(status().isBadRequest()).andReturn();
 
 		assertCorrectJSONResult(expectedError, result);
@@ -235,10 +235,10 @@ class MedSpecialtyControllerTest {
 	@Test
 	void addNew_whenDuplicatedName_returns400AndError() throws JsonProcessingException, Exception {
 		MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ ziom");
-		ErrorDTO expected = new ErrorDTO(new MedSpecialtyAllreadyExistsException(), HttpStatus.BAD_REQUEST);
+		ErrorDTO expected = new ErrorDTO(new MedSpecialtyAlreadyExistsException("ee"));
 		
 		given(medSpecialtyService.addNew(dto))
-		.willThrow(MedSpecialtyAllreadyExistsException.class);
+		.willThrow(MedSpecialtyAlreadyExistsException.class);
 		
 		MvcResult result = mockMvc.perform(
 				post("/medSpecialty/new")

@@ -1,6 +1,6 @@
 package pl.baranowski.dev.model;
 
-import pl.baranowski.dev.exception.InvalidEpochTimeException;
+import pl.baranowski.dev.exception.epoch.InvalidEpochTimeException;
 
 public class EpochFutureTimeRange {
 

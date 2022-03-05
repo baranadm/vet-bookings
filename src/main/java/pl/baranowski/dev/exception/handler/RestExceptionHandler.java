@@ -21,158 +21,36 @@ import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.*;
+import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
+import pl.baranowski.dev.exception.animalType.AnimalTypeException;
+import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
+import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
+import pl.baranowski.dev.exception.patient.PatientAlreadyExistsException;
+import pl.baranowski.dev.exception.search.SearchRequestInvalidException;
+import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
-	// TODO clean-up
-
-	// BAD REQUEST
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(BadRequestException.class)
-	protected ResponseEntity<Object> handleBadRequestException(BadRequestException exception) {
-		ErrorDTO error = new ErrorDTO(exception);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(value= {
-		ConstraintViolationException.class,
-		})
-	protected ResponseEntity<Object> handleException(RuntimeException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
 	@SuppressWarnings("deprecation")
 	@Override
-	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException exception,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 
 		MultiFieldsErrorDTO mfErrorDTO = new MultiFieldsErrorDTO();
-		for (FieldError e : ex.getBindingResult().getFieldErrors()) {
+		for (FieldError e : exception.getBindingResult().getFieldErrors()) {
 			mfErrorDTO.addFieldError(new FieldValidationError(e.getField(), e.getDefaultMessage()));
 		}
 
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON_UTF8).body(mfErrorDTO);
-
-//		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-//		// works only for one invalid argument
-//		error.setMessage(ex.getFieldError().getDefaultMessage());
-//		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-	
-
-	@SuppressWarnings("deprecation")
-	@Override
-	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex.getClass().getSimpleName(), "Invalid or missing value for parameter [" + ex.getParameterName() + "]. Should be positive integer digits", HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.body(mfErrorDTO);
 	}
 
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
-	ResponseEntity<Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex.getClass().getSimpleName(), "Invalid or missing value for parameter [" + ex.getName() + "]. Should be positive integer digits", HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-
-	
-	// TODO i don't like it, can i delete it?
-	@Override
-//	@ExceptionHandler(HttpMessageNotReadableException.class)
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex.getCause().getClass().getSimpleName(), ex.getLocalizedMessage(), HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-
-	@ExceptionHandler(AnimalTypeAllreadyExistsException.class)
-	ResponseEntity<Object> handleAnimalTypeAllreadyExists(AnimalTypeAllreadyExistsException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-
-	@ExceptionHandler(MedSpecialtyAllreadyExistsException.class)
-	ResponseEntity<Object> handleMedSpecialtyAllreadyExists(MedSpecialtyAllreadyExistsException ex,
-			WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-
-	//TODO enhance invalid ID handling - ConstaintViolation? MethodArgumentNotValid?
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(NumberFormatException.class)
-	ResponseEntity<Object> handleNumberFormatException(NumberFormatException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-//		error.setMessage("digits expected");
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(EmptyFieldException.class)
-	ResponseEntity<Object> handleEmptyFieldException(EmptyFieldException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-
-
-	@ExceptionHandler(NIPExistsException.class)
-	ResponseEntity<Object> handleNIPExistsException(NIPExistsException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-
-	@ExceptionHandler(SearchRequestInvalidException.class)
-	ResponseEntity<Object> handleSearchRequestInvalid(SearchRequestInvalidException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-	
-	// NOT FOUND
-
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(NotFoundException.class)
-	protected ResponseEntity<Object> handleNotFoundException(NotFoundException exception) {
+	@ExceptionHandler
+	ResponseEntity<Object> handleApiException(ApiException exception, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(exception);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-	
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(EntityNotFoundException.class)
-	ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-
-	// FORBIDDEN
-	@SuppressWarnings("deprecation")
-	@ExceptionHandler(ForbiddenException.class)
-	protected ResponseEntity<Object> handleForbiddenException(ForbiddenException exception) {
-		ErrorDTO error = new ErrorDTO(exception);
-		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
-	}
-
-	@ExceptionHandler(DoubledSpecialtyException.class)
-	ResponseEntity<Object> handleDoubledSpecialtyException(DoubledSpecialtyException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-
-	@ExceptionHandler(DoctorNotActiveException.class)
-	ResponseEntity<Object> handleDoctorNotActiveException(DoctorNotActiveException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-
-	@ExceptionHandler(PatientAllreadyExistsException.class)
-	ResponseEntity<Object> handlePatientAllreadyExistsException(PatientAllreadyExistsException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
-	}
-	
-	@ExceptionHandler(NewVisitNotPossibleException.class)
-	ResponseEntity<Object> handleNewVisitNotPossible(NewVisitNotPossibleException ex, WebRequest request) {
-		ErrorDTO error = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
 		return ResponseEntity.status(error.getHttpStatus()).body(error);
 	}
 }

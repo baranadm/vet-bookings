@@ -31,6 +31,8 @@ import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.*;
+import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
@@ -222,7 +224,7 @@ class DoctorServiceTest {
         given(animalTypeRepository.findById(1L)).willReturn(Optional.ofNullable(pet));
         given(doctorRepository.findById(dogsDoctor.getId())).willReturn(Optional.ofNullable(dogsDoctor));
 
-        assertThrows(DoubledSpecialtyException.class,
+        assertThrows(DoctorDoubledSpecialtyException.class,
                      () -> doctorService.addAnimalType(dogsDoctor.getId(), pet.getId()));
     }
 
@@ -290,7 +292,7 @@ class DoctorServiceTest {
         given(medSpecialtyRepository.findById(1L)).willReturn(Optional.ofNullable(ms));
         given(doctorRepository.findById(cardioDoctor.getId())).willReturn(Optional.ofNullable(cardioDoctor));
 
-        assertThrows(DoubledSpecialtyException.class,
+        assertThrows(DoctorDoubledSpecialtyException.class,
                      () -> doctorService.addMedSpecialty(cardioDoctor.getId(), ms.getId()));
     }
 

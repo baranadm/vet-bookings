@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.builder.VisitBuilder;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
+import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 
 class DoctorTest {
 

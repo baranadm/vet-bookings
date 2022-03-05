@@ -20,7 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
-import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.mapper.MedSpecialtyMapper;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
@@ -86,7 +86,7 @@ class MedSpecialtyServiceTest {
 	}
 	
 	@Test
-	void addNew_whenNoDuplicate_returnsNewDTO() throws MedSpecialtyAllreadyExistsException {
+	void addNew_whenNoDuplicate_returnsNewDTO() throws MedSpecialtyAlreadyExistsException {
 		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
 //		given(medSpecialtyRepository.findByName(ms.getName())).willReturn(Collections.emptyList());
 		given(medSpecialtyRepository.saveAndFlush(ms)).willReturn(ms);
@@ -101,7 +101,7 @@ class MedSpecialtyServiceTest {
 		MedSpecialty ms = new MedSpecialty(1L, "Cardio");
 		given(medSpecialtyRepository.findByName(ms.getName())).willReturn(Collections.singletonList(ms));
 		
-		assertThrows(MedSpecialtyAllreadyExistsException.class, () -> medSpecialtyService.addNew(mapper.toDto(ms)));
+		assertThrows(MedSpecialtyAlreadyExistsException.class, () -> medSpecialtyService.addNew(mapper.toDto(ms)));
 	}
 
 }

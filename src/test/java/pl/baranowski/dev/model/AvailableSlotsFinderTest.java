@@ -20,10 +20,9 @@ import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Patient;
-import pl.baranowski.dev.entity.Visit;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.exception.InvalidEpochTimeException;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
+import pl.baranowski.dev.exception.epoch.InvalidEpochTimeException;
+import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 
 @SpringBootTest
 class AvailableSlotsFinderTest {

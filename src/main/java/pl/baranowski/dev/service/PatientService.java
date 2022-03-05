@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
@@ -16,7 +17,7 @@ import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.exception.NotFoundException;
-import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.exception.patient.PatientAlreadyExistsException;
 import pl.baranowski.dev.mapper.PatientMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
@@ -46,13 +47,13 @@ public class PatientService {
 		return result;
 	}
 
-	public PatientDTO addNew(NewPatientDTO newDTO) throws PatientAllreadyExistsException, NotFoundException {
-		AnimalType animalType = findAnimalType(newDTO.getAnimalTypeName());
+	public PatientDTO addNew(NewPatientDTO newPatientDTO) throws PatientAlreadyExistsException, NotFoundException {
+		AnimalType animalType = findAnimalType(newPatientDTO.getAnimalTypeName());
 
-		Patient patient = new Patient(newDTO.getName(),
+		Patient patient = new Patient(newPatientDTO.getName(),
 				animalType,
-				Integer.valueOf(newDTO.getAge()), // value validated by @Valid @RequestBody
-				newDTO.getOwnerName(), newDTO.getOwnerEmail());
+				Integer.valueOf(newPatientDTO.getAge()), // value validated by @Valid @RequestBody
+				newPatientDTO.getOwnerName(), newPatientDTO.getOwnerEmail());
 		
 		// checks if patient will not be duplicated
 		ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
@@ -60,7 +61,7 @@ public class PatientService {
 		Optional<Patient> old = patientRepo.findOne(patientExample);
 
 		if(old.isPresent()) {
-			throw new PatientAllreadyExistsException("Patient " + patient.getName() + "allready exists in database, and has id: " + old.get().getId());
+			throw new PatientAlreadyExistsException(newPatientDTO);
 		};
 		
 		Patient result = patientRepo.saveAndFlush(patient);

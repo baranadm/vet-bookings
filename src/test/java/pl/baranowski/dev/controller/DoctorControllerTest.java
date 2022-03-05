@@ -19,8 +19,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
-import pl.baranowski.dev.exception.BadRequestException;
-import pl.baranowski.dev.exception.ForbiddenException;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.model.RestPageImpl;
 import pl.baranowski.dev.service.DoctorService;

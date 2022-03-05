@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collections;
 
 import javax.persistence.EntityNotFoundException;
@@ -41,7 +42,7 @@ import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
-import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.exception.patient.PatientAlreadyExistsException;
 import pl.baranowski.dev.service.PatientService;
 
 @ExtendWith(SpringExtension.class)
@@ -217,14 +218,14 @@ class PatientControllerTest {
 	}
 	
 	@Test
-	void addNew_handlesPatientAllreadyExistsException() throws JsonProcessingException, Exception {
-		PatientAllreadyExistsException ex = new PatientAllreadyExistsException("test message");
-		given(patientService.addNew(newPatientDTO)).willThrow(ex);
+	void addNew_handlesPatientAlreadyExistsException() throws JsonProcessingException, Exception {
+		PatientAlreadyExistsException exception = new PatientAlreadyExistsException(newPatientDTO);
+		given(patientService.addNew(newPatientDTO)).willThrow(exception);
 
 		MvcResult exceptionErrorResult = mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(newPatientDTO))
 				.contentType("application/json;charset=UTF-8")).andExpect(status().isForbidden()).andReturn();
 
-		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.FORBIDDEN);
+		ErrorDTO expected = new ErrorDTO(exception, HttpStatus.FORBIDDEN);
 		assertCorrectJSONResult(expected, exceptionErrorResult);
 	}
 

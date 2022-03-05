@@ -20,7 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
-import pl.baranowski.dev.exception.AnimalTypeAllreadyExistsException;
+import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
@@ -85,7 +85,7 @@ class AnimalTypeServiceTest {
 	}
 
 	@Test
-	void addNew_whenNoDuplicate_returnsNewDTO() throws AnimalTypeAllreadyExistsException {
+	void addNew_whenNoDuplicate_returnsNewDTO() throws AnimalTypeAlreadyExistsException {
 		given(animalTypeRepository.save(dogs)).willReturn(dogs);
 		AnimalTypeDTO dogsDTO = mapper.toDto(dogs);
 		assertEquals(dogsDTO, animalTypeService.addNew(dogsDTO));
@@ -94,6 +94,6 @@ class AnimalTypeServiceTest {
 	@Test
 	void addNew_whenDuplicate_throwsAnimalTypeAllreadyExistsException() {
 		given(animalTypeRepository.findOneByName(cats.getName())).willReturn(Optional.of(cats));
-		assertThrows(AnimalTypeAllreadyExistsException.class , () -> animalTypeService.addNew(mapper.toDto(cats)));
+		assertThrows(AnimalTypeAlreadyExistsException.class , () -> animalTypeService.addNew(mapper.toDto(cats)));
 	}
 }

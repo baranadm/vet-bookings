@@ -3,17 +3,15 @@ package pl.baranowski.dev.exception;
 import org.springframework.http.HttpStatus;
 
 
-// TODO wywalić implements
-// TODO ApiException -> VisitException -> VisitNotAvailableException -> .....
-public class ApiException extends Exception implements ExceptionMessageAndStatusAble {
-        private final HttpStatus HTTP_STATUS = HttpStatus.INTERNAL_SERVER_ERROR;
+public class ApiException extends Exception {
+    private final HttpStatus httpStatus;
 
-        public ApiException(String message) {
-                super(message);
-        }
+    public ApiException(HttpStatus httpStatus, String message) {
+        super(message);
+        this.httpStatus = httpStatus;
+    }
 
-        @Override
-        public HttpStatus getHttpStatus() {
-                return this.HTTP_STATUS;
-        }
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
+    }
 }

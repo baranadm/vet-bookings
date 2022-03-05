@@ -1,20 +1,10 @@
 package pl.baranowski.dev.exception;
 
-public class EmptyFieldException extends Exception {
+import org.springframework.http.HttpStatus;
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4242892593084349448L;
+public class EmptyFieldException extends ApiException {
+    public EmptyFieldException(String fieldName) {
+        super(HttpStatus.BAD_REQUEST, "Field [" + fieldName + "] should not be empty.");
+    }
 
-	private String emptyFieldName;
-	
-	public EmptyFieldException(String fieldName) {
-		this.emptyFieldName = fieldName;
-	}
-
-	@Override
-	public String getMessage() {
-		return "field [" + emptyFieldName + "] must not be empty";
-	}
 }

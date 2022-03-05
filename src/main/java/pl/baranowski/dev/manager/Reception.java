@@ -4,9 +4,8 @@ import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
-import pl.baranowski.dev.exception.NotFoundException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
+import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.PatientService;
 
@@ -64,7 +63,7 @@ public class Reception {
 	
 	private void throwIfDoctorIsInactive(Doctor doctor) throws DoctorNotActiveException {
 		if(!doctor.isActive()) {
-			throw new DoctorNotActiveException("Creating Visit failed. Doctor with id " + doctor.getId() + " is not active.");
+			throw new DoctorNotActiveException(doctor.getId());
 		}
 	}
 	

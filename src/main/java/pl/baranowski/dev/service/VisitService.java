@@ -2,7 +2,6 @@ package pl.baranowski.dev.service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -14,9 +13,7 @@ import pl.baranowski.dev.dto.AvailableSlotsAtTheDoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Visit;
-import pl.baranowski.dev.exception.DoctorNotActiveException;
-import pl.baranowski.dev.exception.InvalidEpochTimeException;
-import pl.baranowski.dev.exception.NewVisitNotPossibleException;
+import pl.baranowski.dev.exception.epoch.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.manager.Reception;
 import pl.baranowski.dev.mapper.VisitMapper;

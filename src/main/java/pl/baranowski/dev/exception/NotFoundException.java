@@ -2,15 +2,9 @@ package pl.baranowski.dev.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class NotFoundException extends Exception implements ExceptionMessageAndStatusAble {
-    private final HttpStatus HTTP_STATUS = HttpStatus.NOT_FOUND;
+public class NotFoundException extends ApiException {
 
     public NotFoundException(String message) {
-        super(message);
-    }
-
-    @Override
-    public HttpStatus getHttpStatus() {
-        return this.HTTP_STATUS;
+        super(HttpStatus.NOT_FOUND, message);
     }
 }

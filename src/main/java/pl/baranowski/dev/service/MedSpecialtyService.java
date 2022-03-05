@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.entity.MedSpecialty;
-import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.mapper.MedSpecialtyMapper;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
@@ -42,13 +42,13 @@ public class MedSpecialtyService {
 		return medSpecialtyRepository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
 	}
 
-	public MedSpecialtyDTO addNew(MedSpecialtyDTO medSpecialtyDTO) throws MedSpecialtyAllreadyExistsException {
-		MedSpecialty ms = mapper.toEntity(medSpecialtyDTO);
-		if(!findByName(ms.getName()).isEmpty()) {
-			throw new MedSpecialtyAllreadyExistsException();
+	public MedSpecialtyDTO addNew(MedSpecialtyDTO medSpecialtyDTO) throws MedSpecialtyAlreadyExistsException {
+		if(medSpecialtyRepository.findOneByName(medSpecialtyDTO.getName()).isEmpty()) {
+			throw new MedSpecialtyAlreadyExistsException(medSpecialtyDTO.getName());
 		}
+		MedSpecialty medSpecialty = mapper.toEntity(medSpecialtyDTO);
 		MedSpecialty result = medSpecialtyRepository
-				.saveAndFlush(ms);
+				.saveAndFlush(medSpecialty);
 		MedSpecialtyDTO resultDTO = mapper.toDto(result);
 		return resultDTO;
 	}

@@ -28,7 +28,7 @@ import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.exception.NotFoundException;
-import pl.baranowski.dev.exception.PatientAllreadyExistsException;
+import pl.baranowski.dev.exception.patient.PatientAlreadyExistsException;
 import pl.baranowski.dev.mapper.PatientMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.PatientRepository;
@@ -108,11 +108,11 @@ class PatientServiceTest {
 		Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
 		given(patientRepository.findOne(patientExample)).willReturn(Optional.of(patient));
 
-		assertThrows(PatientAllreadyExistsException.class, () -> patientService.addNew(newPatient));
+		assertThrows(PatientAlreadyExistsException.class, () -> patientService.addNew(newPatient));
 	}
 	
 	@Test
-	void addNew_whenNotDuplicatedAndAnimalTypeExists_correctlyCallsBusinessAndReturnsDTO() throws PatientAllreadyExistsException, NotFoundException {
+	void addNew_whenNotDuplicatedAndAnimalTypeExists_correctlyCallsBusinessAndReturnsDTO() throws PatientAlreadyExistsException, NotFoundException {
 		// service will find appropriate AnimalType
 		given(animalTypeRepository.findOneByName(patient.getAnimalType().getName())).willReturn(Optional.of(patient.getAnimalType()));
 		

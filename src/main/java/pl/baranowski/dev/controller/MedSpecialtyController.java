@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
-import pl.baranowski.dev.exception.MedSpecialtyAllreadyExistsException;
+import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
 @CrossOrigin
@@ -50,7 +50,7 @@ public class MedSpecialtyController {
 	
 	@PostMapping(value="/new", consumes="application/json;charset=UTF-8", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody MedSpecialtyDTO addNew(@Valid @RequestBody MedSpecialtyDTO dto) throws MedSpecialtyAllreadyExistsException, EmptyFieldException {
+	public @ResponseBody MedSpecialtyDTO addNew(@Valid @RequestBody MedSpecialtyDTO dto) throws MedSpecialtyAlreadyExistsException, EmptyFieldException {
 		return medSpecialtyService.addNew(dto);
 	}
 	
