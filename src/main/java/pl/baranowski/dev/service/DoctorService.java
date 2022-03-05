@@ -16,6 +16,9 @@ import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.exception.*;
+import pl.baranowski.dev.exception.doctor.DoctorAlreadyExistsException;
+import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.DoctorMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
@@ -77,17 +80,17 @@ public class DoctorService {
 		
 	}
 
-	public DoctorDTO addNew(DoctorDTO validatedDoctorDTO) throws ForbiddenException {
-		if(!doctorRepository.findByNip(validatedDoctorDTO.getNip()).isEmpty()) {
-			throw new ForbiddenException("NIP allready exists in database.");
+	public DoctorDTO addNew(DoctorDTO doctorDTO) throws DoctorAlreadyExistsException {
+		if(!doctorRepository.findByNip(doctorDTO.getNip()).isEmpty()) {
+			throw new DoctorAlreadyExistsException(doctorDTO.getNip());
 		}
-		Doctor doctor = doctorMapper.toEntity(validatedDoctorDTO);
+		Doctor doctor = doctorMapper.toEntity(doctorDTO);
 		Doctor result = doctorRepository.saveAndFlush(doctor);
 		DoctorDTO resultDTO = doctorMapper.toDto(result);
 		return resultDTO;
 	}
 
-	public DoctorDTO fire(Long id) throws ForbiddenException, NotFoundException {
+	public DoctorDTO fire(Long id) throws DoctorNotActiveException, NotFoundException {
 		Optional<Doctor> doctorOpt = doctorRepository.findById(id);
 		if(doctorOpt.isPresent()) {
 			Doctor doctor = doctorOpt.get();
@@ -95,7 +98,7 @@ public class DoctorService {
 				doctor.setActive(false);
 				return DoctorMapper.INSTANCE.toDto(doctor);
 			} else { // if Doctor is inactive, throws exception
-				throw new ForbiddenException("Doctor id: " + doctor.getId() + " is not active");
+				throw new DoctorNotActiveException(doctor.getId());
 			}
 		} else {
 			throw new NotFoundException("Doctor has not ben found");
@@ -107,14 +110,14 @@ public class DoctorService {
 	// should throw DoubledSpecialtyException if Doctor already has animalType
 	// should throw DoctorIsNotActiveException if Doctor is not active
 	
-	public DoctorDTO addAnimalType(Long doctorId, Long animalTypeId) throws NotFoundException, ForbiddenException {
+	public DoctorDTO addAnimalType(Long doctorId, Long animalTypeId) throws NotFoundException, DoctorNotActiveException, DoctorDoubledSpecialtyException {
 		
 		// if Doctor not found, throw
-		Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new NotFoundException("Doctor with id " + doctorId + " has not been found"));
+		Doctor doctor = get(doctorId);
 
 		// if Doctor is not active, throw
 		if(!doctor.getActive()) {
-			throw new ForbiddenException("Doctor id: " + doctor.getId() + " not found");
+			throw new DoctorNotActiveException(doctor.getId());
 		}
 		
 		// if animal type not found, throw
@@ -122,7 +125,7 @@ public class DoctorService {
 		
 		// if Doctor has already that animal type specialty, throw
 		if(doctor.getAnimalTypes().contains(animalType)) {
-			throw new ForbiddenException("Doctor already has '" + animalType.getName() + "' animal type assigned.");
+			throw new DoctorDoubledSpecialtyException("Animal Type");
 		}
 		
 		// if everything is ok, update
@@ -136,13 +139,12 @@ public class DoctorService {
 	// should throw DoubledSpecialtyException if Doctor already has medSpecialty
 	// should throw DoctorIsNotActiveException if Doctor is not active
 
-	public DoctorDTO addMedSpecialty(Long doctorId, Long msId) throws NotFoundException, ForbiddenException {
+	public DoctorDTO addMedSpecialty(Long doctorId, Long msId) throws NotFoundException, DoctorNotActiveException, DoctorDoubledSpecialtyException {
 		// if no Doctor found, throw
-		Doctor doctor = doctorRepository.findById(doctorId)
-				.orElseThrow(() -> new EntityNotFoundException("Doctor with id " + doctorId + " has not been found."));
+		Doctor doctor = get(doctorId);
 		// if Doctor is not active, throw
 		if(!doctor.getActive()) {
-			throw new ForbiddenException("Doctor is not active.");
+			throw new DoctorNotActiveException(doctor.getId());
 		}
 		// if no medSpecialty found, throw
 		MedSpecialty medSpecialty = medSpecialtyRepository.findById(msId)
@@ -151,7 +153,7 @@ public class DoctorService {
 		// if Doctor already has this med specialty
 		// since there can't be two medSpecialties with same name, we can check it with .equals()
 		if(doctor.getMedSpecialties().contains(medSpecialty)) {
-			throw new ForbiddenException("Doctor allready has '" + medSpecialty + "' medSpecialty assigned.");
+			throw new DoctorDoubledSpecialtyException("Medical Specialty");
 		}
 		
 		// if everything is ok, then add medSpecialty to Doctor

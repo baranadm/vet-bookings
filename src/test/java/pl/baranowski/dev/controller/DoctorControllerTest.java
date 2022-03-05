@@ -19,7 +19,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
+import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.InvalidParamException;
 import pl.baranowski.dev.exception.NotFoundException;
+import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
+import pl.baranowski.dev.exception.doctor.DoctorAlreadyExistsException;
+import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
+import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.model.RestPageImpl;
 import pl.baranowski.dev.service.DoctorService;
 
@@ -102,8 +109,8 @@ public class DoctorControllerTest {
 	@Test
 	void getById_whenInvalidId_returnsError_andStatus400() throws Exception {
 		String invalidId = "eee";
-		BadRequestException ex = new BadRequestException("Invalid id: " + invalidId);
-		ErrorDTO expectedError = new ErrorDTO(ex);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
+		ErrorDTO expectedError = new ErrorDTO(exception);
 		MvcResult result = mockMvc.perform(get("/doctors/{id}", invalidId))
 				.andExpect(status().isBadRequest()).andReturn();
 
@@ -176,26 +183,25 @@ public class DoctorControllerTest {
 	@Test
 	void findAll_whenPageNumberInvalid_returnsError_andStatus400() throws Exception {
 		String invalidNumberString = "bla";
-		BadRequestException exception = new BadRequestException("Invalid [page] number: " + invalidNumberString);
+		InvalidParamException exception = new InvalidParamException("page", invalidNumberString);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		// TODO https://spring.io/guides/gs/testing-web/
 		MvcResult result = mockMvc.perform(get("/doctors/")
-				.param("page", invalidNumberString)
-				.param("size", "1"))
-		.andExpect(status().isBadRequest())
-		.andReturn();
+												   .param("page", invalidNumberString)
+												   .param("size", "1"))
+				.andExpect(status().isBadRequest())
+				.andReturn();
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void findAll_whenPageSizeInvalid_returnsError_andStatus400() throws Exception {
 		String invalidNumberString = "bla";
-		BadRequestException exception = new BadRequestException("Invalid [size] number: " + invalidNumberString);
+		InvalidParamException exception = new InvalidParamException("size", invalidNumberString);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(get("/doctors/")
@@ -206,13 +212,12 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void findAll_withPageNumberAndWithoutPageSize_returnsError_andStatus400() throws Exception {
-		BadRequestException exception = new BadRequestException("Empty field: size");
+		EmptyFieldException exception = new EmptyFieldException("size");
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(get("/doctors/")
@@ -223,13 +228,12 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void findAll_withoutPageNumberAndWithPageSize_returnsError_andStatus400() throws Exception {
-		BadRequestException exception = new BadRequestException("Empty field: page");
+		EmptyFieldException exception = new EmptyFieldException("page");
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(get("/doctors/")
@@ -240,8 +244,7 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
@@ -305,7 +308,7 @@ public class DoctorControllerTest {
 	@Test
 	void addNew_whenValidRequestAndNIPExists_returnsError_andStatus400() throws JsonProcessingException, Exception {
 		DoctorDTO requestDTO = mostowiak;
-		ForbiddenException exception = new ForbiddenException("NIP allready exists in database.");
+		DoctorAlreadyExistsException exception = new DoctorAlreadyExistsException(requestDTO.getNip());
 		ErrorDTO expectedError = new ErrorDTO(exception);
 		given(doctorService.addNew(requestDTO)).willThrow(exception);
 
@@ -318,8 +321,7 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
@@ -381,13 +383,13 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError, resultError);
+		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
 	}
 
 	@Test
 	void fire_whenInvalidId_returnsError_andStatus400() throws Exception {
 		String invalidId = "prr";
-		BadRequestException exception = new BadRequestException("Invalid id format: " + invalidId);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", invalidId)
@@ -397,13 +399,12 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void fire_handlesException() throws Exception {
-		ForbiddenException exception = new ForbiddenException("Doctor not found.");
+		NotFoundException exception = new NotFoundException("Doctor not found.");
 		ErrorDTO expectedError = new ErrorDTO(exception);
 		doThrow(exception).when(doctorService).fire(mostowiak.getId());
 
@@ -413,7 +414,7 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError, resultError);
+		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
 	}
 
 	@Test
@@ -440,7 +441,7 @@ public class DoctorControllerTest {
 	@Test
 	void addAnimalType_whenDoctorIdInvalid_handlesBadRequestException() throws Exception {
 		String invalidId = "p";
-		BadRequestException exception = new BadRequestException("Invalid id: " + invalidId);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", invalidId, "1"))
@@ -449,14 +450,13 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void addAnimalType_whenAnimalTypeIdInvalid_handlesBadRequestException() throws Exception {
 		String invalidId = "p";
-		BadRequestException exception = new BadRequestException("Invalid id: " + invalidId);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", "1", invalidId))
@@ -465,8 +465,7 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
@@ -486,7 +485,7 @@ public class DoctorControllerTest {
 
 	@Test
 	void addAnimalType_whenAnimalTypeExists_handlesForbiddenException() throws Exception {
-		ForbiddenException exception = new ForbiddenException("AnimalType already exists in database.");
+		DoctorDoubledSpecialtyException exception = new DoctorDoubledSpecialtyException("Animal Type");
 		ErrorDTO expectedError = new ErrorDTO(exception);
 		doThrow(exception).when(doctorService).addAnimalType(1L, 1L);
 
@@ -501,7 +500,7 @@ public class DoctorControllerTest {
 
 	@Test
 	void addAnimalType_whenDoctorNotActive_handlesForbiddenException() throws Exception {
-		ForbiddenException exception = new ForbiddenException("Doctor is not active.");
+		DoctorNotActiveException exception = new DoctorNotActiveException(1L);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 		doThrow(exception).when(doctorService).addAnimalType(1L, 1L);
 
@@ -538,7 +537,7 @@ public class DoctorControllerTest {
 	@Test
 	void addMedSpecialty_whenDoctorIdInvalid_handlesBadRequestException() throws Exception {
 		String invalidId = "p";
-		BadRequestException exception = new BadRequestException("Invalid id: " + invalidId);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", invalidId, "1"))
@@ -547,14 +546,13 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void addMedSpecialty_whenMedSpecialtyIdInvalid_handlesBadRequestException() throws Exception {
 		String invalidId = "p";
-		BadRequestException exception = new BadRequestException("Invalid id: " + invalidId);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", "1", invalidId))
@@ -563,8 +561,7 @@ public class DoctorControllerTest {
 
 		String resultAsString = result.getResponse().getContentAsString();
 		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-		assertEquals(expectedError.getExceptionClassName(), resultError.getExceptionClassName());
-		assertEquals(expectedError.getHttpStatus(), resultError.getHttpStatus());
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
@@ -584,7 +581,7 @@ public class DoctorControllerTest {
 
 	@Test
 	void addMedSpecialty_handlesDoubledSpecialtyException() throws Exception {
-		ForbiddenException exception = new ForbiddenException("MedSpecialty already exists in database.");
+		DoctorDoubledSpecialtyException exception = new DoctorDoubledSpecialtyException("Medical Specialty");
 		ErrorDTO expectedError = new ErrorDTO(exception);
 		doThrow(exception).when(doctorService).addMedSpecialty(1L, 1L);
 
@@ -599,7 +596,7 @@ public class DoctorControllerTest {
 
 	@Test
 	void addMedSpecialty_handlesDoctorNotActiveException() throws Exception {
-		ForbiddenException exception = new ForbiddenException("Doctor is not active.");
+		DoctorNotActiveException exception = new DoctorNotActiveException(1L);
 		ErrorDTO expectedError = new ErrorDTO(exception);
 		doThrow(exception).when(doctorService).addMedSpecialty(1L, 1L);
 

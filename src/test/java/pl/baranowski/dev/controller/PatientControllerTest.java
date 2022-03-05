@@ -42,6 +42,8 @@ import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.InvalidParamException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.patient.PatientAlreadyExistsException;
 import pl.baranowski.dev.service.PatientService;
 
@@ -85,29 +87,33 @@ class PatientControllerTest {
 	
 	@Test
 	void getById_whenEntityDoNotExists_throwsEntityNotFoundException() throws Exception {
-		EntityNotFoundException expectedException = new EntityNotFoundException("test");
+		NotFoundException expectedException = new NotFoundException("test");
 		given(patientService.getDto(patientDTO.getId())).willThrow(expectedException);
 		MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
 				.andExpect(status().isNotFound())
 				.andReturn();
 		
-		ErrorDTO expectedError = new ErrorDTO(expectedException, HttpStatus.NOT_FOUND);
-		
-		assertCorrectJSONResult(expectedError, result);
+		ErrorDTO expectedError = new ErrorDTO(expectedException);
+
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
 	}
 	
 	@Test
-	void getById_whenInvalidId_throwsNumberFormatException() throws Exception {
+	void getById_whenInvalidId_throwsInvalidParamException() throws Exception {
 		String invalidId = "a";
-		NumberFormatException expectedException = generateNumberFormatExceptionForString(invalidId);
+		InvalidParamException expectedException = new InvalidParamException("id", invalidId);
 		given(patientService.getDto(patientDTO.getId())).willThrow(expectedException);
 		MvcResult result = mockMvc.perform(get("/patient/{id}", invalidId))
 				.andExpect(status().isBadRequest())
 				.andReturn();
 		
-		ErrorDTO expectedError = new ErrorDTO(expectedException, HttpStatus.BAD_REQUEST);
-		
-		assertCorrectJSONResult(expectedError, result);
+		ErrorDTO expectedError = new ErrorDTO(expectedException);
+
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
 	}
 	
 	@Test
@@ -141,7 +147,7 @@ class PatientControllerTest {
 			.andExpect(status().isBadRequest())
 			.andReturn();
 		EmptyFieldException emptyPageExc = new EmptyFieldException("page");
-		ErrorDTO emptyPageError = new ErrorDTO(emptyPageExc, HttpStatus.BAD_REQUEST);
+		ErrorDTO emptyPageError = new ErrorDTO(emptyPageExc);
 		assertCorrectJSONResult(emptyPageError, resultEmptyPage);
 
 		MvcResult resultEmptySize = mockMvc.perform(get("/patient/")
@@ -152,21 +158,27 @@ class PatientControllerTest {
 				.andReturn();
 		
 		EmptyFieldException emptySizeExc = new EmptyFieldException("size");
-		ErrorDTO emptySizeError = new ErrorDTO(emptySizeExc, HttpStatus.BAD_REQUEST);
-		assertCorrectJSONResult(emptySizeError, resultEmptySize);
+		ErrorDTO emptySizeError = new ErrorDTO(emptySizeExc);
+
+		String resultAsString = resultEmptySize.getResponse().getContentAsString();
+		ErrorDTO emptySizeResultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(emptyPageError, emptySizeResultError);
 		
 		String invalidValue = "a";
 		
-		MvcResult resultNumberFormatError = mockMvc.perform(get("/patient/")
+		MvcResult invalidSizeResult = mockMvc.perform(get("/patient/")
 				.contentType("application/json;charset=UTF-8)")
 				.param("page", "2")
 				.param("size", invalidValue))
 				.andExpect(status().isBadRequest())
 				.andReturn();
 		
-		NumberFormatException numForExc = generateNumberFormatExceptionForString(invalidValue);
-		ErrorDTO numForError = new ErrorDTO(numForExc, HttpStatus.BAD_REQUEST);
-		assertCorrectJSONResult(numForError, resultNumberFormatError);
+		InvalidParamException invalidSizeException = new InvalidParamException("size", invalidValue);
+		ErrorDTO invalidSizeError = new ErrorDTO(invalidSizeException);
+
+		String invalidSizeResultAsString = invalidSizeResult.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(invalidSizeResultAsString, ErrorDTO.class);
+		assertEquals(invalidSizeError, resultError);
 	}
 	
 	@Test
@@ -206,15 +218,19 @@ class PatientControllerTest {
 	}
 	
 	@Test
-	void addNew_handlesEntityNotFoundException() throws JsonProcessingException, Exception {
-		given(patientService.addNew(newPatientDTO)).willThrow(new EntityNotFoundException());
+	void addNew_whenAnimalTypeNotExists_handlesNotFoundException() throws JsonProcessingException, Exception {
+		NotFoundException exception = new NotFoundException("Animal type not exists.");
+		given(patientService.addNew(newPatientDTO)).willThrow(exception);
 
-		MvcResult exceptionErrorResult = mockMvc.perform(post("/patient/")
+		MvcResult result = mockMvc.perform(post("/patient/")
 				.content(objectMapper.writeValueAsString(newPatientDTO)).contentType("application/json;charset=UTF-8"))
 				.andExpect(status().isNotFound()).andReturn();
 
-		ErrorDTO expected = new ErrorDTO(new EntityNotFoundException(), HttpStatus.NOT_FOUND);
-		assertCorrectJSONResult(expected, exceptionErrorResult);
+		ErrorDTO expectedError = new ErrorDTO(exception);
+
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
 	}
 	
 	@Test
@@ -222,11 +238,14 @@ class PatientControllerTest {
 		PatientAlreadyExistsException exception = new PatientAlreadyExistsException(newPatientDTO);
 		given(patientService.addNew(newPatientDTO)).willThrow(exception);
 
-		MvcResult exceptionErrorResult = mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(newPatientDTO))
+		MvcResult result = mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(newPatientDTO))
 				.contentType("application/json;charset=UTF-8")).andExpect(status().isForbidden()).andReturn();
 
-		ErrorDTO expected = new ErrorDTO(exception, HttpStatus.FORBIDDEN);
-		assertCorrectJSONResult(expected, exceptionErrorResult);
+		ErrorDTO expectedError = new ErrorDTO(exception);
+
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
 	}
 
 	private NumberFormatException generateNumberFormatExceptionForString(String invalidValue) {

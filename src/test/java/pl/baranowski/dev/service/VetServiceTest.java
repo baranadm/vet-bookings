@@ -31,6 +31,7 @@ import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.MedSpecialty;
 import pl.baranowski.dev.exception.*;
+import pl.baranowski.dev.exception.doctor.DoctorAlreadyExistsException;
 import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
 import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.mapper.DoctorMapper;
@@ -132,7 +133,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void addNew_ifOK_returnDTO() throws ForbiddenException {
+    void addNew_ifOK_returnDTO() throws DoctorAlreadyExistsException {
         given(doctorRepository.saveAndFlush(mostowiak)).willReturn(mostowiak);
         DoctorDTO expected = doctorMapper.toDto(mostowiak);
         DoctorDTO result = doctorService.addNew(doctorMapper.toDto(mostowiak));
@@ -141,13 +142,13 @@ class DoctorServiceTest {
 
     @Test
     void addNew_ifNipExists_throwNIPExistsException() {
-        // simulation of existing NIP in database
+        // simulation of existing Doctor with same NIP in database
         given(doctorRepository.findByNip(mostowiak.getNip())).willReturn(Collections.singletonList(mostowiak));
-        assertThrows(NIPExistsException.class, () -> doctorService.addNew(doctorMapper.toDto(mostowiak)));
+        assertThrows(DoctorAlreadyExistsException.class, () -> doctorService.addNew(doctorMapper.toDto(mostowiak)));
     }
 
     @Test
-    void fire_ifEntryExistsAndIsActive_setsActiveToFalse() throws ForbiddenException, NotFoundException {
+    void fire_ifEntryExistsAndIsActive_setsActiveToFalse() throws NotFoundException, DoctorNotActiveException {
         Doctor active = mostowiak;
         active.setActive(true);
 
@@ -175,7 +176,7 @@ class DoctorServiceTest {
     }
 
     @Test
-    void addAnimalType_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws ForbiddenException, NotFoundException {
+    void addAnimalType_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException {
         Doctor mostowiakWithCats = new DoctorBuilder().name(mostowiak.getName())
                 .surname(mostowiak.getSurname())
                 .nip(mostowiak.getNip())
@@ -234,15 +235,15 @@ class DoctorServiceTest {
         inactive.setActive(false);
         AnimalType pet = new AnimalType(1L, "Dogs");
 
-        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
-        given(animalTypeRepository.findById(pet.getId())).willReturn(Optional.ofNullable(pet));
+        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.of(mostowiak));
+        given(animalTypeRepository.findById(pet.getId())).willReturn(Optional.of(pet));
 
         assertThrows(DoctorNotActiveException.class, () -> doctorService.addAnimalType(mostowiak.getId(), pet.getId()));
 
     }
 
     @Test
-    void addMedSpecialty_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws ForbiddenException, NotFoundException {
+    void addMedSpecialty_whenDoctorAndAnimalTypeExists_returnsTrueOnSuccess() throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException {
         Doctor cardioMostowiak = new DoctorBuilder()
                 .name(mostowiak.getName())
                 .surname(mostowiak.getSurname())
@@ -255,8 +256,8 @@ class DoctorServiceTest {
         MedSpecialty ms = new MedSpecialty(1L, "Cardio");
         cardioMostowiak.addMedSpecialty(ms);
 
-        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
-        given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.ofNullable(ms));
+        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.of(mostowiak));
+        given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.of(ms));
         given(doctorRepository.saveAndFlush(cardioMostowiak)).willReturn(cardioMostowiak);
 
         DoctorDTO result = doctorService.addMedSpecialty(mostowiak.getId(), ms.getId());
@@ -267,7 +268,7 @@ class DoctorServiceTest {
     @Test
     void addMedSpecialty_whenMedSpecialtyNotFound_throwsEntityNotFoundException() {
         // mocks no medSpecialty in database
-        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
+        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.of(mostowiak));
         given(medSpecialtyRepository.findById(1L)).willReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class, () -> doctorService.addMedSpecialty(mostowiak.getId(), 1L));
@@ -277,7 +278,7 @@ class DoctorServiceTest {
     void addMedSpecialty_whenDoctorNotFound_throwsEntityNotFoundException() {
         given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.empty());
         MedSpecialty medSpecialty = new MedSpecialty(1L, "Cardio");
-        given(medSpecialtyRepository.findById(medSpecialty.getId())).willReturn(Optional.ofNullable(medSpecialty));
+        given(medSpecialtyRepository.findById(medSpecialty.getId())).willReturn(Optional.of(medSpecialty));
 
         assertThrows(EntityNotFoundException.class,
                      () -> doctorService.addMedSpecialty(mostowiak.getId(), medSpecialty.getId()));
@@ -289,8 +290,8 @@ class DoctorServiceTest {
         Doctor cardioDoctor = mostowiak;
         cardioDoctor.addMedSpecialty(ms);
 
-        given(medSpecialtyRepository.findById(1L)).willReturn(Optional.ofNullable(ms));
-        given(doctorRepository.findById(cardioDoctor.getId())).willReturn(Optional.ofNullable(cardioDoctor));
+        given(medSpecialtyRepository.findById(1L)).willReturn(Optional.of(ms));
+        given(doctorRepository.findById(cardioDoctor.getId())).willReturn(Optional.of(cardioDoctor));
 
         assertThrows(DoctorDoubledSpecialtyException.class,
                      () -> doctorService.addMedSpecialty(cardioDoctor.getId(), ms.getId()));
@@ -302,8 +303,8 @@ class DoctorServiceTest {
         inactive.setActive(false);
         MedSpecialty ms = new MedSpecialty(1L, "Cardio");
 
-        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
-        given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.ofNullable(ms));
+        given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.of(mostowiak));
+        given(medSpecialtyRepository.findById(ms.getId())).willReturn(Optional.of(ms));
 
         assertThrows(DoctorNotActiveException.class,
                      () -> doctorService.addMedSpecialty(mostowiak.getId(), ms.getId()));

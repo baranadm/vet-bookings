@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import pl.baranowski.dev.exception.ApiException;
 
 public class ErrorDTO {
-    private final HttpStatus httpStatus
+    private final HttpStatus httpStatus;
     private final String message;
 
     public ErrorDTO(ApiException exception) {

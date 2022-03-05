@@ -46,6 +46,8 @@ import pl.baranowski.dev.dto.NewVisitDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.VisitDTO;
+import pl.baranowski.dev.exception.InvalidParamException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.VisitService;
@@ -103,11 +105,11 @@ class VisitControllerTest {
 	@Test
 	void getById_whenValidIdAndEntityNotFound_returns404AndNotFound() throws Exception {long epoch = System.currentTimeMillis();
 		VisitDTO notExisting = new VisitDTO(1L, doctor, patient, epoch, false);
-		EntityNotFoundException exc = new EntityNotFoundException("testing");
-		ErrorDTO expected = new ErrorDTO(exc, HttpStatus.NOT_FOUND);
+		NotFoundException exception = new NotFoundException("Visit with id=" + notExisting.getId() + " has not been found.");
+		ErrorDTO expectedError = new ErrorDTO(exception);
 		
 		// mocks service return value
-		given(visitService.getById(notExisting.getId())).willThrow(exc);
+		given(visitService.getById(notExisting.getId())).willThrow(exception);
 		
 		MvcResult result = mockMvc.perform(get("/visit/{id}", notExisting.getId())
 					.contentType("application/json;charset=UTF-8"))
@@ -116,20 +118,26 @@ class VisitControllerTest {
 				.andReturn();
 		
 		// verifies JSON error response
-		assertCorrectJSONResult(expected, result);
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
 	}
 
 	@Test
 	void getById_whenInvalidId_returns400AndError() throws Exception {
-		MvcResult result = mockMvc.perform(get("/visit/{id}", "a")
+		String invalidId = "a";
+		MvcResult result = mockMvc.perform(get("/visit/{id}", invalidId)
 				.contentType("application/json;charset=UTF-8"))
 			.andExpect(content().contentType("application/json;charset=UTF-8"))
 			.andExpect(status().isBadRequest())
 			.andReturn();
-		
-		ErrorDTO expected = new ErrorDTO(new NumberFormatException().getClass().getSimpleName(), "Forinputstring:\"a\"", HttpStatus.BAD_REQUEST);
-		
-		assertCorrectJSONResult(expected, result);
+		InvalidParamException exception = new InvalidParamException("id", invalidId);
+		ErrorDTO expectedError = new ErrorDTO(exception);
+
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
+
 	}
 	
 	@Test
@@ -319,19 +327,22 @@ class VisitControllerTest {
 	void addNew_handlesEntityNotFoundException() throws Exception {
 		Long now = System.currentTimeMillis();
 		NewVisitDTO newVisit = new NewVisitDTO("1", "2", now.toString());
+		NotFoundException exception = new NotFoundException("Doctor with id=" + newVisit.getDoctorId() + " has not been found.");
 
-		given(visitService.addNew(1L, 2L, now)).willThrow(EntityNotFoundException.class);
-		
+		given(visitService.addNew(1L, 2L, now)).willThrow(exception);
+
 		MvcResult result = mockMvc.perform(post("/visit/")
 				.content(objectMapper.writeValueAsString(newVisit))
 				.contentType("application/json;charset=UTF-8"))
 			.andExpect(status().isNotFound())
 			.andExpect(content().contentType("application/json;charset=UTF-8"))
 			.andReturn();
-		
-		ErrorDTO expected = new ErrorDTO(new EntityNotFoundException(), HttpStatus.NOT_FOUND);
-		
-		assertCorrectJSONResult(expected, result);
+
+		ErrorDTO expectedError = new ErrorDTO(exception);
+
+		String resultAsString = result.getResponse().getContentAsString();
+		ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+		assertEquals(expectedError, resultError);
 	}
 
 	// TODO test service calls

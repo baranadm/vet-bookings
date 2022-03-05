@@ -151,8 +151,8 @@ class AnimalTypeControllerTest {
 
 	@Test
 	void testFindByName_whenNameIsEmpty_returns400andError() throws Exception {
-		EmptyFieldException ex = new EmptyFieldException("name");
-		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.BAD_REQUEST);
+		EmptyFieldException exception = new EmptyFieldException("name");
+		ErrorDTO expected = new ErrorDTO(exception);
 		
 		MvcResult result = mockMvc.perform(get("/animalTypes/find").param("name", "")).andExpect(status().isBadRequest()).andReturn();
 		assertCorrectJSONResult(expected, result);
@@ -219,7 +219,8 @@ class AnimalTypeControllerTest {
 	@Test
 	void testAddNew_whenNameIsDuplicated_thenReturns400AndErrorDTO() throws JsonProcessingException, Exception {
 		AnimalTypeDTO requestDto = new AnimalTypeDTO("Wiewiórka");
-		ErrorDTO expectedError = new ErrorDTO(new AnimalTypeAlreadyExistsException(), HttpStatus.BAD_REQUEST);
+		AnimalTypeAlreadyExistsException exception = new AnimalTypeAlreadyExistsException(requestDto.getName());
+		ErrorDTO expectedError = new ErrorDTO(exception);
 
 		// mocking service method
 		given(animalTypeService.addNew(requestDto)).willThrow(AnimalTypeAlreadyExistsException.class);

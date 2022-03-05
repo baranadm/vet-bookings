@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.exception.*;
+import pl.baranowski.dev.exception.doctor.DoctorAlreadyExistsException;
+import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
+import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.service.DoctorService;
 
 @RestController
@@ -41,7 +44,7 @@ public class DoctorController {
 
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO getById(@PathVariable String id) throws NotFoundException, BadRequestException {
+	public @ResponseBody DoctorDTO getById(@PathVariable String id) throws NotFoundException, InvalidParamException {
 		LOGGER.info("Received GET request - /id with 'id'='{}'", id);
 
 		DoctorDTO doctorDTO = doctorService.getDto(getIdFromString(id));
@@ -50,19 +53,19 @@ public class DoctorController {
 		return doctorDTO;
 	}
 
-	private Long getIdFromString(String stringId) throws BadRequestException {
+	private Long getIdFromString(String stringId) throws InvalidParamException {
 		Long id;
 		try {
 			id = Long.decode(stringId);
 		} catch(NumberFormatException ex) {
-			throw new BadRequestException("Invalid id: " + stringId);
+			throw new InvalidParamException("id", stringId);
 		}
 		return id;
 	}
 
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody Page<DoctorDTO> findAll(@Min(0) @RequestParam("page") String page, @RequestParam("size") String size) throws BadRequestException {
+	public @ResponseBody Page<DoctorDTO> findAll(@Min(0) @RequestParam("page") String page, @RequestParam("size") String size) throws InvalidParamException, EmptyFieldException {
 		LOGGER.info("Received GET request - / (findAll) with params: page='{}', size='{}'", page, size);
 
 		validatePageAndSize(page, size);
@@ -75,25 +78,25 @@ public class DoctorController {
 		return result;
 	}
 
-	private int getIntegerFromString(String str) throws BadRequestException {
+	private int getIntegerFromString(String str) throws InvalidParamException {
 		Integer result;
 		try {
 			result = Integer.parseInt(str);
 		} catch (NumberFormatException ex) {
-			throw new BadRequestException("Invalid param: " + str);
+			throw new InvalidParamException("Invalid param: " + str);
 		}
 		return result;
 	}
 
-	private void validatePageAndSize(String page, String size) throws BadRequestException {
+	private void validatePageAndSize(String page, String size) throws EmptyFieldException {
 		LOGGER.info("Validating params: page='{}', size='{}'", page, size);
-		if(page.isEmpty()) throw new BadRequestException("page");
-		if(size.isEmpty()) throw new BadRequestException("size");
+		if(page.isEmpty()) throw new EmptyFieldException("page");
+		if(size.isEmpty()) throw new EmptyFieldException("size");
 	}
 
 	@PostMapping(value = "/", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody DoctorDTO addNew(@Valid @RequestBody DoctorDTO doctorDTO) throws ForbiddenException {
+	public @ResponseBody DoctorDTO addNew(@Valid @RequestBody DoctorDTO doctorDTO) throws DoctorAlreadyExistsException {
 		LOGGER.info("Received POST request - / (addNew) with request body: {}", doctorDTO);
 
 		DoctorDTO createdDoctorDTO = doctorService.addNew(doctorDTO);
@@ -104,7 +107,7 @@ public class DoctorController {
 	
 	@PutMapping("/fire/{id}")
 	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO fire(@PathVariable("id") String id) throws BadRequestException, ForbiddenException, NotFoundException {
+	public @ResponseBody DoctorDTO fire(@PathVariable("id") String id) throws NotFoundException, DoctorNotActiveException, InvalidParamException {
 		LOGGER.info("Received PUT request - /fire/id with id='{}'", id);
 
 		DoctorDTO firedDoctorDTO = doctorService.fire(getIdFromString(id));
@@ -115,7 +118,7 @@ public class DoctorController {
 	
 	@PutMapping(value = "{doctorId}/addAnimalType/{atId}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO addAnimalType(@PathVariable String doctorId, @PathVariable String atId) throws BadRequestException, ForbiddenException, NotFoundException {
+	public @ResponseBody DoctorDTO addAnimalType(@PathVariable String doctorId, @PathVariable String atId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
 		LOGGER.info("Received PUT request - /doctorId/addAnimalType/animalTypeId with doctorId='{}', animalTypeId='{}'", doctorId, atId);
 
 		DoctorDTO updatedDoctorDTO = doctorService.addAnimalType(getIdFromString(doctorId), getIdFromString(atId));
@@ -126,7 +129,7 @@ public class DoctorController {
 	
 	@PutMapping(value = "{doctorId}/addMedSpecialty/{msId}", produces="application/json;charset=UTF-8")
 	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO addMedSpecialty(@PathVariable String doctorId, @PathVariable String msId) throws BadRequestException, ForbiddenException, NotFoundException {
+	public @ResponseBody DoctorDTO addMedSpecialty(@PathVariable String doctorId, @PathVariable String msId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
 		LOGGER.info("Received PUT request - /doctorId/addMedSpecialty/medSpecialtyId with doctorId='{}', medSpecialtyId='{}'", doctorId, msId);
 
 		DoctorDTO updatedDoctorDTO = doctorService.addMedSpecialty(getIdFromString(doctorId), getIdFromString(msId));

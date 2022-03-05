@@ -37,6 +37,8 @@ import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
 import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.InvalidParamException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
@@ -46,216 +48,234 @@ import pl.baranowski.dev.service.MedSpecialtyService;
 @AutoConfigureMockMvc
 class MedSpecialtyControllerTest {
 
-	@Autowired
-	MockMvc mockMvc;
-	
-	@Autowired
-	ObjectMapper objectMapper;
-	
-	@MockBean
-	MedSpecialtyService medSpecialtyService;
-	
-	private List<MedSpecialtyDTO> specialtiesDTO = new ArrayList<>();
-	
-	public MedSpecialtyControllerTest() {
-		// some data for testing purposes
-		specialtiesDTO.add(new MedSpecialtyDTO("Kardiolog"));
-		specialtiesDTO.add(new MedSpecialtyDTO("Chujolog"));
-		specialtiesDTO.add(new MedSpecialtyDTO("Pizdolog"));
-	}
-	@BeforeEach
-	void setUp() throws Exception {
-	}
+    @Autowired
+    MockMvc mockMvc;
 
-	// verify if controller responds for request
-	@Test
-	void findAll_respondsToRequest() throws Exception {
-		mockMvc
-			.perform(get("/medSpecialty/all"))
-			.andExpect(status().isOk());
-	}
+    @Autowired
+    ObjectMapper objectMapper;
 
-	// verify if controller returns correct entries
-	@Test
-	void findAll_returnsEntries() throws Exception {
-		// mock service return value
-		given(medSpecialtyService.findAll()).willReturn(specialtiesDTO);
+    @MockBean
+    MedSpecialtyService medSpecialtyService;
 
-		MvcResult result = mockMvc
-			.perform(get("/medSpecialty/all"))
-			.andExpect(status().isOk()).andReturn();
+    private List<MedSpecialtyDTO> specialtiesDTO = new ArrayList<>();
 
-		assertCorrectJSONResult(specialtiesDTO, result);
-	}
+    public MedSpecialtyControllerTest() {
+        // some data for testing purposes
+        specialtiesDTO.add(new MedSpecialtyDTO("Kardiolog"));
+        specialtiesDTO.add(new MedSpecialtyDTO("Chujolog"));
+        specialtiesDTO.add(new MedSpecialtyDTO("Pizdolog"));
+    }
 
-	@Test
-	void getById_respondsToRequest() throws Exception {
-		mockMvc.perform(get("/medSpecialty/{id}", 1L)).andExpect(status().isOk());
-	}
+    @BeforeEach
+    void setUp() throws Exception {
+    }
 
-	@Test
-	void getById_whenValidInput_verifyBusinessCalls() throws Exception {
-		String idString = "123";
-		mockMvc.perform(get("/medSpecialty/{id}", "123")).andExpect(status().isOk());
+    // verify if controller responds for request
+    @Test
+    void findAll_respondsToRequest() throws Exception {
+        mockMvc
+                .perform(get("/medSpecialty/all"))
+                .andExpect(status().isOk());
+    }
 
-		ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
-		verify(medSpecialtyService, times(1)).getById(captor.capture());
-		assertEquals(Long.decode(idString), captor.getValue());
-	}
-	
-	@Test
-	void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
-		EntityNotFoundException ex = new EntityNotFoundException("medical specialty has not been found");
-		ErrorDTO expected = new ErrorDTO(ex, HttpStatus.NOT_FOUND);
-		
-		given(medSpecialtyService.getById(123L)).willThrow(ex);
-		
-		MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", "123"))
-				.andExpect(status().isNotFound())
-				.andReturn();
-		
-		assertCorrectJSONResult(expected, result);
+    // verify if controller returns correct entries
+    @Test
+    void findAll_returnsEntries() throws Exception {
+        // mock service return value
+        given(medSpecialtyService.findAll()).willReturn(specialtiesDTO);
 
-	}
-	@Test
-	void getById_whenValidId_returnsEntry() throws Exception {
-		MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "ĘÓŁĄĆŃŻŻ");
-		
-		given(medSpecialtyService.getById(1L)).willReturn(expected);
-		
-		MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", 1L)).andExpect(status().isOk()).andReturn();
-		
-		assertCorrectJSONResult(expected, result);
-	}
+        MvcResult result = mockMvc
+                .perform(get("/medSpecialty/all"))
+                .andExpect(status().isOk()).andReturn();
 
-	@Test
-	void getById_whenInvalidId_returns400AndError() throws Exception {
-		ErrorDTO expectedError = new ErrorDTO(new NumberFormatException(), HttpStatus.BAD_REQUEST);
-		MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", "ł")).andExpect(status().isBadRequest()).andReturn();
+        assertCorrectJSONResult(specialtiesDTO, result);
+    }
 
-		assertCorrectJSONResult(expectedError, result);
-	}
+    @Test
+    void getById_respondsToRequest() throws Exception {
+        mockMvc.perform(get("/medSpecialty/{id}", 1L)).andExpect(status().isOk());
+    }
 
-	@Test
-	void findByName_respondsToRequest() throws Exception {
-		MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "Kóniolog");
-		mockMvc.perform(get("/medSpecialty/find").param("specialty", expected.getName())).andExpect(status().isOk());
-	}
+    @Test
+    void getById_whenValidInput_verifyBusinessCalls() throws Exception {
+        String idString = "123";
+        mockMvc.perform(get("/medSpecialty/{id}", "123")).andExpect(status().isOk());
 
-	@Test
-	void findByName_whenValidInput_verifyBusinessCalls() throws Exception {
-		String medSpecialtyName = "Kónio log";
-		mockMvc.perform(get("/medSpecialty/find").param("specialty", medSpecialtyName)).andExpect(status().isOk());
+        ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+        verify(medSpecialtyService, times(1)).getById(captor.capture());
+        assertEquals(Long.decode(idString), captor.getValue());
+    }
 
-		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-		verify(medSpecialtyService, times(1)).findByName(captor.capture());
-		assertEquals(medSpecialtyName, captor.getValue());
-	}
-	
-	@Test
-	void findByName_whenValidName_returnsCorrectEntries() throws Exception {
-		MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "Kóniolog");
-		given(medSpecialtyService.findByName(expected.getName())).willReturn(Collections.singletonList(expected));
-		MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", expected.getName())).andExpect(status().isOk()).andReturn();
+    @Test
+    void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
+        NotFoundException exception = new NotFoundException("Medical Specialty has not been found");
+        ErrorDTO expectedError = new ErrorDTO(exception);
 
-		assertCorrectJSONResult(Collections.singletonList(expected), result);
-	}
+        given(medSpecialtyService.getById(123L)).willThrow(exception);
 
-	@Test
-	void findByName_whenNameIsEmpty_returns400andError() throws Exception {
-		ErrorDTO expectedError = new ErrorDTO(new EmptyFieldException("specialty"));
-		MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", "")).andExpect(status().isBadRequest()).andReturn();
+        MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", "123"))
+                .andExpect(status().isNotFound())
+                .andReturn();
 
-		assertCorrectJSONResult(expectedError, result);
-	}
+        String resultAsString = result.getResponse().getContentAsString();
+        ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+        assertEquals(expectedError, resultError);
 
-	@Test
-	void addNew_respondsToRequest() throws JsonProcessingException, Exception {
-		MedSpecialtyDTO body = new MedSpecialtyDTO("ĘŁÓ log");
-		mockMvc.perform(
-				post("/medSpecialty/new")
-				.contentType("application/json;charset=UTF-8")
-				.content(objectMapper.writeValueAsString(body)))
-		.andExpect(status().isCreated());
-	}
-	
-	@Test
-	void addNew_whenValidInput_verifyBusinessCalls() throws JsonProcessingException, Exception {
-		MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ log");
-		mockMvc.perform(
-				post("/medSpecialty/new")
-				.contentType("application/json;charset=UTF-8")
-				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isCreated());
-		
-		ArgumentCaptor<MedSpecialtyDTO> medSpecialtyCaptor = ArgumentCaptor.forClass(MedSpecialtyDTO.class);
-		verify(medSpecialtyService, times(1)).addNew(medSpecialtyCaptor.capture());
-		assertEquals(objectMapper.writeValueAsString(medSpecialtyCaptor.getValue()), objectMapper.writeValueAsString(dto));
-	}
-	
-	// fails: returns empty body
-	@Test
-	void addNew_whenValidInput_returns200AndNewEntry() throws JsonProcessingException, Exception {
-		MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ log");
-		MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "ĘŁÓ log");
+    }
 
-		// mocking service return value
-		given(medSpecialtyService.addNew(dto)).willReturn(expected);
-		
-		mockMvc.perform(
-				post("/medSpecialty/new")
-				.contentType("application/json")
-				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isCreated())
-				.andDo(mvcResult -> {
-					String res = mvcResult.getResponse().getContentAsString();
-					assertEquals(StringUtils.trimAllWhitespace(
-							objectMapper.writeValueAsString(expected)),
-							StringUtils.trimAllWhitespace(res));
-				});
-		
-	}
-	
-	// fails - return 200 instead of 400 (spring @Valid validator not working)
-	@Test
-	void addNew_whenEmptyName_returns400AndError() throws JsonProcessingException, Exception {
-		MedSpecialtyDTO dto = new MedSpecialtyDTO("");
-		MultiFieldsErrorDTO expected = new MultiFieldsErrorDTO(new FieldValidationError("name", "specialty must not be null or empty"));
+    @Test
+    void getById_whenValidId_returnsEntry() throws Exception {
+        MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "ĘÓŁĄĆŃŻŻ");
 
-		MvcResult result = mockMvc.perform(
-				post("/medSpecialty/new")
-				.contentType("application/json")
-				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isBadRequest()).andReturn();
-		
-		
-		assertCorrectJSONResult(expected, result);
-	}
-	
-	@Test
-	void addNew_whenDuplicatedName_returns400AndError() throws JsonProcessingException, Exception {
-		MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ ziom");
-		ErrorDTO expected = new ErrorDTO(new MedSpecialtyAlreadyExistsException("ee"));
-		
-		given(medSpecialtyService.addNew(dto))
-		.willThrow(MedSpecialtyAlreadyExistsException.class);
-		
-		MvcResult result = mockMvc.perform(
-				post("/medSpecialty/new")
-				.contentType("application/json;charset=UTF-8")
-				.content(objectMapper.writeValueAsString(dto)))
-		.andExpect(status().isBadRequest()).andReturn();
-		
-		
-		assertCorrectJSONResult(expected, result);
-		
-	}
+        given(medSpecialtyService.getById(1L)).willReturn(expected);
 
-	private void assertCorrectJSONResult(Object expected, MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
-		String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
-		String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
+        MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", 1L)).andExpect(status().isOk()).andReturn();
 
-		assertEquals(expectedTrimmed, actualTrimmed);
-	}
-	
+        assertCorrectJSONResult(expected, result);
+    }
+
+    @Test
+    void getById_whenInvalidId_returns400AndError() throws Exception {
+        String invalidParam = "ł";
+        InvalidParamException exception = new InvalidParamException("id", invalidParam);
+        ErrorDTO expectedError = new ErrorDTO(exception);
+
+        MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", invalidParam))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String resultAsString = result.getResponse().getContentAsString();
+        ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
+        assertEquals(expectedError, resultError);
+    }
+
+    @Test
+    void findByName_respondsToRequest() throws Exception {
+        MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "Kóniolog");
+        mockMvc.perform(get("/medSpecialty/find").param("specialty", expected.getName())).andExpect(status().isOk());
+    }
+
+    @Test
+    void findByName_whenValidInput_verifyBusinessCalls() throws Exception {
+        String medSpecialtyName = "Kónio log";
+        mockMvc.perform(get("/medSpecialty/find").param("specialty", medSpecialtyName)).andExpect(status().isOk());
+
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        verify(medSpecialtyService, times(1)).findByName(captor.capture());
+        assertEquals(medSpecialtyName, captor.getValue());
+    }
+
+    @Test
+    void findByName_whenValidName_returnsCorrectEntries() throws Exception {
+        MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "Kóniolog");
+        given(medSpecialtyService.findByName(expected.getName())).willReturn(Collections.singletonList(expected));
+        MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", expected.getName()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertCorrectJSONResult(Collections.singletonList(expected), result);
+    }
+
+    @Test
+    void findByName_whenNameIsEmpty_returns400andError() throws Exception {
+        ErrorDTO expectedError = new ErrorDTO(new EmptyFieldException("specialty"));
+        MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", ""))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertCorrectJSONResult(expectedError, result);
+    }
+
+    @Test
+    void addNew_respondsToRequest() throws JsonProcessingException, Exception {
+        MedSpecialtyDTO body = new MedSpecialtyDTO("ĘŁÓ log");
+        mockMvc.perform(
+                        post("/medSpecialty/new")
+                                .contentType("application/json;charset=UTF-8")
+                                .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void addNew_whenValidInput_verifyBusinessCalls() throws JsonProcessingException, Exception {
+        MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ log");
+        mockMvc.perform(
+                        post("/medSpecialty/new")
+                                .contentType("application/json;charset=UTF-8")
+                                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<MedSpecialtyDTO> medSpecialtyCaptor = ArgumentCaptor.forClass(MedSpecialtyDTO.class);
+        verify(medSpecialtyService, times(1)).addNew(medSpecialtyCaptor.capture());
+        assertEquals(objectMapper.writeValueAsString(medSpecialtyCaptor.getValue()),
+                     objectMapper.writeValueAsString(dto));
+    }
+
+    // fails: returns empty body
+    @Test
+    void addNew_whenValidInput_returns200AndNewEntry() throws JsonProcessingException, Exception {
+        MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ log");
+        MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "ĘŁÓ log");
+
+        // mocking service return value
+        given(medSpecialtyService.addNew(dto)).willReturn(expected);
+
+        mockMvc.perform(
+                        post("/medSpecialty/new")
+                                .contentType("application/json")
+                                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isCreated())
+                .andDo(mvcResult -> {
+                    String res = mvcResult.getResponse().getContentAsString();
+                    assertEquals(StringUtils.trimAllWhitespace(
+                                         objectMapper.writeValueAsString(expected)),
+                                 StringUtils.trimAllWhitespace(res));
+                });
+
+    }
+
+    // fails - return 200 instead of 400 (spring @Valid validator not working)
+    @Test
+    void addNew_whenEmptyName_returns400AndError() throws JsonProcessingException, Exception {
+        MedSpecialtyDTO dto = new MedSpecialtyDTO("");
+        MultiFieldsErrorDTO expected = new MultiFieldsErrorDTO(new FieldValidationError("name",
+                                                                                        "specialty must not be null or empty"));
+
+        MvcResult result = mockMvc.perform(
+                        post("/medSpecialty/new")
+                                .contentType("application/json")
+                                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest()).andReturn();
+
+
+        assertCorrectJSONResult(expected, result);
+    }
+
+    @Test
+    void addNew_whenDuplicatedName_returns400AndError() throws JsonProcessingException, Exception {
+        MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ ziom");
+        ErrorDTO expected = new ErrorDTO(new MedSpecialtyAlreadyExistsException("ee"));
+
+        given(medSpecialtyService.addNew(dto))
+                .willThrow(MedSpecialtyAlreadyExistsException.class);
+
+        MvcResult result = mockMvc.perform(
+                        post("/medSpecialty/new")
+                                .contentType("application/json;charset=UTF-8")
+                                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isBadRequest()).andReturn();
+
+
+        assertCorrectJSONResult(expected, result);
+
+    }
+
+    private void assertCorrectJSONResult(Object expected,
+                                         MvcResult result) throws JsonProcessingException, UnsupportedEncodingException {
+        String expectedTrimmed = StringUtils.trimAllWhitespace(objectMapper.writeValueAsString(expected));
+        String actualTrimmed = StringUtils.trimAllWhitespace(result.getResponse().getContentAsString());
+
+        assertEquals(expectedTrimmed, actualTrimmed);
+    }
+
 }

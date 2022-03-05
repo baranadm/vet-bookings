@@ -42,7 +42,7 @@ public class AnimalTypeService {
 
 	public AnimalTypeDTO addNew(AnimalTypeDTO dto) throws AnimalTypeAlreadyExistsException {
 		if(animalTypeRepo.findOneByName(dto.getName()).isPresent()) {
-			throw new AnimalTypeAlreadyExistsException();
+			throw new AnimalTypeAlreadyExistsException(dto.getName());
 		}
 		AnimalType newAnimalType = mapper.toEntity(dto);
 		AnimalTypeDTO newAnimalTypeDTO = mapper.toDto(animalTypeRepo.save(newAnimalType));
