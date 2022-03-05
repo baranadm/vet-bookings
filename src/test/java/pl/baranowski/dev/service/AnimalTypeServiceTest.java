@@ -26,6 +26,7 @@ import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
 // TODO check, if repo is not considering "Cat" and "Cats" are equal (contains != equals!!). If so, findByName should be repaired
+// zrobione wg. pkt 6. https://www.baeldung.com/spring-boot-testing
 @SpringBootTest
 class AnimalTypeServiceTest {
 
@@ -60,7 +61,7 @@ class AnimalTypeServiceTest {
 	
 	@Test
 	void findByName_whenEntitiesExist_returnsListOfDTOs() {
-		given(animalTypeRepository.findOneByName("Cats")).willReturn(Optional.of(cats));
+		given(animalTypeRepository.findByName("Cats")).willReturn(Collections.singletonList(cats));
 		assertEquals(
 				Collections.singletonList(cats).stream().map(mapper::toDto).collect(Collectors.toList()), 
 				animalTypeService.findByName("Cats")
@@ -93,7 +94,7 @@ class AnimalTypeServiceTest {
 	}
 	
 	@Test
-	void addNew_whenDuplicate_throwsAnimalTypeAllreadyExistsException() {
+	void addNew_whenDuplicate_throwsAnimalTypeAlreadyExistsException() {
 		given(animalTypeRepository.findOneByName(cats.getName())).willReturn(Optional.of(cats));
 		assertThrows(AnimalTypeAlreadyExistsException.class , () -> animalTypeService.addNew(mapper.toDto(cats)));
 	}
