@@ -48,9 +48,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 				.body(mfErrorDTO);
 	}
 
+	@SuppressWarnings("deprecation")
 	@ExceptionHandler
 	ResponseEntity<Object> handleApiException(ApiException exception, WebRequest request) {
 		ErrorDTO error = new ErrorDTO(exception);
-		return ResponseEntity.status(error.getHttpStatus()).body(error);
+		return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
 	}
 }

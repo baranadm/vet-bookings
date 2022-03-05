@@ -1,9 +1,11 @@
 package pl.baranowski.dev.error;
 
+import java.util.Objects;
+
 public class FieldValidationError {
 	
-	private String field;
-	private String message;
+	private final String field;
+	private final String message;
 	
 	public FieldValidationError(String field, String message) {
 		this.field = field;
@@ -17,5 +19,25 @@ public class FieldValidationError {
 	public String getMessage() {
 		return message;
 	}
-	
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		FieldValidationError that = (FieldValidationError) o;
+		return Objects.equals(field, that.field) && Objects.equals(message, that.message);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(field, message);
+	}
+
+	@Override
+	public String toString() {
+		return "FieldValidationError{" +
+				"field='" + field + '\'' +
+				", message='" + message + '\'' +
+				'}';
+	}
 }

@@ -16,7 +16,7 @@ public class AnimalTypeDTO {
 		this.name = name;
 	}
 	
-	public AnimalTypeDTO(Long id, @NotBlank String name) {
+	public AnimalTypeDTO(Long id, String name) {
 		this.id = id;
 		this.name = name;
 	}

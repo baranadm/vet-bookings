@@ -20,6 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
@@ -46,7 +47,7 @@ class AnimalTypeServiceTest {
 	}
 
 	@Test
-	void findById_whenEntityExists_returnsDTO() {
+	void findById_whenEntityExists_returnsDTO() throws NotFoundException {
 		given(animalTypeRepository.findById(1L)).willReturn(Optional.ofNullable(cats));
 		assertEquals(mapper.toDto(cats), animalTypeService.findById(1L));
 	}

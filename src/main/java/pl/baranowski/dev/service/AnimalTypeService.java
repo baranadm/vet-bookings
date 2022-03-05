@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
@@ -27,8 +28,8 @@ public class AnimalTypeService {
 		this.animalTypeRepo = animalTypeRepo;
 	}
 
-	public AnimalTypeDTO findById(Long id) throws EntityNotFoundException {
-		AnimalType entry = animalTypeRepo.findById(id).orElseThrow(EntityNotFoundException::new);
+	public AnimalTypeDTO findById(Long id) throws NotFoundException {
+		AnimalType entry = animalTypeRepo.findById(id).orElseThrow(() -> new NotFoundException("Animal type with id=" + id + " has not been found."));
 		return mapper.toDto(entry);
 	}
 

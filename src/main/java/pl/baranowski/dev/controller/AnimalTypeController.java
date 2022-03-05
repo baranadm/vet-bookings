@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
+import pl.baranowski.dev.exception.InvalidParamException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.service.AnimalTypeService;
@@ -46,13 +48,23 @@ public class AnimalTypeController {
 	}
 
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
-	public @ResponseBody AnimalTypeDTO findById(@PathVariable String id) throws NumberFormatException {
+	public @ResponseBody AnimalTypeDTO findById(@PathVariable String id) throws NotFoundException, InvalidParamException {
 		LOGGER.info("Received GET request - /id with 'id'='{}'", id);
 
-		AnimalTypeDTO animalTypeDTO = animalTypeService.findById(Long.decode(id));
+		AnimalTypeDTO animalTypeDTO = animalTypeService.findById(getIdFromString(id));
 
 		LOGGER.info("Returning response: {}",animalTypeDTO);
 		return animalTypeDTO;
+	}
+
+	private Long getIdFromString(String id) throws InvalidParamException {
+		Long result;
+		try {
+			result = Long.decode(id);
+		} catch (NumberFormatException e) {
+			throw new InvalidParamException("id", id);
+		}
+		return result;
 	}
 
 	@GetMapping(value="/find", produces="application/json;charset=UTF-8")
