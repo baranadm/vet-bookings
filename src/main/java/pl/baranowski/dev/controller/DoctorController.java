@@ -57,11 +57,8 @@ public class DoctorController {
     @ResponseStatus(HttpStatus.OK)
     public @ResponseBody
     Page<DoctorDTO> findAll(@Min(0) @NotBlank @RequestParam("page") String page,
-                            @Min(0) @NotBlank @RequestParam("size") String size) throws InvalidParamException, EmptyFieldException {
+                            @Min(1) @NotBlank @RequestParam("size") String size) throws InvalidParamException, EmptyFieldException {
         LOGGER.info("Received GET request - / (findAll) with params: page='{}', size='{}'", page, size);
-
-        validatePageAndSize(page, size);
-        LOGGER.info("Params are valid, creating pageable...");
 
         Pageable requestedPageable = PageRequest.of(getIntegerFromString(page), getIntegerFromString(size));
         Page<DoctorDTO> result = doctorService.findAll(requestedPageable);
@@ -76,13 +73,6 @@ public class DoctorController {
         } catch (NumberFormatException ex) {
             throw new InvalidParamException("Invalid param: " + str);
         }
-    }
-
-    private void validatePageAndSize(String page, String size) throws EmptyFieldException {
-        LOGGER.debug("Validating params: page='{}', size='{}'", page, size);
-        if (page.isEmpty()) throw new EmptyFieldException("page");
-        if (size.isEmpty()) throw new EmptyFieldException("size");
-        LOGGER.debug("Validated - not empty.");
     }
 
     @PostMapping(value = "/", produces = "application/json;charset=UTF-8")
