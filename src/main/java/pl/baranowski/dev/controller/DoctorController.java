@@ -1,141 +1,143 @@
 package pl.baranowski.dev.controller;
 
-import javax.print.Doc;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import pl.baranowski.dev.dto.DoctorDTO;
-import pl.baranowski.dev.exception.*;
+import pl.baranowski.dev.exception.EmptyFieldException;
+import pl.baranowski.dev.exception.InvalidParamException;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.doctor.DoctorAlreadyExistsException;
 import pl.baranowski.dev.exception.doctor.DoctorDoubledSpecialtyException;
 import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.service.DoctorService;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+
+@Validated
 @RestController
 @RequestMapping("/doctors")
 public class DoctorController {
-	public static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 5);
-	private static final Logger LOGGER = LoggerFactory.getLogger(AnimalTypeController.class);
+    public static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 5);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnimalTypeController.class);
+    private final DoctorService doctorService;
 
+    public DoctorController(DoctorService doctorService) {
+        this.doctorService = doctorService;
+    }
 
-	private final DoctorService doctorService;
+    @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
+    @ResponseStatus(HttpStatus.OK)
+    public @ResponseBody
+    DoctorDTO getById(@PathVariable String id) throws NotFoundException, InvalidParamException {
+        LOGGER.info("Received GET request - /id with 'id'='{}'", id);
 
-	public DoctorController(DoctorService doctorService) {
-		this.doctorService = doctorService;
-	}
+        DoctorDTO doctorDTO = doctorService.getDto(getIdFromString(id));
 
-	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
-	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO getById(@PathVariable String id) throws NotFoundException, InvalidParamException {
-		LOGGER.info("Received GET request - /id with 'id'='{}'", id);
+        LOGGER.info("Returning response: {}", doctorDTO);
+        return doctorDTO;
+    }
 
-		DoctorDTO doctorDTO = doctorService.getDto(getIdFromString(id));
+    private Long getIdFromString(String stringId) throws InvalidParamException {
+        try {
+            return Long.decode(stringId);
+        } catch (NumberFormatException ex) {
+            throw new InvalidParamException("id", stringId);
+        }
+    }
 
-		LOGGER.info("Returning response: {}",doctorDTO);
-		return doctorDTO;
-	}
+    @GetMapping(value = "/", produces = "application/json;charset=UTF-8")
+    @ResponseStatus(HttpStatus.OK)
+    public @ResponseBody
+    Page<DoctorDTO> findAll(@Min(0) @NotBlank @RequestParam("page") String page,
+                            @Min(0) @NotBlank @RequestParam("size") String size) throws InvalidParamException, EmptyFieldException {
+        LOGGER.info("Received GET request - / (findAll) with params: page='{}', size='{}'", page, size);
 
-	private Long getIdFromString(String stringId) throws InvalidParamException {
-		Long id;
-		try {
-			id = Long.decode(stringId);
-		} catch(NumberFormatException ex) {
-			throw new InvalidParamException("id", stringId);
-		}
-		return id;
-	}
+        validatePageAndSize(page, size);
+        LOGGER.info("Params are valid, creating pageable...");
 
-	@GetMapping(value="/", produces="application/json;charset=UTF-8")
-	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody Page<DoctorDTO> findAll(@Min(0) @RequestParam("page") String page, @RequestParam("size") String size) throws InvalidParamException, EmptyFieldException {
-		LOGGER.info("Received GET request - / (findAll) with params: page='{}', size='{}'", page, size);
+        Pageable requestedPageable = PageRequest.of(getIntegerFromString(page), getIntegerFromString(size));
+        Page<DoctorDTO> result = doctorService.findAll(requestedPageable);
 
-		validatePageAndSize(page, size);
-		LOGGER.info("Params are valid, creating pageable...");
+        LOGGER.info("Returning response: Page of DoctorDTOs - size: {}", result.getContent().size());
+        return result;
+    }
 
-		Pageable requestedPageable = PageRequest.of(getIntegerFromString(page), getIntegerFromString(size));
-		Page<DoctorDTO> result = doctorService.findAll(requestedPageable);
+    private int getIntegerFromString(String str) throws InvalidParamException {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException ex) {
+            throw new InvalidParamException("Invalid param: " + str);
+        }
+    }
 
-		LOGGER.info("Returning response: Page of DoctorDTOs - size: {}",result.getContent().size());
-		return result;
-	}
+    private void validatePageAndSize(String page, String size) throws EmptyFieldException {
+        LOGGER.debug("Validating params: page='{}', size='{}'", page, size);
+        if (page.isEmpty()) throw new EmptyFieldException("page");
+        if (size.isEmpty()) throw new EmptyFieldException("size");
+        LOGGER.debug("Validated - not empty.");
+    }
 
-	private int getIntegerFromString(String str) throws InvalidParamException {
-		Integer result;
-		try {
-			result = Integer.parseInt(str);
-		} catch (NumberFormatException ex) {
-			throw new InvalidParamException("Invalid param: " + str);
-		}
-		return result;
-	}
+    @PostMapping(value = "/", produces = "application/json;charset=UTF-8")
+    @ResponseStatus(HttpStatus.CREATED)
+    public @ResponseBody
+    DoctorDTO addNew(@Valid @RequestBody DoctorDTO doctorDTO) throws DoctorAlreadyExistsException {
+        LOGGER.info("Received POST request - / (addNew) with request body: {}", doctorDTO);
 
-	private void validatePageAndSize(String page, String size) throws EmptyFieldException {
-		LOGGER.info("Validating params: page='{}', size='{}'", page, size);
-		if(page.isEmpty()) throw new EmptyFieldException("page");
-		if(size.isEmpty()) throw new EmptyFieldException("size");
-	}
+        DoctorDTO createdDoctorDTO = doctorService.addNew(doctorDTO);
 
-	@PostMapping(value = "/", produces="application/json;charset=UTF-8")
-	@ResponseStatus(HttpStatus.CREATED)
-	public @ResponseBody DoctorDTO addNew(@Valid @RequestBody DoctorDTO doctorDTO) throws DoctorAlreadyExistsException {
-		LOGGER.info("Received POST request - / (addNew) with request body: {}", doctorDTO);
+        LOGGER.info("Creating new animalType success. Object created: {}", createdDoctorDTO);
+        return createdDoctorDTO;
+    }
 
-		DoctorDTO createdDoctorDTO = doctorService.addNew(doctorDTO);
+    @PutMapping("/fire/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public @ResponseBody
+    DoctorDTO fire(@PathVariable("id") String id) throws NotFoundException, DoctorNotActiveException, InvalidParamException {
+        LOGGER.info("Received PUT request - /fire/id with id='{}'", id);
 
-		LOGGER.info("Creating new animalType success. Object created: {}", createdDoctorDTO);
-		return createdDoctorDTO;
-	}
-	
-	@PutMapping("/fire/{id}")
-	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO fire(@PathVariable("id") String id) throws NotFoundException, DoctorNotActiveException, InvalidParamException {
-		LOGGER.info("Received PUT request - /fire/id with id='{}'", id);
+        DoctorDTO firedDoctorDTO = doctorService.fire(getIdFromString(id));
 
-		DoctorDTO firedDoctorDTO = doctorService.fire(getIdFromString(id));
+        LOGGER.info("Doctor has been fired. Fired Doctor: {}", firedDoctorDTO);
+        return firedDoctorDTO;
+    }
 
-		LOGGER.info("Doctor has been fired. Fired Doctor: {}", firedDoctorDTO);
-		return firedDoctorDTO;
-	}
-	
-	@PutMapping(value = "{doctorId}/addAnimalType/{atId}", produces="application/json;charset=UTF-8")
-	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO addAnimalType(@PathVariable String doctorId, @PathVariable String atId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
-		LOGGER.info("Received PUT request - /doctorId/addAnimalType/animalTypeId with doctorId='{}', animalTypeId='{}'", doctorId, atId);
+    @PutMapping(value = "{doctorId}/addAnimalType/{atId}", produces = "application/json;charset=UTF-8")
+    @ResponseStatus(HttpStatus.OK)
+    public @ResponseBody
+    DoctorDTO addAnimalType(@PathVariable String doctorId,
+                            @PathVariable String atId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
+        LOGGER.info("Received PUT request - /doctorId/addAnimalType/animalTypeId with doctorId='{}', animalTypeId='{}'",
+                    doctorId,
+                    atId);
 
-		DoctorDTO updatedDoctorDTO = doctorService.addAnimalType(getIdFromString(doctorId), getIdFromString(atId));
+        DoctorDTO updatedDoctorDTO = doctorService.addAnimalType(getIdFromString(doctorId), getIdFromString(atId));
 
-		LOGGER.info("AnimalType with id='{}' has been added to Doctor: {}", atId, updatedDoctorDTO);
-		return updatedDoctorDTO;
-	}
-	
-	@PutMapping(value = "{doctorId}/addMedSpecialty/{msId}", produces="application/json;charset=UTF-8")
-	@ResponseStatus(HttpStatus.OK)
-	public @ResponseBody DoctorDTO addMedSpecialty(@PathVariable String doctorId, @PathVariable String msId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
-		LOGGER.info("Received PUT request - /doctorId/addMedSpecialty/medSpecialtyId with doctorId='{}', medSpecialtyId='{}'", doctorId, msId);
+        LOGGER.info("AnimalType with id='{}' has been added to Doctor: {}", atId, updatedDoctorDTO);
+        return updatedDoctorDTO;
+    }
 
-		DoctorDTO updatedDoctorDTO = doctorService.addMedSpecialty(getIdFromString(doctorId), getIdFromString(msId));
+    @PutMapping(value = "{doctorId}/addMedSpecialty/{msId}", produces = "application/json;charset=UTF-8")
+    @ResponseStatus(HttpStatus.OK)
+    public @ResponseBody
+    DoctorDTO addMedSpecialty(@PathVariable String doctorId,
+                              @PathVariable String msId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
+        LOGGER.info(
+                "Received PUT request - /doctorId/addMedSpecialty/medSpecialtyId with doctorId='{}', medSpecialtyId='{}'",
+                doctorId,
+                msId);
 
-		LOGGER.info("MedSpecialty with id='{}' has been added to Doctor: {}", msId, updatedDoctorDTO);
-		return updatedDoctorDTO;
-	}
-	
+        DoctorDTO updatedDoctorDTO = doctorService.addMedSpecialty(getIdFromString(doctorId), getIdFromString(msId));
+
+        LOGGER.info("MedSpecialty with id='{}' has been added to Doctor: {}", msId, updatedDoctorDTO);
+        return updatedDoctorDTO;
+    }
+
 }

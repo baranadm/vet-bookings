@@ -43,23 +43,27 @@ import pl.baranowski.dev.repository.MedSpecialtyRepository;
 @SpringBootTest
 class DoctorServiceTest {
 
-    private final Doctor mostowiak = new DoctorBuilder().name("Mark").surname("Most-o-wiack").nip("1181328620").id(1L)
-            .hourlyRate(new BigDecimal(150).setScale(2))
-            .build();
     @MockBean
     DoctorRepository doctorRepository;
     @MockBean
     AnimalTypeRepository animalTypeRepository;
     @MockBean
     MedSpecialtyRepository medSpecialtyRepository;
+
     @Autowired
     DoctorService doctorService;
+
     @Autowired
     DoctorMapper doctorMapper;
+
+    private Doctor mostowiak;
     private List<DoctorDTO> doctorsList;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
+        this.mostowiak = new DoctorBuilder().name("Mark").surname("Most-o-wiack").nip("1181328620").id(1L)
+                .hourlyRate(new BigDecimal(150).setScale(2))
+                .build();
         doctorsList = new ArrayList<>();
 
         doctorsList.add(new DoctorDTOBuilder().name("Robert")
@@ -90,7 +94,6 @@ class DoctorServiceTest {
     @Test
     void getById_whenValidId_returnsDTOfromOptional() throws NotFoundException {
         Long id = 1L;
-        // TODO https://stackoverflow.com/questions/66870778/what-is-difference-here-autowired-and-mockbean
         Optional<Doctor> expected = Optional.of(mostowiak);
         given(doctorRepository.findById(id)).willReturn(expected);
         DoctorDTO result = doctorService.getDto(id);
@@ -103,7 +106,7 @@ class DoctorServiceTest {
 
         given(doctorRepository.findById(id)).willReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> doctorService.getDto(id));
+        assertThrows(NotFoundException.class, () -> doctorService.getDto(id));
     }
 
     @Test
@@ -119,17 +122,22 @@ class DoctorServiceTest {
         Page<DoctorDTO> expected = new PageImpl<>(doctorsList, pageable, doctorsList.size());
         Page<DoctorDTO> result = doctorService.findAll(pageable);
 
-        assertPagesEquals(expected, result);
+        assertEquals(expected.get().collect(Collectors.toList()), result.get().collect(Collectors.toList()));
+        assertEquals(expected.getPageable(), result.getPageable());
     }
 
     @Test
     void findAll_ifNoEntitiesFound_returnsEmptyPage() {
+        //given
         Pageable pageable = PageRequest.of(0, 2);
-        Page<Doctor> repoResult = new PageImpl<Doctor>(Collections.emptyList(), pageable, 0);
-        Page<DoctorDTO> expected = repoResult.map(doctorMapper::toDto);
-
-        given(doctorRepository.findAll(pageable)).willReturn(repoResult);
-        assertPagesEquals(expected, doctorService.findAll(pageable));
+        Page<Doctor> mockedRepoResult = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        Page<DoctorDTO> expected = mockedRepoResult.map(doctorMapper::toDto);
+        given(doctorRepository.findAll(pageable)).willReturn(mockedRepoResult);
+        //when
+        Page<DoctorDTO> result = doctorService.findAll(pageable);
+        //then
+        assertEquals(expected.get().collect(Collectors.toList()), result.get().collect(Collectors.toList()));
+        assertEquals(expected.getPageable(), result.getPageable());
     }
 
     @Test
@@ -149,13 +157,13 @@ class DoctorServiceTest {
 
     @Test
     void fire_ifEntryExistsAndIsActive_setsActiveToFalse() throws NotFoundException, DoctorNotActiveException {
-        Doctor active = mostowiak;
-        active.setActive(true);
+        Doctor activeDoctor = mostowiak;
+        activeDoctor.setActive(true);
+        given(doctorRepository.findById(activeDoctor.getId())).willReturn(Optional.of(activeDoctor));
 
-        given(doctorRepository.findById(active.getId())).willReturn(Optional.of(active));
+        DoctorDTO fired = doctorService.fire(activeDoctor.getId());
 
-        doctorService.fire(active.getId());
-        assertFalse(doctorRepository.findById(active.getId()).get().getActive());
+        assertFalse(fired.getActive());
     }
 
     @Test
@@ -172,7 +180,7 @@ class DoctorServiceTest {
     void fire_ifNoEntry_throwsEntityNotFoundException() {
         given(doctorRepository.findById(1L)).willReturn(Optional.empty());
 //		doctorService.fire(1L);
-        assertThrows(EntityNotFoundException.class, () -> doctorService.fire(1L));
+        assertThrows(NotFoundException.class, () -> doctorService.fire(1L));
     }
 
     @Test
@@ -199,11 +207,10 @@ class DoctorServiceTest {
 
     @Test
     void addAnimalType_whenAnimalTypeNotFound_throwsEntityNotFoundException() {
-        // mocks no animalType in database
         given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.ofNullable(mostowiak));
         given(animalTypeRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> doctorService.addAnimalType(mostowiak.getId(), 1L));
+        assertThrows(NotFoundException.class, () -> doctorService.addAnimalType(mostowiak.getId(), 1L));
     }
 
     @Test
@@ -212,7 +219,7 @@ class DoctorServiceTest {
         AnimalType animalType = new AnimalType(1L, "dogs");
         given(animalTypeRepository.findById(animalType.getId())).willReturn(Optional.ofNullable(animalType));
 
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(NotFoundException.class,
                      () -> doctorService.addAnimalType(mostowiak.getId(), animalType.getId()));
     }
 
@@ -271,7 +278,7 @@ class DoctorServiceTest {
         given(doctorRepository.findById(mostowiak.getId())).willReturn(Optional.of(mostowiak));
         given(medSpecialtyRepository.findById(1L)).willReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> doctorService.addMedSpecialty(mostowiak.getId(), 1L));
+        assertThrows(NotFoundException.class, () -> doctorService.addMedSpecialty(mostowiak.getId(), 1L));
     }
 
     @Test
@@ -280,7 +287,7 @@ class DoctorServiceTest {
         MedSpecialty medSpecialty = new MedSpecialty(1L, "Cardio");
         given(medSpecialtyRepository.findById(medSpecialty.getId())).willReturn(Optional.of(medSpecialty));
 
-        assertThrows(EntityNotFoundException.class,
+        assertThrows(NotFoundException.class,
                      () -> doctorService.addMedSpecialty(mostowiak.getId(), medSpecialty.getId()));
     }
 
@@ -314,11 +321,6 @@ class DoctorServiceTest {
     @Test
     void testMappings() {
         assertEquals(mostowiak, doctorMapper.toEntity(doctorMapper.toDto(mostowiak)));
-    }
-
-    private void assertPagesEquals(Page<DoctorDTO> expected, Page<DoctorDTO> result) {
-        assertEquals(expected.get().collect(Collectors.toList()), result.get().collect(Collectors.toList()));
-        assertEquals(expected.getPageable(), result.getPageable());
     }
 
 }
