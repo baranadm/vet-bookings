@@ -37,13 +37,13 @@ public class PatientService {
 		return result.map(entity -> mapper.toDto(entity));
 	}
 	
-	public PatientDTO getDto(Long patientId) {
+	public PatientDTO getDto(Long patientId) throws NotFoundException {
 		Patient result = get(patientId);
 		return mapper.toDto(result);
 	}
 
-	public Patient get(Long patientId) {
-		Patient result = patientRepo.findById(patientId).orElseThrow(() -> new EntityNotFoundException("Patient with id " + patientId + " has not been found."));
+	public Patient get(Long patientId) throws NotFoundException {
+		Patient result = patientRepo.findById(patientId).orElseThrow(() -> new NotFoundException("Patient with id " + patientId + " has not been found."));
 		return result;
 	}
 

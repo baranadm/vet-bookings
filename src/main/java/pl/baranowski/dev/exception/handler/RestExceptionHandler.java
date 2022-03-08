@@ -55,6 +55,8 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 .body(mfErrorDTO);
     }
 
+
+
     @SuppressWarnings("deprecation")
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException exception) {
@@ -76,6 +78,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
             node = value;
         }
         return node.getName() == null ? "---" : node.getName();
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        ErrorDTO error = new ErrorDTO(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ResponseEntity.status(error.getHttpStatus()).contentType(MediaType.APPLICATION_JSON_UTF8).body(error);
     }
 
     @SuppressWarnings("deprecation")
