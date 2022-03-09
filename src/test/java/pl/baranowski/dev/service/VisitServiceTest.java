@@ -83,7 +83,7 @@ class VisitServiceTest {
 	}
 
 	@Test
-	void getById_correctCallToRepositoryAndDTOReturnValue() {
+	void getById_correctCallToRepositoryAndDTOReturnValue() throws NotFoundException {
 		Long id = 13L;
 		given(visitRepository.findById(id)).willReturn(Optional.of(visit));
 

@@ -37,14 +37,13 @@ public class VisitService {
 		this.patientService = patientService;
 	}
 
-	public VisitDTO getById(long id) {
+	public VisitDTO getById(long id) throws NotFoundException {
 		Visit result = findByIdOrThrow(id);
 		return mapper.toDto(result);
 	}
 
-	// TODO nie rzucać RuntimeException
-	private Visit findByIdOrThrow(long id) {
-		return visitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Visit with id: " + id+" has not been found"));
+	private Visit findByIdOrThrow(long id) throws NotFoundException {
+		return visitRepository.findById(id).orElseThrow(() -> new NotFoundException("Visit with id: " + id+" has not been found"));
 	}
 	
 	public Page<VisitDTO> findAll(Pageable pageable) {

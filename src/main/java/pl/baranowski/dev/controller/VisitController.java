@@ -3,9 +3,7 @@ package pl.baranowski.dev.controller;
 import java.util.List;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,9 +40,7 @@ public class VisitController {
 	public static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 5);
 	@Autowired
 	VisitService visitService;
-	@Autowired
-	DoctorService doctorService;
-	
+
 	@GetMapping(value="/check", produces = "application/json;charset=UTF-8")
 	public @ResponseBody List<AvailableSlotsAtTheDoctorDTO> findFreeSlots(
 			@RequestParam("animalTypeName") @NotBlank(message="Invalid search criteria: animalTypeName should not be empty.") String animalTypeName,
@@ -55,16 +51,16 @@ public class VisitController {
 	}
 	
 	@GetMapping(value="/{id}", produces="application/json;charset=UTF-8")
-	public @ResponseBody VisitDTO getById(@PathVariable String id) throws NumberFormatException {
+	public @ResponseBody VisitDTO getById(@Pattern(regexp = "\\d+", message = "Parameter [size] must be natural number.") @Min(1) @PathVariable String id) throws NumberFormatException, NotFoundException {
 		return visitService.getById(Long.decode(id));
 	}
 
 	@GetMapping(value="/", produces="application/json;charset=UTF-8")
 	public @ResponseBody Page<VisitDTO> findAll(
-			@RequestParam("page") @Min(value=0, message="invalid parameter: page must be greather than or equal to 0") int page,
-			@RequestParam("size") @Min(value=1, message="invalid parameter: size must be greather than or equal to 1") int size) {
+			@RequestParam("page") @Pattern(regexp = "\\d+", message="Parameter [page] must be natural number, greater than or equal to 0.") String page,
+			@RequestParam("size") @Pattern(regexp = "\\d+", message = "Parameter [size] must be natural number.") @Min(value=1, message="Parameter [size] must be greater than or equal to 1") String size) {
 		
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(Integer.parseInt(page), Integer.parseInt(size));
 		return visitService.findAll(pageable);
 	}
 	
