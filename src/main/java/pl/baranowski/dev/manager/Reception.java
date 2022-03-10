@@ -1,5 +1,7 @@
 package pl.baranowski.dev.manager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Patient;
@@ -10,32 +12,37 @@ import pl.baranowski.dev.service.DoctorService;
 import pl.baranowski.dev.service.PatientService;
 
 public class Reception {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Reception.class);
 	private final DoctorService doctorService;
 	private final PatientService patientService;
 
 	public Reception(DoctorService doctorService, PatientService patientService) {
+		LOGGER.info("Created new Reception with: doctorService={}, patientService={}", doctorService, patientService);
 		this.doctorService = doctorService;
 		this.patientService = patientService;
 	}
 
 	public Visit createNewVisitIfPossible(Long doctorId, Long patientId, Long epochInSeconds) throws Exception {
+		LOGGER.info("Received createNewVisitIfPossible() with params: doctorId='{}', patientId='{}', epochInSeconds='{}'", doctorId, patientId, epochInSeconds);
+
 		Doctor doctor = doctorService.get(doctorId);
+		LOGGER.info("Doctor found: {}", doctor);
+
 		Patient patient = patientService.get(patientId);
+		LOGGER.info("Patient found: {}", patient);
 
 		Visit visit = new VisitBuilder().doctor(doctor).patient(patient).epoch(epochInSeconds).build();
 		validateVisit(visit);
+		LOGGER.info("New visit has been validated - OK. {}", visit);
 		
 		return visit;
 	}
 
 	private void validateVisit(Visit visit) throws NewVisitNotPossibleException, DoctorNotActiveException {
 		validateEpoch(visit.getEpoch());
-		
 		validateDoctor(visit.getDoctor());
 		validateDoctorAvailability(visit);
-		
 		validatePatientAvailability(visit);
-		
 		validateAnimalTypeMatching(visit.getDoctor(), visit.getPatient());
 		
 	}

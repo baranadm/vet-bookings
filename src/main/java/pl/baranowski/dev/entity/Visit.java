@@ -64,12 +64,7 @@ public class Visit {
 	public Boolean getIsConfirmed() {
 		return isConfirmed;
 	}
-	
-	public Visit withId(long id) {
-		this.id = id;
-		return this;
-	}
-	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;

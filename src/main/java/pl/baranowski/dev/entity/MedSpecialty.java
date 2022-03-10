@@ -20,10 +20,6 @@ public class MedSpecialty {
 	
 	private String name;
 
-	@JsonIgnore
-	@ManyToMany(mappedBy = "medSpecialties")
-	private Set<Doctor> entitledDoctors = new HashSet<>();
-
 	public MedSpecialty() {
 	}
 

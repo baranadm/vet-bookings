@@ -1,140 +1,119 @@
 package pl.baranowski.dev.dto;
 
+import java.util.Objects;
+
 public class VisitDTO {
 
-	private long id;
-	private DoctorDTO doctor;
-	private PatientDTO patient;
-	private long epoch;
-	private Boolean isConfirmed;
-	private Long duration;
-	
-	public VisitDTO() {
-	}
+    private Long id;
+    private DoctorDTO doctor;
+    private PatientDTO patient;
+    private Long epoch;
+    private Boolean isConfirmed;
+    private Long duration;
 
-	public VisitDTO(DoctorDTO doctor, PatientDTO patient, long epoch, Boolean isConfirmed) {
-		this.doctor = doctor;
-		this.patient = patient;
-		this.epoch = epoch;
-		this.isConfirmed = isConfirmed;
-	}
+    public VisitDTO() {
+    }
 
-	public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, long epoch, Boolean confirmed) {
-		this.id = id;
-		this.doctor = doctor;
-		this.patient = patient;
-		this.epoch = epoch;
-		this.isConfirmed = confirmed;
-	}
+    public VisitDTO(DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean isConfirmed) {
+        this.doctor = doctor;
+        this.patient = patient;
+        this.epoch = epoch;
+        this.isConfirmed = isConfirmed;
+    }
 
-	public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, long epoch, Boolean isConfirmed, Long duration) {
-		this.id = id;
-		this.doctor = doctor;
-		this.patient = patient;
-		this.epoch = epoch;
-		this.isConfirmed = isConfirmed;
-		this.duration = duration;
-	}
+    public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean confirmed) {
+        this.id = id;
+        this.doctor = doctor;
+        this.patient = patient;
+        this.epoch = epoch;
+        this.isConfirmed = confirmed;
+    }
 
-	public VisitDTO withId(long id) {
-		return new VisitDTO(id, doctor, patient,epoch, isConfirmed);
-	}
+    public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean isConfirmed, Long duration) {
+        this.id = id;
+        this.doctor = doctor;
+        this.patient = patient;
+        this.epoch = epoch;
+        this.isConfirmed = isConfirmed;
+        this.duration = duration;
+    }
 
-	public long getId() {
-		return id;
-	}
+    public VisitDTO withId(Long id) {
+        return new VisitDTO(id, doctor, patient, epoch, isConfirmed);
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public DoctorDTO getDoctor() {
-		return doctor;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setDoctor(DoctorDTO doctor) {
-		this.doctor = doctor;
-	}
+    public DoctorDTO getDoctor() {
+        return doctor;
+    }
 
-	public PatientDTO getPatient() {
-		return patient;
-	}
+    public void setDoctor(DoctorDTO doctor) {
+        this.doctor = doctor;
+    }
 
-	public void setPatient(PatientDTO patient) {
-		this.patient = patient;
-	}
+    public PatientDTO getPatient() {
+        return patient;
+    }
 
-	public long getEpoch() {
-		return epoch;
-	}
+    public void setPatient(PatientDTO patient) {
+        this.patient = patient;
+    }
 
-	public void setEpoch(long epoch) {
-		this.epoch = epoch;
-	}
+    public Long getEpoch() {
+        return epoch;
+    }
 
-	public Boolean getConfirmed() {
-		return isConfirmed;
-	}
+    public void setEpoch(Long epoch) {
+        this.epoch = epoch;
+    }
 
-	public void setConfirmed(Boolean confirmed) {
-		this.isConfirmed = confirmed;
-	}
+    public Boolean getConfirmed() {
+        return isConfirmed;
+    }
 
-	public Long getDuration() {
-		return duration;
-	}
+    public void setConfirmed(Boolean confirmed) {
+        this.isConfirmed = confirmed;
+    }
 
-	public void setDuration(Long duration) {
-		this.duration = duration;
-	}
+    public Long getDuration() {
+        return duration;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((isConfirmed == null) ? 0 : isConfirmed.hashCode());
-		result = prime * result + (int) (epoch ^ (epoch >>> 32));
-		result = prime * result + (int) (id ^ (id >>> 32));
-		result = prime * result + ((patient == null) ? 0 : patient.hashCode());
-		result = prime * result + ((doctor == null) ? 0 : doctor.hashCode());
-		return result;
-	}
+    public void setDuration(Long duration) {
+        this.duration = duration;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		VisitDTO other = (VisitDTO) obj;
-		if (isConfirmed == null) {
-			if (other.isConfirmed != null)
-				return false;
-		} else if (!isConfirmed.equals(other.isConfirmed))
-			return false;
-		if (epoch != other.epoch)
-			return false;
-		if (id != other.id)
-			return false;
-		if (patient == null) {
-			if (other.patient != null)
-				return false;
-		} else if (!patient.equals(other.patient))
-			return false;
-		if (doctor == null) {
-			if (other.doctor != null)
-				return false;
-		} else if (!doctor.equals(other.doctor))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        VisitDTO visitDTO = (VisitDTO) o;
+        return Objects.equals(id, visitDTO.id) && Objects.equals(doctor,
+                                                                 visitDTO.doctor) && Objects.equals(
+                patient,
+                visitDTO.patient) && Objects.equals(epoch,
+                                                    visitDTO.epoch) && Objects.equals(isConfirmed,
+                                                                                      visitDTO.isConfirmed) && Objects.equals(
+                duration,
+                visitDTO.duration);
+    }
 
-	@Override
-	public String toString() {
-		return "VisitDTO [id=" + id + ", doctor=" + doctor + ", patient=" + patient + ", epoch=" + epoch + ", confirmed="
-				+ isConfirmed + "]";
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, doctor, patient, epoch, isConfirmed, duration);
+    }
+
+    @Override
+    public String toString() {
+        return "VisitDTO [id=" + id + ", doctor=" + doctor + ", patient=" + patient + ", epoch=" + epoch + ", confirmed="
+                + isConfirmed + "]";
+    }
 
 }

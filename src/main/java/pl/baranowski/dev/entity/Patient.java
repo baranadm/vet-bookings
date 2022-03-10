@@ -3,13 +3,7 @@ package pl.baranowski.dev.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -27,7 +21,8 @@ public class Patient {
 	private String ownerName;
 	private String ownerEmail;
 	@JsonIgnore
-	@OneToMany(mappedBy="patient")
+	@OneToMany(fetch = FetchType.EAGER,
+			mappedBy="patient")
 	private Set<Visit> visits = new HashSet<>();
 
 	public Patient() {

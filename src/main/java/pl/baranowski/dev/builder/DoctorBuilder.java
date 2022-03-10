@@ -19,7 +19,7 @@ public class DoctorBuilder {
     private BigDecimal hourlyRate;
     private String nip;
     private Boolean active = true;
-    private List<DayOfWeek> workingDays = Arrays.asList(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY);
+    private List<DayOfWeek> workingDays;
     private Integer worksFromHour = 9;
     private Integer worksTillHour = 16;
     private Set<MedSpecialty> medSpecialties = new HashSet<>();

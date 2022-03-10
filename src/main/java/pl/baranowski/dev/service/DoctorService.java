@@ -47,8 +47,10 @@ public class DoctorService {
     }
 
     public Doctor get(long doctorId) throws NotFoundException {
+        LOGGER.info("Received get() request with params: doctorId='{}'", doctorId);
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new NotFoundException("Doctor with id=" + doctorId + " has not been found."));
+        LOGGER.info("Doctor has been found! {}", doctor);
         return doctor;
     }
 

@@ -5,6 +5,9 @@ import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
 
+import com.sun.jdi.VirtualMachine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ import pl.baranowski.dev.repository.VisitRepository;
 
 @Service
 public class VisitService {
+	private static final Logger LOGGER = LoggerFactory.getLogger(VisitService.class);
 
 	private final VisitMapper mapper;
 	private final VisitRepository visitRepository;
@@ -53,6 +57,7 @@ public class VisitService {
 	}
 
 	public VisitDTO addNew(Long doctorId, Long patientId, Long epochInSeconds) throws Exception {
+		LOGGER.info("Received addNew() request with params: doctorId='{}', patientId='{}', epochInSeconds='{}'", doctorId, patientId, epochInSeconds);
 		Reception reception = new Reception(doctorService, patientService);
 		Visit possibleVisit = reception.createNewVisitIfPossible(doctorId, patientId, epochInSeconds);
 		Visit savedVisit = visitRepository.save(possibleVisit);
