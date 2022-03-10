@@ -15,14 +15,12 @@ import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
 import pl.baranowski.dev.error.FieldValidationError;
-import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.InvalidParamException;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.service.AnimalTypeService;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -140,8 +138,7 @@ class AnimalTypeControllerTest {
     @Test
     void testFindByName_whenNameIsNotEmpty__callsBusinessCorreclty_andReturnsEntries() throws Exception {
         AnimalTypeDTO expectedDTO = new AnimalTypeDTO(1L, "Wiewiórka");
-        List<AnimalTypeDTO> expectedDTOlist = Collections.singletonList(expectedDTO);
-        given(animalTypeService.findByName(expectedDTO.getName())).willReturn(expectedDTOlist);
+        given(animalTypeService.findByName(expectedDTO.getName())).willReturn(expectedDTO);
 
         MvcResult result = mockMvc.perform(get("/animalTypes/find").param("name", expectedDTO.getName()))
                 .andExpect(status().isOk())
@@ -152,52 +149,47 @@ class AnimalTypeControllerTest {
         assertEquals(expectedDTO.getName(), captor.getValue());
 
         String resultAsString = result.getResponse().getContentAsString();
-        List<AnimalTypeDTO> resultDTO = objectMapper.readValue(resultAsString,
-                                                               new TypeReference<>() {
-                                                               });
-        assertEquals(expectedDTOlist, resultDTO);
+        AnimalTypeDTO resultDTO = objectMapper.readValue(resultAsString, AnimalTypeDTO.class);
+        assertEquals(expectedDTO, resultDTO);
     }
 
     @Test
     void testFindByName_whenNameIsEmpty_returns400andError() throws Exception {
-        EmptyFieldException exception = new EmptyFieldException("name");
-        ErrorDTO expectedError = new ErrorDTO(exception);
-
         MvcResult result = mockMvc.perform(get("/animalTypes/find").param("name", ""))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
-        ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-        assertEquals(expectedError, resultError);
+        MultiFieldsErrorDTO resultError = objectMapper.readValue(resultAsString,
+                                                                 new TypeReference<>() {
+                                                                 });
+        assertEquals(1, resultError.getFieldErrors().size());
     }
 
     @Test
     void testAddNew_respondsToRequest() throws Exception {
-        AnimalTypeDTO dto = new AnimalTypeDTO("Wiewiórka");
         mockMvc.perform(
-                        post("/animalTypes/new").contentType("application/json").content(objectMapper.writeValueAsString(dto)))
+                        post("/animalTypes/new").contentType("application/json").param("name", "Wiewiórka"))
                 .andExpect(status().isCreated());
     }
 
     @Test
     void testAddNew_whenValidInput_callsBusinessCorrectly_thenReturnsValidAnimalType() throws Exception {
-        AnimalTypeDTO newDTO = new AnimalTypeDTO("Wiewiórka");
         AnimalTypeDTO expectedDTO = new AnimalTypeDTO(1L, "Wiewiórka");
 
         // mocking service return value
-        given(animalTypeService.addNew(newDTO)).willReturn(expectedDTO);
+        given(animalTypeService.addNew("Wiewiórka")).willReturn(expectedDTO);
 
         MvcResult result = mockMvc.perform(
                         post("/animalTypes/new")
                                 .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(newDTO)))
+                                .param("name", "Wiewiórka"))
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        ArgumentCaptor<AnimalTypeDTO> animalTypeCaptor = ArgumentCaptor.forClass(AnimalTypeDTO.class);
-        verify(animalTypeService, times(1)).addNew(animalTypeCaptor.capture());
-        assertEquals(newDTO.getName(), animalTypeCaptor.getValue().getName());
+        ArgumentCaptor<String> nameCaptor = ArgumentCaptor.forClass(String.class);
+        verify(animalTypeService, times(1)).addNew(nameCaptor.capture());
+        assertEquals("Wiewiórka", nameCaptor.getValue());
 
         String resultAsString = result.getResponse().getContentAsString();
         AnimalTypeDTO resultDTO = objectMapper.readValue(resultAsString, AnimalTypeDTO.class);
@@ -214,7 +206,7 @@ class AnimalTypeControllerTest {
         MvcResult result = mockMvc
                 .perform(post("/animalTypes/new")
                                  .contentType("application/json")
-                                 .content(objectMapper.writeValueAsString(emptyNameDto)))
+                                 .param("name", ""))
                 .andExpect(status().isBadRequest()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
@@ -235,15 +227,14 @@ class AnimalTypeControllerTest {
 
     @Test
     void testAddNew_whenNameIsDuplicated_thenReturns400AndErrorDTO() throws Exception {
-        AnimalTypeDTO requestDto = new AnimalTypeDTO("Wiewiórka");
-        AnimalTypeAlreadyExistsException exception = new AnimalTypeAlreadyExistsException(requestDto.getName());
+        AnimalTypeAlreadyExistsException exception = new AnimalTypeAlreadyExistsException("Wiewiórka");
         ErrorDTO expectedError = new ErrorDTO(exception);
 
         // mocking service method
-        given(animalTypeService.addNew(requestDto)).willThrow(exception);
+        given(animalTypeService.addNew("Wiewiórka")).willThrow(exception);
 
         MvcResult result = mockMvc.perform(post("/animalTypes/new").contentType("application/json")
-                                                   .content(objectMapper.writeValueAsString(requestDto))).andReturn();
+                                                   .param("name", "Wiewiórka")).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.AnimalTypeDTO;
@@ -32,21 +33,22 @@ public class AnimalTypeService {
 		return mapper.toDto(entry);
 	}
 
-	public List<AnimalTypeDTO> findByName(String name) {
-		return animalTypeRepo.findByName(name).stream().map(r -> mapper.toDto(r)).collect(Collectors.toList());
+	public AnimalTypeDTO findByName(String name) throws NotFoundException {
+		AnimalType result = animalTypeRepo.findOneByName(name).orElseThrow(() -> new NotFoundException("Animal type with name=" + name + " has not been found."));
+		return mapper.toDto(result);
 	}
 
 	public List<AnimalTypeDTO> findAll() {
 		return animalTypeRepo.findAll().stream().map(r -> mapper.toDto(r)).collect(Collectors.toList());
 	}
 
-	public AnimalTypeDTO addNew(AnimalTypeDTO dto) throws AnimalTypeAlreadyExistsException {
-		if(animalTypeRepo.findOneByName(dto.getName()).isPresent()) {
-			throw new AnimalTypeAlreadyExistsException(dto.getName());
+	public AnimalTypeDTO addNew(String name) throws AnimalTypeAlreadyExistsException {
+		try {
+			AnimalType result = animalTypeRepo.save(new AnimalType(name));
+			return mapper.toDto(result);
+		} catch(DataIntegrityViolationException e) {
+			throw new AnimalTypeAlreadyExistsException(name);
 		}
-		AnimalType newAnimalType = mapper.toEntity(dto);
-		AnimalTypeDTO newAnimalTypeDTO = mapper.toDto(animalTypeRepo.save(newAnimalType));
-		return newAnimalTypeDTO;
 	}
 
 }

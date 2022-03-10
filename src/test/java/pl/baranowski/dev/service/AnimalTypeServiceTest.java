@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
 import pl.baranowski.dev.entity.AnimalType;
 import pl.baranowski.dev.exception.NotFoundException;
@@ -12,88 +11,79 @@ import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
 import pl.baranowski.dev.mapper.AnimalTypeMapper;
 import pl.baranowski.dev.repository.AnimalTypeRepository;
 
-import javax.persistence.EntityNotFoundException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.BDDMockito.given;
+import static org.junit.jupiter.api.Assertions.*;
 
 // TODO check, if repo is not considering "Cat" and "Cats" are equal (contains != equals!!). If so, findByName should be repaired
-// zrobione wg. pkt 6. https://www.baeldung.com/spring-boot-testing
 @SpringBootTest
 class AnimalTypeServiceTest {
-
     @Autowired
     AnimalTypeService animalTypeService;
-
+    @Autowired
+    AnimalTypeRepository animalTypeRepository;
     @Autowired
     AnimalTypeMapper mapper;
-
-    @MockBean
-    AnimalTypeRepository animalTypeRepository;
-
-    private AnimalType cats = new AnimalType(1l, "Cats");
-    private AnimalType dogs = new AnimalType(2l, "Dogs");
-    private List<AnimalType> animals = Arrays.asList(cats, dogs);
+    private AnimalType cats;
+    private AnimalType dogs;
+    private List<AnimalType> animals;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
+        animalTypeRepository.deleteAll();
+        cats = animalTypeRepository.save(new AnimalType("Cats"));
+        dogs = animalTypeRepository.save(new AnimalType("Dogs"));
+        animals = animalTypeRepository.findAll();
     }
 
     @Test
     void findById_whenEntityExists_returnsDTO() throws NotFoundException {
-        given(animalTypeRepository.findById(1L)).willReturn(Optional.ofNullable(cats));
-        assertEquals(mapper.toDto(cats), animalTypeService.findById(1L));
+        assertEquals(mapper.toDto(cats), animalTypeService.findById(cats.getId()));
     }
 
     @Test
     void findById_whenEntityDoesNotExists_throwsEntityNotFoundException() {
-        given(animalTypeRepository.findById(1L)).willThrow(EntityNotFoundException.class);
-        assertThrows(EntityNotFoundException.class, () -> animalTypeService.findById(1L));
+        assertThrows(NotFoundException.class, () -> animalTypeService.findById(123L));
     }
 
     @Test
-    void findByName_whenEntitiesExist_returnsListOfDTOs() {
-        given(animalTypeRepository.findByName("Cats")).willReturn(Collections.singletonList(cats));
-        assertEquals(
-                Collections.singletonList(cats).stream().map(mapper::toDto).collect(Collectors.toList()),
-                animalTypeService.findByName("Cats")
+    void findByName_whenEntityExists_returnsDTO() throws NotFoundException {
+        assertEquals(mapper.toDto(cats), animalTypeService.findByName("Cats")
         );
     }
 
     @Test
-    void findByName_whenEntitiesDoNotExist_returnsEmptyList() {
-        given(animalTypeRepository.findOneByName("ł")).willReturn(Optional.empty());
-        assertEquals(Collections.emptyList(), animalTypeService.findByName("ł"));
+    void findByName_whenEntitiesDoNotExist_throwsNotFoundException() {
+        assertThrows(NotFoundException.class, () -> animalTypeService.findByName("Ł"));
+    }
+
+    @Test
+    void findByName_whenNameIsPartOfOtherEntityName_doNotReturnThatEntity() {
+        assertThrows(NotFoundException.class, () -> animalTypeService.findByName("Cat"));
     }
 
     @Test
     void findAll_whenEntitiesExist_returnsListOfDTOs() {
-        given(animalTypeRepository.findAll()).willReturn(animals);
         assertEquals(animals.stream().map(mapper::toDto).collect(Collectors.toList()), animalTypeService.findAll());
     }
 
     @Test
     void findAll_whenEntitiesDoNotExist_returnsEmptyList() {
-        given(animalTypeRepository.findAll()).willReturn(Collections.emptyList());
+        animalTypeRepository.deleteAll();
         assertEquals(Collections.emptyList(), animalTypeService.findAll());
     }
 
     @Test
     void addNew_whenNoDuplicate_returnsNewDTO() throws AnimalTypeAlreadyExistsException {
-        given(animalTypeRepository.save(dogs)).willReturn(dogs);
-        AnimalTypeDTO dogsDTO = mapper.toDto(dogs);
-        assertEquals(dogsDTO, animalTypeService.addNew(dogsDTO));
+        AnimalTypeDTO result = animalTypeService.addNew("Camel");
+        assertEquals("Camel", result.getName());
+        assertNotNull(result.getId());
     }
 
     @Test
     void addNew_whenDuplicate_throwsAnimalTypeAlreadyExistsException() {
-        given(animalTypeRepository.findOneByName(cats.getName())).willReturn(Optional.of(cats));
-        assertThrows(AnimalTypeAlreadyExistsException.class, () -> animalTypeService.addNew(mapper.toDto(cats)));
+        assertThrows(AnimalTypeAlreadyExistsException.class, () -> animalTypeService.addNew(cats.getName()));
     }
 }
