@@ -7,7 +7,6 @@ import pl.baranowski.dev.entity.Visit;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -87,7 +86,18 @@ public class DoctorBuilder {
     }
 
     public Doctor build() {
-        return new Doctor(id, name, surname, hourlyRate, nip, active, workingDays, worksFromHour, worksTillHour, animalTypes, medSpecialties, visits);
+        return new Doctor(id,
+                          name,
+                          surname,
+                          hourlyRate,
+                          nip,
+                          active,
+                          workingDays,
+                          worksFromHour,
+                          worksTillHour,
+                          animalTypes,
+                          medSpecialties,
+                          visits);
     }
 
 }

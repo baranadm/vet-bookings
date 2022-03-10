@@ -2,6 +2,7 @@ package pl.baranowski.dev.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,7 +20,6 @@ import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.DoctorDTO;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
-import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.InvalidParamException;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.doctor.DoctorAlreadyExistsException;
@@ -30,7 +30,6 @@ import pl.baranowski.dev.service.DoctorService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,40 +61,48 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = DoctorController.class)
 public class DoctorControllerTest {
-
-    private final DoctorDTO mostowiak = new DoctorDTOBuilder().name("Marek")
-            .surname("Mostowiak")
-            .id(1L)
-            .hourlyRate("150")
-            .nip("1181328620")
-            .build();
-    private final List<DoctorDTO> doctorsList;
     @Autowired
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
     @MockBean
     DoctorService doctorService;
+    private DoctorDTO mostowiak;
+    private List<DoctorDTO> doctorsList;
 
-    public DoctorControllerTest() {
+    @BeforeEach
+    void setUp() {
+        mostowiak = new DoctorDTOBuilder().name("Marek")
+                                          .surname("Mostowiak")
+                                          .id(1L)
+                                          .hourlyRate("150")
+                                          .nip("1181328620")
+                                          .build();
+
         doctorsList = new ArrayList<>();
-
         doctorsList.add(new DoctorDTOBuilder().name("Robert")
-                                .surname("Kubica")
-                                .hourlyRate("100000")
-                                .nip("1213141516")
-                                .build());
+                                              .surname("Kubica")
+                                              .hourlyRate("100000")
+                                              .nip("1213141516")
+                                              .build());
+
         doctorsList.add(new DoctorDTOBuilder().name("Mirosław")
-                                .surname("Rosomak")
-                                .hourlyRate("100.0")
-                                .nip("0987654321")
-                                .build());
+                                              .surname("Rosomak")
+                                              .hourlyRate("100.0")
+                                              .nip("0987654321")
+                                              .build());
+
         doctorsList.add(new DoctorDTOBuilder().name("Mamadou")
-                                .surname("Urghabananandi")
-                                .hourlyRate("40")
-                                .nip("5566557755")
-                                .build());
-        doctorsList.add(new DoctorDTOBuilder().name("C").surname("J").hourlyRate("123.45").nip("1122334455").build());
+                                              .surname("Urghabananandi")
+                                              .hourlyRate("40")
+                                              .nip("5566557755")
+                                              .build());
+
+        doctorsList.add(new DoctorDTOBuilder().name("C")
+                                              .surname("J")
+                                              .hourlyRate("123.45")
+                                              .nip("1122334455")
+                                              .build());
     }
 
     @Test
@@ -108,11 +115,12 @@ public class DoctorControllerTest {
     void getById_whenValidId_returnsCorrectValue_andStatus200() throws Exception {
         //given
         DoctorDTO expected = this.mostowiak;
-        given(doctorService.getDto(expected.getId())).willReturn(expected);
+        given(doctorService.get(expected.getId())).willReturn(expected);
 
         //when
         MvcResult result = mockMvc.perform(get("/doctors/{id}", expected.getId()))
-                .andExpect(status().isOk()).andReturn();
+                                  .andExpect(status().isOk())
+                                  .andReturn();
 
         //then
         String resultAsString = result.getResponse().getContentAsString();
@@ -126,7 +134,8 @@ public class DoctorControllerTest {
         InvalidParamException exception = new InvalidParamException("id", invalidId);
         ErrorDTO expectedError = new ErrorDTO(exception);
         MvcResult result = mockMvc.perform(get("/doctors/{id}", invalidId))
-                .andExpect(status().isBadRequest()).andReturn();
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -137,10 +146,9 @@ public class DoctorControllerTest {
     void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
         NotFoundException exception = new NotFoundException("Doctor with id=" + 1L + " has not been found.");
         ErrorDTO expectedError = new ErrorDTO(exception);
-        given(doctorService.getDto(1L)).willThrow(exception);
+        given(doctorService.get(1L)).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(get("/doctors/{id}", 1))
-                .andExpect(status().isNotFound()).andReturn();
+        MvcResult result = mockMvc.perform(get("/doctors/{id}", 1)).andExpect(status().isNotFound()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -157,10 +165,7 @@ public class DoctorControllerTest {
 
         given(doctorService.findAll(request)).willReturn(resultPage);
 
-        mockMvc.perform(get("/doctors/")
-                                .param("page", "0")
-                                .param("size", "3"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/doctors/").param("page", "0").param("size", "3")).andExpect(status().isOk());
     }
 
     @Test
@@ -169,10 +174,7 @@ public class DoctorControllerTest {
         Page<DoctorDTO> resultPage = Page.empty(expectedRequest);
         given(doctorService.findAll(expectedRequest)).willReturn(resultPage);
 
-        mockMvc.perform(get("/doctors/")
-                                .param("page", "0")
-                                .param("size", "3"))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/doctors/").param("page", "0").param("size", "3")).andExpect(status().isOk());
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(doctorService).findAll(pageableCaptor.capture());
@@ -185,10 +187,9 @@ public class DoctorControllerTest {
         Page<DoctorDTO> resultPage = Page.empty(expectedDefaultRequest);
         given(doctorService.findAll(expectedDefaultRequest)).willReturn(resultPage);
 
-        mockMvc.perform(get("/doctors/")
-                                .param("page", "" + expectedDefaultRequest.getPageNumber())
-                                .param("size", "" + expectedDefaultRequest.getPageSize()))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/doctors/").param("page", "" + expectedDefaultRequest.getPageNumber())
+                                        .param("size", "" + expectedDefaultRequest.getPageSize()))
+               .andExpect(status().isOk());
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(doctorService).findAll(pageableCaptor.capture());
@@ -197,11 +198,9 @@ public class DoctorControllerTest {
 
     @Test
     void findAll_invalidPageAndSize_returnsErrors_andStatus400() throws Exception {
-        MvcResult result = mockMvc.perform(get("/doctors/")
-                                                   .param("page", "-1")
-                                                   .param("size", ""))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+        MvcResult result = mockMvc.perform(get("/doctors/").param("page", "-1").param("size", ""))
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         MultiFieldsErrorDTO resultError = objectMapper.readValue(resultAsString, MultiFieldsErrorDTO.class);
@@ -215,11 +214,10 @@ public class DoctorControllerTest {
 
         given(doctorService.findAll(pageable)).willReturn(expectedPage);
 
-        MvcResult result = mockMvc.perform(get("/doctors/")
-                                                   .param("page", "" + pageable.getPageNumber())
-                                                   .param("size", "" + pageable.getPageSize()))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult result = mockMvc.perform(get("/doctors/").param("page", "" + pageable.getPageNumber())
+                                                           .param("size", "" + pageable.getPageSize()))
+                                  .andExpect(status().isOk())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         TypeReference<RestPageImpl<DoctorDTO>> pageType = new TypeReference<>() {
@@ -235,31 +233,28 @@ public class DoctorControllerTest {
     @Test
     void addNew_respondsToRequest() throws Exception {
         DoctorDTO expected = mostowiak;
-        mockMvc.perform(post("/doctors/")
-                                .contentType("application/json")
-                                .characterEncoding("UTF-8")
-                                .content(objectMapper.writeValueAsString(expected)))
-                .andExpect(status().isCreated());
+        mockMvc.perform(post("/doctors/").contentType("application/json")
+                                         .characterEncoding("UTF-8")
+                                         .content(objectMapper.writeValueAsString(expected)))
+               .andExpect(status().isCreated());
     }
 
     @Test
     void addNew_whenValidRequestBody_returns201AndEntry() throws Exception {
-        DoctorDTO requestDTO = new DoctorDTOBuilder()
-                .name(mostowiak.getName())
-                .surname(mostowiak.getSurname())
-                .id(mostowiak.getId())
-                .hourlyRate(mostowiak.getHourlyRate())
-                .nip(mostowiak.getNip())
-                .build();
+        DoctorDTO requestDTO = new DoctorDTOBuilder().name(mostowiak.getName())
+                                                     .surname(mostowiak.getSurname())
+                                                     .id(mostowiak.getId())
+                                                     .hourlyRate(mostowiak.getHourlyRate())
+                                                     .nip(mostowiak.getNip())
+                                                     .build();
         DoctorDTO expectedDTO = mostowiak;
         given(doctorService.addNew(requestDTO)).willReturn(expectedDTO);
 
-        MvcResult result = mockMvc.perform(post("/doctors/")
-                                                   .contentType("application/json")
-                                                   .characterEncoding("UTF-8")
-                                                   .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isCreated())
-                .andReturn();
+        MvcResult result = mockMvc.perform(post("/doctors/").contentType("application/json")
+                                                            .characterEncoding("UTF-8")
+                                                            .content(objectMapper.writeValueAsString(requestDTO)))
+                                  .andExpect(status().isCreated())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         DoctorDTO resultDTO = objectMapper.readValue(resultAsString, DoctorDTO.class);
@@ -274,12 +269,11 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
         given(doctorService.addNew(requestDTO)).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(post("/doctors/")
-                                                   .contentType("application/json")
-                                                   .characterEncoding("UTF-8")
-                                                   .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isForbidden())
-                .andReturn();
+        MvcResult result = mockMvc.perform(post("/doctors/").contentType("application/json")
+                                                            .characterEncoding("UTF-8")
+                                                            .content(objectMapper.writeValueAsString(requestDTO)))
+                                  .andExpect(status().isForbidden())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -288,17 +282,16 @@ public class DoctorControllerTest {
 
     @Test
     void addNew_whenAllFieldsNotValid_returnsErrorForEveryField_andStatus400() throws Exception {
-        DoctorDTO requestDTO = new DoctorDTOBuilder().name("").surname("").hourlyRate("a1").nip("1111111112").build();
+        DoctorDTO requestDTO = new DoctorDTOBuilder().name("").surname("").hourlyRate("a1").nip("1111111112")
+                                                     .build();
 
-        mockMvc.perform(post("/doctors/")
-                                .contentType("application/json")
-                                .characterEncoding("UTF-8")
-                                .content(objectMapper.writeValueAsString(requestDTO))
-                )
-                .andExpect(status().isBadRequest())
+        mockMvc.perform(post("/doctors/").contentType("application/json")
+                                         .characterEncoding("UTF-8")
+                                         .content(objectMapper.writeValueAsString(requestDTO)))
+               .andExpect(status().isBadRequest())
 
-                // checks, if there are 4 errors thrown
-                .andExpect(jsonPath("$.fieldErrors", hasSize(4)));
+               // checks, if there are 4 errors thrown
+               .andExpect(jsonPath("$.fieldErrors", hasSize(4)));
     }
 
     //@PUT /fire/{id}
@@ -308,19 +301,18 @@ public class DoctorControllerTest {
 
     @Test
     void fire_respondsToRequest() throws Exception {
-        mockMvc.perform(put("/doctors/fire/{id}", 1L)
-                                .characterEncoding("UTF-8"))
-                .andExpect(status().isOk());
+        mockMvc.perform(put("/doctors/fire/{id}", 1L).characterEncoding("UTF-8")).andExpect(status().isOk());
     }
 
     @Test
     void fire_whenValidId_callsFireWithCorrectId_andReturns200OnSuccess_andReturnsCorrectValue() throws Exception {
-        DoctorDTO fired = new DoctorDTOBuilder().id(1L).name("Mark").surname("Second").active(false).build();
+        DoctorDTO fired = new DoctorDTOBuilder().id(1L).name("Mark").surname("Second").active(false)
+                                                .build();
         given(doctorService.fire(fired.getId())).willReturn(fired);
 
-        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", fired.getId())
-                                                   .characterEncoding("UTF-8"))
-                .andExpect(status().isOk()).andReturn();
+        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", fired.getId()).characterEncoding("UTF-8"))
+                                  .andExpect(status().isOk())
+                                  .andReturn();
 
         ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
         verify(doctorService, times(1)).fire(captor.capture());
@@ -338,10 +330,9 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
         doThrow(exception).when(doctorService).fire(id);
 
-        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", 1L)
-                                                   .characterEncoding("UTF-8"))
-                .andExpect(status().isNotFound())
-                .andReturn();
+        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", 1L).characterEncoding("UTF-8"))
+                                  .andExpect(status().isNotFound())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -354,10 +345,9 @@ public class DoctorControllerTest {
         InvalidParamException exception = new InvalidParamException("id", invalidId);
         ErrorDTO expectedError = new ErrorDTO(exception);
 
-        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", invalidId)
-                                                   .characterEncoding("UTF-8"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", invalidId).characterEncoding("UTF-8"))
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -370,9 +360,7 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
         doThrow(exception).when(doctorService).fire(mostowiak.getId());
 
-        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", "1"))
-                .andExpect(status().isNotFound())
-                .andReturn();
+        MvcResult result = mockMvc.perform(put("/doctors/fire/{id}", "1")).andExpect(status().isNotFound()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -386,7 +374,8 @@ public class DoctorControllerTest {
         given(doctorService.addAnimalType(1L, 1L)).willReturn(mostowiak);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", doctorId, atId))
-                .andExpect(status().isOk()).andReturn();
+                                  .andExpect(status().isOk())
+                                  .andReturn();
 
         ArgumentCaptor<Long> doctorIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> atIdCaptor = ArgumentCaptor.forClass(Long.class);
@@ -407,8 +396,8 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", invalidId, "1"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -422,8 +411,8 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", "1", invalidId))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -437,8 +426,8 @@ public class DoctorControllerTest {
         doThrow(exception).when(doctorService).addAnimalType(1L, 1L);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", "1", "1"))
-                .andExpect(status().isNotFound())
-                .andReturn();
+                                  .andExpect(status().isNotFound())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -452,8 +441,8 @@ public class DoctorControllerTest {
         doThrow(exception).when(doctorService).addAnimalType(1L, 1L);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", "1", "1"))
-                .andExpect(status().isForbidden())
-                .andReturn();
+                                  .andExpect(status().isForbidden())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -467,8 +456,8 @@ public class DoctorControllerTest {
         doThrow(exception).when(doctorService).addAnimalType(1L, 1L);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addAnimalType/{id}", "1", "1"))
-                .andExpect(status().isForbidden())
-                .andReturn();
+                                  .andExpect(status().isForbidden())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -482,7 +471,8 @@ public class DoctorControllerTest {
         given(doctorService.addMedSpecialty(1L, 1L)).willReturn(mostowiak);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", doctorId, msId))
-                .andExpect(status().isOk()).andReturn();
+                                  .andExpect(status().isOk())
+                                  .andReturn();
 
         ArgumentCaptor<Long> doctorIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> msIdCaptor = ArgumentCaptor.forClass(Long.class);
@@ -503,8 +493,8 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", invalidId, "1"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -518,8 +508,8 @@ public class DoctorControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", "1", invalidId))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+                                  .andExpect(status().isBadRequest())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -533,8 +523,8 @@ public class DoctorControllerTest {
         doThrow(exception).when(doctorService).addMedSpecialty(1L, 1L);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", "1", "1"))
-                .andExpect(status().isNotFound())
-                .andReturn();
+                                  .andExpect(status().isNotFound())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -548,8 +538,8 @@ public class DoctorControllerTest {
         doThrow(exception).when(doctorService).addMedSpecialty(1L, 1L);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", "1", "1"))
-                .andExpect(status().isForbidden())
-                .andReturn();
+                                  .andExpect(status().isForbidden())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
@@ -563,8 +553,8 @@ public class DoctorControllerTest {
         doThrow(exception).when(doctorService).addMedSpecialty(1L, 1L);
 
         MvcResult result = mockMvc.perform(put("/doctors/{id}/addMedSpecialty/{id}", "1", "1"))
-                .andExpect(status().isForbidden())
-                .andReturn();
+                                  .andExpect(status().isForbidden())
+                                  .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);

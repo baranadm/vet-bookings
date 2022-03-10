@@ -41,20 +41,22 @@ public class DoctorService {
         this.doctorMapper = doctorMapper;
     }
 
-    public DoctorDTO getDto(long doctorId) throws NotFoundException {
-        Doctor doctor = get(doctorId);
-        return doctorMapper.toDto(doctor);
+    public DoctorDTO get(long doctorId) throws NotFoundException {
+        LOGGER.info("Received get() request with params: doctorId='{}'", doctorId);
+        Doctor doctor = getEntity(doctorId);
+        DoctorDTO result = doctorMapper.toDto(doctor);
+        LOGGER.info("Doctor has been found and mapped: {}", result);
+        return result;
     }
 
-    public Doctor get(long doctorId) throws NotFoundException {
-        LOGGER.info("Received get() request with params: doctorId='{}'", doctorId);
+    public Doctor getEntity(long doctorId) throws NotFoundException {
+        LOGGER.info("Received getEntity() request with params: doctorId='{}'", doctorId);
         Doctor doctor = doctorRepository.findById(doctorId)
                 .orElseThrow(() -> new NotFoundException("Doctor with id=" + doctorId + " has not been found."));
         LOGGER.info("Doctor has been found! {}", doctor);
         return doctor;
     }
 
-    // TODO pytanie: czy get(0) jest ok?
     // TODO tests for below method
     public List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName,
                                                                 String medSpecialtyName) throws NotFoundException {
@@ -99,14 +101,17 @@ public class DoctorService {
 
     public DoctorDTO fire(Long id) throws DoctorNotActiveException, NotFoundException {
         LOGGER.info("/fire id={}", id);
+
         Optional<Doctor> doctorOpt = doctorRepository.findById(id);
         LOGGER.debug("repo returned: {}", doctorOpt);
+
         if (doctorOpt.isPresent()) {
             Doctor doctor = doctorOpt.get();
             if (doctor.getActive()) { // if Doctor is active, sets active to false
                 doctor.setActive(false);
                 LOGGER.debug("Doctor set to inactive: {}", doctor);
-                return doctorMapper.toDto(doctor);
+                DoctorDTO firedDoctor = doctorMapper.toDto(doctorRepository.save(doctor));
+                return firedDoctor;
             } else { // if Doctor is inactive, throws exception
                 throw new DoctorNotActiveException(doctor.getId());
             }
@@ -124,7 +129,7 @@ public class DoctorService {
                                    Long animalTypeId) throws NotFoundException, DoctorNotActiveException, DoctorDoubledSpecialtyException {
 
         // if Doctor not found, throw
-        Doctor doctor = get(doctorId);
+        Doctor doctor = getEntity(doctorId);
 
         // if Doctor is not active, throw
         if (!doctor.getActive()) {
@@ -154,7 +159,7 @@ public class DoctorService {
     public DoctorDTO addMedSpecialty(Long doctorId,
                                      Long msId) throws NotFoundException, DoctorNotActiveException, DoctorDoubledSpecialtyException {
         // if no Doctor found, throw
-        Doctor doctor = get(doctorId);
+        Doctor doctor = getEntity(doctorId);
         // if Doctor is not active, throw
         if (!doctor.getActive()) {
             throw new DoctorNotActiveException(doctor.getId());

@@ -78,7 +78,7 @@ public class Doctor {
         this.id = id;
         this.name = name;
         this.surname = surname;
-        this.hourlyRate = hourlyRate;
+        this.hourlyRate = hourlyRate.setScale(2, RoundingMode.UP);
         this.nip = nip;
         this.active = active;
         this.workingDays = (workingDays != null) ? workingDays : DEFAULT_WORKING_DAYS;
