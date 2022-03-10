@@ -21,7 +21,7 @@ public class VisitDTO {
         this.isConfirmed = isConfirmed;
     }
 
-    public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean confirmed) {
+    public VisitDTO(Long id, DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean confirmed) {
         this.id = id;
         this.doctor = doctor;
         this.patient = patient;
@@ -29,7 +29,7 @@ public class VisitDTO {
         this.isConfirmed = confirmed;
     }
 
-    public VisitDTO(long id, DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean isConfirmed, Long duration) {
+    public VisitDTO(Long id, DoctorDTO doctor, PatientDTO patient, Long epoch, Boolean isConfirmed, Long duration) {
         this.id = id;
         this.doctor = doctor;
         this.patient = patient;
@@ -46,7 +46,7 @@ public class VisitDTO {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

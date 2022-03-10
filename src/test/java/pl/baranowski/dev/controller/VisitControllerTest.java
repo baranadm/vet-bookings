@@ -138,7 +138,6 @@ class VisitControllerTest {
                                                                  false));
         Pageable pageable = PageRequest.of(0, 3);
         Page<VisitDTO> expectedPage = new PageImpl<>(visits, pageable, visits.size());
-
         // mocks service
         given(visitService.findAll(pageable)).willReturn(expectedPage);
         MvcResult result = mockMvc.perform(get("/visit/")
@@ -155,7 +154,11 @@ class VisitControllerTest {
         String resultAsString = result.getResponse().getContentAsString();
         Page<VisitDTO> resultPage = objectMapper.readValue(resultAsString, new TypeReference<RestPageImpl<VisitDTO>>() {
         });
-        assertEquals(expectedPage, resultPage);
+
+        assertEquals(expectedPage.getTotalPages(), resultPage.getTotalPages());
+        assertEquals(expectedPage.getTotalElements(), resultPage.getTotalElements());
+        assertEquals(expectedPage.getPageable(), resultPage.getPageable());
+        assertEquals(expectedPage.getContent(), resultPage.getContent());
     }
 
     @Test
