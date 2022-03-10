@@ -14,15 +14,12 @@ import org.springframework.test.web.servlet.MvcResult;
 import pl.baranowski.dev.dto.ErrorDTO;
 import pl.baranowski.dev.dto.MedSpecialtyDTO;
 import pl.baranowski.dev.dto.MultiFieldsErrorDTO;
-import pl.baranowski.dev.error.FieldValidationError;
-import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.InvalidParamException;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.medSpecialty.MedSpecialtyAlreadyExistsException;
 import pl.baranowski.dev.service.MedSpecialtyService;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -158,71 +155,65 @@ class MedSpecialtyControllerTest {
 
     @Test
     void findByName_whenValidName_returnsCorrectEntries() throws Exception {
-        MedSpecialtyDTO dto = new MedSpecialtyDTO(1L, "Kóniolog");
-        List<MedSpecialtyDTO> expectedDTOlist = Collections.singletonList(dto);
-        given(medSpecialtyService.findByName(dto.getName())).willReturn(expectedDTOlist);
+        MedSpecialtyDTO expectedDTO = new MedSpecialtyDTO(1L, "Kóniolog");
+        given(medSpecialtyService.findByName(expectedDTO.getName())).willReturn(expectedDTO);
 
-        MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", dto.getName()))
+        MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", expectedDTO.getName()))
                 .andExpect(status().isOk())
                 .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
-        List<MedSpecialtyDTO> resultDTO = objectMapper.readValue(resultAsString,
-                                                                 new TypeReference<>() {
-                                                                 });
-        assertEquals(expectedDTOlist, resultDTO);
+        MedSpecialtyDTO resultDTO = objectMapper.readValue(resultAsString, MedSpecialtyDTO.class);
+        assertEquals(expectedDTO, resultDTO);
     }
 
     @Test
     void findByName_whenNameIsEmpty_returns400andError() throws Exception {
-        ErrorDTO expectedError = new ErrorDTO(new EmptyFieldException("specialty"));
         MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", ""))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
-        ErrorDTO resultError = objectMapper.readValue(resultAsString, ErrorDTO.class);
-        assertEquals(expectedError, resultError);
+        MultiFieldsErrorDTO resultError = objectMapper.readValue(resultAsString, MultiFieldsErrorDTO.class);
+        assertEquals(1, resultError.getFieldErrors().size());
     }
 
     @Test
     void addNew_respondsToRequest() throws Exception {
-        MedSpecialtyDTO body = new MedSpecialtyDTO("ĘŁÓ log");
         mockMvc.perform(
                         post("/medSpecialty/new")
                                 .contentType("application/json;charset=UTF-8")
-                                .content(objectMapper.writeValueAsString(body)))
+                                .param("specialty", "Wiewiórka"))
                 .andExpect(status().isCreated());
     }
 
     @Test
     void addNew_whenValidInput_verifyBusinessCalls() throws Exception {
-        MedSpecialtyDTO dto = new MedSpecialtyDTO("ĘŁÓ log");
+        String specialtyName = "Czółkolog";
         mockMvc.perform(
                         post("/medSpecialty/new")
                                 .contentType("application/json;charset=UTF-8")
-                                .content(objectMapper.writeValueAsString(dto)))
+                                .param("specialty", specialtyName))
                 .andExpect(status().isCreated());
 
-        ArgumentCaptor<MedSpecialtyDTO> medSpecialtyCaptor = ArgumentCaptor.forClass(MedSpecialtyDTO.class);
-        verify(medSpecialtyService, times(1)).addNew(medSpecialtyCaptor.capture());
+        ArgumentCaptor<String> specialtyNameCaptor = ArgumentCaptor.forClass(String.class);
+        verify(medSpecialtyService, times(1)).addNew(specialtyNameCaptor.capture());
 
-        assertEquals(medSpecialtyCaptor.getValue(), dto);
+        assertEquals(specialtyNameCaptor.getValue(), specialtyName);
     }
 
-    // fails: returns empty body
     @Test
     void addNew_whenValidInput_returns200AndNewEntry() throws Exception {
-        MedSpecialtyDTO newDTO = new MedSpecialtyDTO("ĘŁÓ log");
-        MedSpecialtyDTO expectedDTO = new MedSpecialtyDTO(1L, "ĘŁÓ log");
+        String specialtyName = "Czółkolog";
+        MedSpecialtyDTO expectedDTO = new MedSpecialtyDTO(1L, specialtyName);
 
         // mocking service return value
-        given(medSpecialtyService.addNew(newDTO)).willReturn(expectedDTO);
+        given(medSpecialtyService.addNew(specialtyName)).willReturn(expectedDTO);
 
         MvcResult result = mockMvc.perform(
                         post("/medSpecialty/new")
                                 .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(newDTO)))
+                                .param("specialty", specialtyName))
                 .andExpect(status().isCreated()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
@@ -232,45 +223,30 @@ class MedSpecialtyControllerTest {
 
     @Test
     void addNew_whenEmptyName_returns400AndError() throws Exception {
-        MedSpecialtyDTO dto = new MedSpecialtyDTO("");
-        MultiFieldsErrorDTO expectedError = new MultiFieldsErrorDTO(new FieldValidationError("name",
-                                                                                             "specialty must not be null or empty"));
-
         MvcResult result = mockMvc.perform(
                         post("/medSpecialty/new")
                                 .contentType("application/json")
-                                .content(objectMapper.writeValueAsString(dto)))
+                                .param("specialty", ""))
                 .andExpect(status().isBadRequest()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         MultiFieldsErrorDTO resultError = objectMapper.readValue(resultAsString, MultiFieldsErrorDTO.class);
-        assert (errorFieldsEquals(expectedError.getFieldErrors(), resultError.getFieldErrors()));
-    }
-
-    private boolean errorFieldsEquals(List<FieldValidationError> expected, List<FieldValidationError> actual) {
-        for (int i = 0; i < expected.size(); i++) {
-            FieldValidationError expectedField = expected.get(i);
-            FieldValidationError actualField = actual.get(i);
-            if (!expectedField.getField().equals(actualField.getField())) {
-                return false;
-            }
-        }
-        return true;
+        assertEquals(1, resultError.getFieldErrors().size());
     }
 
     @Test
     void addNew_whenDuplicatedName_returns400AndError() throws Exception {
-        MedSpecialtyDTO newDTO = new MedSpecialtyDTO("ĘŁÓ ziom");
-        MedSpecialtyAlreadyExistsException exception = new MedSpecialtyAlreadyExistsException(newDTO.getName());
+        String specialtyName = "Czółkolog";
+        MedSpecialtyAlreadyExistsException exception = new MedSpecialtyAlreadyExistsException(specialtyName);
         ErrorDTO expectedError = new ErrorDTO(exception);
 
-        given(medSpecialtyService.addNew(newDTO))
+        given(medSpecialtyService.addNew(specialtyName))
                 .willThrow(exception);
 
         MvcResult result = mockMvc.perform(
                         post("/medSpecialty/new")
                                 .contentType("application/json;charset=UTF-8")
-                                .content(objectMapper.writeValueAsString(newDTO)))
+                                .param("specialty", specialtyName))
                 .andExpect(status().isForbidden()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
