@@ -14,7 +14,7 @@ import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.exception.epoch.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 import pl.baranowski.dev.manager.Reception;
-import pl.baranowski.dev.mapper.FreeSlotsMapper;
+import pl.baranowski.dev.mapper.AvailableSlotsMapper;
 import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.model.AvailableSlotsFinder;
 import pl.baranowski.dev.model.DoctorsFreeSlots;
@@ -29,13 +29,13 @@ public class VisitService {
     private static final Logger LOGGER = LoggerFactory.getLogger(VisitService.class);
 
     private final VisitMapper visitMapper;
-    private final FreeSlotsMapper slotsMapper;
+    private final AvailableSlotsMapper slotsMapper;
     private final VisitRepository visitRepository;
     private final DoctorService doctorService;
     private final PatientService patientService;
 
     public VisitService(VisitMapper visitMapper,
-                        FreeSlotsMapper slotsMapper,
+                        AvailableSlotsMapper slotsMapper,
                         VisitRepository visitRepository,
                         DoctorService doctorService,
                         PatientService patientService) {

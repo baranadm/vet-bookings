@@ -57,7 +57,7 @@ class MedSpecialtyControllerTest {
     @Test
     void findAll_respondsToRequest() throws Exception {
         mockMvc
-                .perform(get("/medSpecialty/all"))
+                .perform(get("/medSpecialties/all"))
                 .andExpect(status().isOk());
     }
 
@@ -68,7 +68,7 @@ class MedSpecialtyControllerTest {
         given(medSpecialtyService.findAll()).willReturn(specialtiesDTO);
 
         MvcResult result = mockMvc
-                .perform(get("/medSpecialty/all"))
+                .perform(get("/medSpecialties/all"))
                 .andExpect(status().isOk()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
@@ -80,13 +80,13 @@ class MedSpecialtyControllerTest {
 
     @Test
     void getById_respondsToRequest() throws Exception {
-        mockMvc.perform(get("/medSpecialty/{id}", 1L)).andExpect(status().isOk());
+        mockMvc.perform(get("/medSpecialties/{id}", 1L)).andExpect(status().isOk());
     }
 
     @Test
     void getById_whenValidInput_verifyBusinessCalls() throws Exception {
         String idString = "123";
-        mockMvc.perform(get("/medSpecialty/{id}", "123")).andExpect(status().isOk());
+        mockMvc.perform(get("/medSpecialties/{id}", "123")).andExpect(status().isOk());
 
         ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
         verify(medSpecialtyService, times(1)).getById(captor.capture());
@@ -100,7 +100,7 @@ class MedSpecialtyControllerTest {
 
         given(medSpecialtyService.getById(123L)).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", "123"))
+        MvcResult result = mockMvc.perform(get("/medSpecialties/{id}", "123"))
                 .andExpect(status().isNotFound())
                 .andReturn();
 
@@ -115,7 +115,7 @@ class MedSpecialtyControllerTest {
         MedSpecialtyDTO expectedDTO = new MedSpecialtyDTO(1L, "ĘÓŁĄĆŃŻŻ");
         given(medSpecialtyService.getById(1L)).willReturn(expectedDTO);
 
-        MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", 1L)).andExpect(status().isOk()).andReturn();
+        MvcResult result = mockMvc.perform(get("/medSpecialties/{id}", 1L)).andExpect(status().isOk()).andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
         MedSpecialtyDTO resultDTO = objectMapper.readValue(resultAsString, MedSpecialtyDTO.class);
@@ -128,7 +128,7 @@ class MedSpecialtyControllerTest {
         InvalidParamException exception = new InvalidParamException("id", invalidParam);
         ErrorDTO expectedError = new ErrorDTO(exception);
 
-        MvcResult result = mockMvc.perform(get("/medSpecialty/{id}", invalidParam))
+        MvcResult result = mockMvc.perform(get("/medSpecialties/{id}", invalidParam))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -140,13 +140,13 @@ class MedSpecialtyControllerTest {
     @Test
     void findByName_respondsToRequest() throws Exception {
         MedSpecialtyDTO expected = new MedSpecialtyDTO(1L, "Kóniolog");
-        mockMvc.perform(get("/medSpecialty/find").param("specialty", expected.getName())).andExpect(status().isOk());
+        mockMvc.perform(get("/medSpecialties/find").param("specialty", expected.getName())).andExpect(status().isOk());
     }
 
     @Test
     void findByName_whenValidInput_verifyBusinessCalls() throws Exception {
         String medSpecialtyName = "Kónio log";
-        mockMvc.perform(get("/medSpecialty/find").param("specialty", medSpecialtyName)).andExpect(status().isOk());
+        mockMvc.perform(get("/medSpecialties/find").param("specialty", medSpecialtyName)).andExpect(status().isOk());
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(medSpecialtyService, times(1)).findByName(captor.capture());
@@ -158,7 +158,7 @@ class MedSpecialtyControllerTest {
         MedSpecialtyDTO expectedDTO = new MedSpecialtyDTO(1L, "Kóniolog");
         given(medSpecialtyService.findByName(expectedDTO.getName())).willReturn(expectedDTO);
 
-        MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", expectedDTO.getName()))
+        MvcResult result = mockMvc.perform(get("/medSpecialties/find").param("specialty", expectedDTO.getName()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -169,7 +169,7 @@ class MedSpecialtyControllerTest {
 
     @Test
     void findByName_whenNameIsEmpty_returns400andError() throws Exception {
-        MvcResult result = mockMvc.perform(get("/medSpecialty/find").param("specialty", ""))
+        MvcResult result = mockMvc.perform(get("/medSpecialties/find").param("specialty", ""))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -181,7 +181,7 @@ class MedSpecialtyControllerTest {
     @Test
     void addNew_respondsToRequest() throws Exception {
         mockMvc.perform(
-                        post("/medSpecialty/new")
+                        post("/medSpecialties/new")
                                 .contentType("application/json;charset=UTF-8")
                                 .param("specialty", "Wiewiórka"))
                 .andExpect(status().isCreated());
@@ -191,7 +191,7 @@ class MedSpecialtyControllerTest {
     void addNew_whenValidInput_verifyBusinessCalls() throws Exception {
         String specialtyName = "Czółkolog";
         mockMvc.perform(
-                        post("/medSpecialty/new")
+                        post("/medSpecialties/new")
                                 .contentType("application/json;charset=UTF-8")
                                 .param("specialty", specialtyName))
                 .andExpect(status().isCreated());
@@ -211,7 +211,7 @@ class MedSpecialtyControllerTest {
         given(medSpecialtyService.addNew(specialtyName)).willReturn(expectedDTO);
 
         MvcResult result = mockMvc.perform(
-                        post("/medSpecialty/new")
+                        post("/medSpecialties/new")
                                 .contentType("application/json")
                                 .param("specialty", specialtyName))
                 .andExpect(status().isCreated()).andReturn();
@@ -224,7 +224,7 @@ class MedSpecialtyControllerTest {
     @Test
     void addNew_whenEmptyName_returns400AndError() throws Exception {
         MvcResult result = mockMvc.perform(
-                        post("/medSpecialty/new")
+                        post("/medSpecialties/new")
                                 .contentType("application/json")
                                 .param("specialty", ""))
                 .andExpect(status().isBadRequest()).andReturn();
@@ -244,7 +244,7 @@ class MedSpecialtyControllerTest {
                 .willThrow(exception);
 
         MvcResult result = mockMvc.perform(
-                        post("/medSpecialty/new")
+                        post("/medSpecialties/new")
                                 .contentType("application/json;charset=UTF-8")
                                 .param("specialty", specialtyName))
                 .andExpect(status().isForbidden()).andReturn();

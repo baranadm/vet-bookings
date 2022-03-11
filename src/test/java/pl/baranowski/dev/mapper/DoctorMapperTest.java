@@ -2,6 +2,8 @@ package pl.baranowski.dev.mapper;
 
 import org.junit.jupiter.api.Test;
 import org.mapstruct.ap.internal.util.Collections;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
@@ -17,7 +19,14 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class DoctorMapperTest {
+    @Autowired
+    AnimalTypeMapper animalTypeMapper;
+    @Autowired
+    MedSpecialtyMapper medSpecialtyMapper;
+    @Autowired
+    DoctorMapper underTest;
 
     @Test
     void toDto_allFieldsValid() {
@@ -38,7 +47,7 @@ class DoctorMapperTest {
         doctor.addMedSpecialty(medSpecialty);
 
         //when
-        DoctorDTO doctorDTO = DoctorMapper.INSTANCE.toDto(doctor);
+        DoctorDTO doctorDTO = underTest.toDto(doctor);
         //then
         assertEquals(doctor.getId(), doctorDTO.getId());
         assertEquals(doctor.getName(), doctorDTO.getName());
@@ -47,10 +56,10 @@ class DoctorMapperTest {
         assertEquals(doctor.getNip(), doctorDTO.getNip());
         assertEquals(doctor.getActive(), doctorDTO.getActive());
 
-        Set<AnimalType> animalTypes = doctorDTO.getAnimalTypes().stream().map(AnimalTypeMapper.INSTANCE::toEntity).collect(Collectors.toSet());
+        Set<AnimalType> animalTypes = doctorDTO.getAnimalTypes().stream().map(animalTypeMapper::toEntity).collect(Collectors.toSet());
         assertEquals(doctor.getAnimalTypes(), animalTypes);
 
-        Set<MedSpecialty> medSpecialties = doctorDTO.getMedSpecialties().stream().map(MedSpecialtyMapper.INSTANCE::toEntity).collect(Collectors.toSet());
+        Set<MedSpecialty> medSpecialties = doctorDTO.getMedSpecialties().stream().map(medSpecialtyMapper::toEntity).collect(Collectors.toSet());
         assertEquals(doctor.getMedSpecialties(), medSpecialties);
 
     }
@@ -73,7 +82,7 @@ class DoctorMapperTest {
 
 
         //when
-        Doctor doctor = DoctorMapper.INSTANCE.toEntity(doctorDTO);
+        Doctor doctor = underTest.toEntity(doctorDTO);
         //then
         assertEquals(doctorDTO.getId(), doctor.getId());
         assertEquals(doctorDTO.getName(), doctor.getName());
@@ -82,11 +91,11 @@ class DoctorMapperTest {
         assertEquals(doctorDTO.getNip(), doctor.getNip());
         assertEquals(doctorDTO.getActive(), doctor.getActive());
 
-        Set<AnimalTypeDTO> animalTypeDTOs = doctor.getAnimalTypes().stream().map(AnimalTypeMapper.INSTANCE::toDto).collect(
+        Set<AnimalTypeDTO> animalTypeDTOs = doctor.getAnimalTypes().stream().map(animalTypeMapper::toDto).collect(
                 Collectors.toSet());
         assertEquals(doctorDTO.getAnimalTypes(), animalTypeDTOs);
 
-        Set<MedSpecialtyDTO> medSpecialtyDTOs = doctor.getMedSpecialties().stream().map(MedSpecialtyMapper.INSTANCE::toDto).collect(
+        Set<MedSpecialtyDTO> medSpecialtyDTOs = doctor.getMedSpecialties().stream().map(medSpecialtyMapper::toDto).collect(
                 Collectors.toSet());
         assertEquals(doctorDTO.getMedSpecialties(), medSpecialtyDTOs);
     }

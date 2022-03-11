@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +32,14 @@ class MedSpecialtyServiceTest {
 
     @BeforeEach
     void setUp() {
-        medSpecialtyRepository.deleteAll();
         cardio = medSpecialtyRepository.save(new MedSpecialty("Kardiolog"));
         uro = medSpecialtyRepository.save(new MedSpecialty("Urolog"));
         specialties = medSpecialtyRepository.findAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        medSpecialtyRepository.deleteAll();
     }
 
     @Test

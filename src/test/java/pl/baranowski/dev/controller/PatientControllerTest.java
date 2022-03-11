@@ -64,7 +64,7 @@ class PatientControllerTest {
     void getById_whenEntityExists_callsCorrectlyAndReturnsDTO() throws Exception {
         given(patientService.getDto(patientDTO.getId())).willReturn(patientDTO);
 
-        MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
+        MvcResult result = mockMvc.perform(get("/patients/{id}", patientDTO.getId()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -84,7 +84,7 @@ class PatientControllerTest {
         ErrorDTO expectedError = new ErrorDTO(expectedException);
         given(patientService.getDto(patientDTO.getId())).willThrow(expectedException);
 
-        MvcResult result = mockMvc.perform(get("/patient/{id}", patientDTO.getId()))
+        MvcResult result = mockMvc.perform(get("/patients/{id}", patientDTO.getId()))
                 .andExpect(status().isNotFound())
                 .andReturn();
 
@@ -96,7 +96,7 @@ class PatientControllerTest {
 
     @Test
     void getById_whenIdContainsCharacter_throwsErrors_andStatus400() throws Exception {
-        MvcResult result = mockMvc.perform(get("/patient/{id}", "a"))
+        MvcResult result = mockMvc.perform(get("/patients/{id}", "a"))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -107,7 +107,7 @@ class PatientControllerTest {
 
     @Test
     void getById_whenIdNegative_throwsErrors_andStatus400() throws Exception {
-        MvcResult result = mockMvc.perform(get("/patient/{id}", "-1"))
+        MvcResult result = mockMvc.perform(get("/patients/{id}", "-1"))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -118,7 +118,7 @@ class PatientControllerTest {
 
     @Test
     void findAll_whenNoParams_throwsError_andStatus400() throws Exception {
-        MvcResult result = mockMvc.perform(get("/patient/"))
+        MvcResult result = mockMvc.perform(get("/patients/"))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -134,7 +134,7 @@ class PatientControllerTest {
         Page<PatientDTO> expectedPage = new PageImpl<>(Collections.singletonList(patientDTO), expectedPageable, 1);
         given(patientService.findAll(expectedPageable)).willReturn(expectedPage);
 
-        MvcResult result = mockMvc.perform(get("/patient/")
+        MvcResult result = mockMvc.perform(get("/patients/")
                                                    .contentType("application/json;charset=UTF-8)")
                                                    .param("page", "2")
                                                    .param("size", "2"))
@@ -154,7 +154,7 @@ class PatientControllerTest {
 
     @Test
     void findAll_whenInvalidParams_handlesException() throws Exception {
-        MvcResult result = mockMvc.perform(get("/patient/")
+        MvcResult result = mockMvc.perform(get("/patients/")
                                                    .contentType("application/json;charset=UTF-8)")
                                                    .param("page", "")
                                                    .param("size", ""))
@@ -170,14 +170,14 @@ class PatientControllerTest {
     void addNew_whenInvalidRequestBody_returns404andErrorDTO() throws Exception {
         NewPatientDTO incorrectNewPatientDTO = new NewPatientDTO("", "-1", "", "", "ee");
 
-        mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(incorrectNewPatientDTO))
+        mockMvc.perform(post("/patients/").content(objectMapper.writeValueAsString(incorrectNewPatientDTO))
                                 .contentType("application/json;charset=UTF-8")).andExpect(status().isBadRequest())
                 // checks, if there are 5 errors thrown
                 .andExpect(jsonPath("$.fieldErrors", hasSize(5)));
 
         //for "age": "a"
         incorrectNewPatientDTO.setAge("a");
-        mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(incorrectNewPatientDTO))
+        mockMvc.perform(post("/patients/").content(objectMapper.writeValueAsString(incorrectNewPatientDTO))
                                 .contentType("application/json;charset=UTF-8")).andExpect(status().isBadRequest())
                 // checks, if there are 6 errors thrown
                 .andExpect(jsonPath("$.fieldErrors", hasSize(6)));
@@ -189,7 +189,7 @@ class PatientControllerTest {
         given(patientService.addNew(newPatientDTO)).willReturn(patientDTO);
 
         // responds to request, returns 201 on success
-        MvcResult result = mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(newPatientDTO))
+        MvcResult result = mockMvc.perform(post("/patients/").content(objectMapper.writeValueAsString(newPatientDTO))
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -208,7 +208,7 @@ class PatientControllerTest {
         NotFoundException exception = new NotFoundException("Animal type not exists.");
         given(patientService.addNew(newPatientDTO)).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(post("/patient/")
+        MvcResult result = mockMvc.perform(post("/patients/")
                                                    .content(objectMapper.writeValueAsString(newPatientDTO))
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isNotFound()).andReturn();
@@ -226,7 +226,7 @@ class PatientControllerTest {
         ErrorDTO expectedError = new ErrorDTO(exception);
         given(patientService.addNew(newPatientDTO)).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(post("/patient/").content(objectMapper.writeValueAsString(newPatientDTO))
+        MvcResult result = mockMvc.perform(post("/patients/").content(objectMapper.writeValueAsString(newPatientDTO))
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isForbidden())
                 .andReturn();

@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-// TODO repair showing free slots for weekend days
 @SpringBootTest
 class VisitServiceTest {
     private final long MONDAY_H10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 0, 0),
@@ -60,27 +60,35 @@ class VisitServiceTest {
 
     @BeforeEach
     void setUp() {
-        AnimalType newAnimalType = new AnimalType(1L, "Owad");
+        AnimalType newAnimalType = new AnimalType("Owad");
         this.animalType = animalTypeRepository.save(newAnimalType);
 
-        MedSpecialty newMedSpecialty = new MedSpecialty(2L, "Czółkolog");
+        MedSpecialty newMedSpecialty = new MedSpecialty("Czółkolog");
         this.medSpecialty = medSpecialtyRepository.save(newMedSpecialty);
 
-        doctor = new DoctorBuilder().name("Kazik")
-                                    .surname("Montana")
-                                    .nip("1111111111")
-                                    .hourlyRate(new BigDecimal(220))
-                                    .id(3L)
-                                    .build();
-        doctor.addAnimalType(animalType);
-        doctor.addMedSpecialty(medSpecialty);
-        doctorRepository.save(doctor);
+        Doctor newDoctor = new DoctorBuilder().name("Kazik")
+                                              .surname("Montana")
+                                              .nip("1111111111")
+                                              .hourlyRate(new BigDecimal(220))
+                                              .build();
+        newDoctor.addAnimalType(animalType);
+        newDoctor.addMedSpecialty(medSpecialty);
+        doctor = doctorRepository.save(newDoctor);
 
-        patient = new Patient(4L, "Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
+        patient = new Patient("Karaluch", animalType, 13, "Lubiacz Owadów", "ijegomail@sld.pl");
         patientRepository.save(patient);
 
-        Visit newVisit = new VisitBuilder().id(13L).doctor(doctor).patient(patient).epoch(MONDAY_H10Y2100).build();
+        Visit newVisit = new VisitBuilder().doctor(doctor).patient(patient).epoch(MONDAY_H10Y2100).build();
         visit = visitRepository.save(newVisit);
+    }
+
+    @AfterEach
+    void tearDown() {
+        visitRepository.deleteAll();
+        patientRepository.deleteAll();
+        doctorRepository.deleteAll();
+        medSpecialtyRepository.deleteAll();
+        animalTypeRepository.deleteAll();
     }
 
     @Test

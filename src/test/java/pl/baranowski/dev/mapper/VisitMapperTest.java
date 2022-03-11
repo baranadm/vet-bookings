@@ -3,6 +3,9 @@ package pl.baranowski.dev.mapper;
 import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.ap.internal.util.Collections;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.builder.VisitBuilder;
@@ -16,7 +19,14 @@ import java.time.ZonedDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class VisitMapperTest {
+    @Autowired
+    VisitMapper underTest;
+    @Autowired
+    DoctorMapper doctorMapper;
+    @Autowired
+    PatientMapper patientMapper;
 
     @Test
     void toDto() {
@@ -35,11 +45,11 @@ class VisitMapperTest {
 
         Visit visit = new VisitBuilder().id(1L).doctor(doctor).patient(patient).epoch(mondayH10Y2100).build();
         //when
-        VisitDTO visitDTO = VisitMapper.INSTANCE.toDto(visit);
+        VisitDTO visitDTO = underTest.toDto(visit);
         //then
         assertEquals(visit.getId(), visitDTO.getId());
-        assertEquals(visit.getDoctor(), DoctorMapper.INSTANCE.toEntity(visitDTO.getDoctor()));
-        assertEquals(visit.getPatient(), PatientMapper.INSTANCE.toEntity(visitDTO.getPatient()));
+        assertEquals(visit.getDoctor(), doctorMapper.toEntity(visitDTO.getDoctor()));
+        assertEquals(visit.getPatient(), patientMapper.toEntity(visitDTO.getPatient()));
         assertEquals(visit.getEpoch(), visitDTO.getEpoch());
         assertEquals(visit.getDuration(), visitDTO.getDuration());
         assertEquals(visit.getIsConfirmed(), visitDTO.getConfirmed());
@@ -56,12 +66,12 @@ class VisitMapperTest {
 
         VisitDTO visitDTO = new VisitDTO(3L, doctorDTO, patientDTO, mondayH10Y2100, true, 3600L);
         //when
-        Visit visit = VisitMapper.INSTANCE.toEntity(visitDTO);
+        Visit visit = underTest.toEntity(visitDTO);
         System.out.println(visit);
         //then
         assertEquals(visitDTO.getId(), visit.getId());
-        assertEquals(visitDTO.getDoctor(), DoctorMapper.INSTANCE.toDto(visit.getDoctor()));
-        assertEquals(visitDTO.getPatient(), PatientMapper.INSTANCE.toDto(visit.getPatient()));
+        assertEquals(visitDTO.getDoctor(), doctorMapper.toDto(visit.getDoctor()));
+        assertEquals(visitDTO.getPatient(), patientMapper.toDto(visit.getPatient()));
         assertEquals(visitDTO.getEpoch(), visit.getEpoch());
         assertEquals(visitDTO.getDuration(), visit.getDuration());
         assertEquals(visitDTO.getConfirmed(), visit.getIsConfirmed());

@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +33,14 @@ class AnimalTypeServiceTest {
 
     @BeforeEach
     void setUp() {
-        animalTypeRepository.deleteAll();
         cats = animalTypeRepository.save(new AnimalType("Cats"));
         dogs = animalTypeRepository.save(new AnimalType("Dogs"));
         animals = animalTypeRepository.findAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        animalTypeRepository.deleteAll();
     }
 
     @Test

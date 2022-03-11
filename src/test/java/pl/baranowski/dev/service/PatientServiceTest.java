@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +40,14 @@ class PatientServiceTest {
 
     @BeforeEach
     void setUp() {
-        patientRepository.deleteAll();
-        animalTypeRepository.deleteAll();
         animalType = animalTypeRepository.save(new AnimalType(1L, "Dog"));
         patient = patientRepository.save(new Patient("Rex", animalType, 12, "Juzio Kałuża", "kaluza@duza.pl"));
+    }
+
+    @AfterEach
+    void tearDown() {
+        patientRepository.deleteAll();
+        animalTypeRepository.deleteAll();
     }
 
     @Test

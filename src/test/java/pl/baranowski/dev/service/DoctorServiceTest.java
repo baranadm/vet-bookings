@@ -1,5 +1,6 @@
 package pl.baranowski.dev.service;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,9 +49,6 @@ class DoctorServiceTest {
 
     @BeforeEach
     void setUp() {
-        doctorRepository.deleteAll();
-        animalTypeRepository.deleteAll();
-        medSpecialtyRepository.deleteAll();
 
         doctorsList = new ArrayList<>();
 
@@ -91,6 +89,13 @@ class DoctorServiceTest {
                                            .stream()
                                            .map(doctorMapper::toDto)
                                            .collect(Collectors.toList()));
+    }
+
+    @AfterEach
+    void tearDown() {
+        doctorRepository.deleteAll();
+        animalTypeRepository.deleteAll();
+        medSpecialtyRepository.deleteAll();
     }
 
     @Test

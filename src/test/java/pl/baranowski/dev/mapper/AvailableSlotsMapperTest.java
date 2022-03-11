@@ -1,6 +1,8 @@
 package pl.baranowski.dev.mapper;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.builder.DoctorDTOBuilder;
 import pl.baranowski.dev.dto.DoctorsFreeSlotsDTO;
@@ -16,7 +18,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class AvailableSlotsMapperTest {
+
+    @Autowired
+    AvailableSlotsMapper underTest;
+    @Autowired
+    DoctorMapper doctorMapper;
 
     @Test
     void toDto() {
@@ -27,9 +35,9 @@ class AvailableSlotsMapperTest {
         List<Long> epochFreeTimes = Arrays.asList(mondayH10Y2100, mondayH11Y2100);
         DoctorsFreeSlots entity = new DoctorsFreeSlots(doctor, epochFreeTimes);
         //when
-        DoctorsFreeSlotsDTO dto = AvailableSlotsMapper.INSTANCE.toDto(entity);
+        DoctorsFreeSlotsDTO dto = underTest.toDto(entity);
         //then
-        assertEquals(entity.getDoctor(), DoctorMapper.INSTANCE.toEntity(dto.getDoctorDTO()));
+        assertEquals(entity.getDoctor(), doctorMapper.toEntity(dto.getDoctorDTO()));
         assertEquals(entity.getEpochFreeTimes(), dto.getAvailableEpochTimes());
     }
 
@@ -42,9 +50,9 @@ class AvailableSlotsMapperTest {
         List<Long> epochFreeTimes = Arrays.asList(mondayH10Y2100, mondayH11Y2100);
         DoctorsFreeSlotsDTO dto = new DoctorsFreeSlotsDTO(doctorDTO, epochFreeTimes);
         //when
-        DoctorsFreeSlots entity = AvailableSlotsMapper.INSTANCE.toEntity(dto);
+        DoctorsFreeSlots entity = underTest.toEntity(dto);
         //then
-        assertEquals(dto.getDoctorDTO(), DoctorMapper.INSTANCE.toDto(entity.getDoctor()));
+        assertEquals(dto.getDoctorDTO(), doctorMapper.toDto(entity.getDoctor()));
         assertEquals(dto.getAvailableEpochTimes(), entity.getEpochFreeTimes());
     }
 }

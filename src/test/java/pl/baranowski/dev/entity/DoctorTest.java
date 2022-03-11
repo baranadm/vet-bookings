@@ -32,6 +32,7 @@ class DoctorTest {
 	void hasVisitsAtEpoch() throws NewVisitNotPossibleException, DoctorNotActiveException {
 		//given
 		Visit newVisit = new VisitBuilder().doctor(underTest).patient(patient).epoch(mondayH10Y2100).build();
+		underTest.addVisit(newVisit);
 		//when
 		Boolean hasVisits = underTest.hasVisitsAtEpoch(mondayH10Y2100);
 		//then
