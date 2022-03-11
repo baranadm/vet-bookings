@@ -31,13 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class VisitServiceTest {
-
-    @Autowired
-    VisitService visitService;
-    @Autowired
-    VisitMapper mapper;
-    @Autowired
-    VisitRepository visitRepository;
     @Autowired
     AnimalTypeRepository animalTypeRepository;
     @Autowired
@@ -46,6 +39,12 @@ class VisitServiceTest {
     DoctorRepository doctorRepository;
     @Autowired
     PatientRepository patientRepository;
+    @Autowired
+    VisitRepository visitRepository;
+    @Autowired
+    VisitService visitService;
+    @Autowired
+    VisitMapper mapper;
 
     private final long MONDAY_H10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 0, 0), ZoneId.systemDefault())
             .toEpochSecond();
