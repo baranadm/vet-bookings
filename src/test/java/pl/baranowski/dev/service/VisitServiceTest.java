@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-// TODO inspect, why in database every New Visit's isConfirmed = null
 @SpringBootTest
 class VisitServiceTest {
 
@@ -125,7 +124,6 @@ class VisitServiceTest {
     }
 
 
-    // TODO correct this one
     @Test
     void addNew_whenValidParams_returnsDTO() throws Exception {
         //given
@@ -147,6 +145,7 @@ class VisitServiceTest {
         assertEquals(expected.getConfirmed(), result.getConfirmed());
         assertEquals(expected.getDuration(), result.getDuration());
         assertNotNull(result.getId());
+        assertFalse(result.getConfirmed());
     }
 
     @Test
@@ -253,5 +252,4 @@ class VisitServiceTest {
         assertThrows(NewVisitNotPossibleException.class,
                      () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayDuringWorkPlus2min));
     }
-
 }
