@@ -67,11 +67,11 @@ class AvailableSlotsFinderTest {
 		timeRange = new EpochFutureTimeRange(MONDAY_10, MONDAY_13);
 		underTest = new AvailableSlotsFinder(doctors, timeRange);
 		//when
-		List<AvailableSlotsAtTheDoctor> actual = underTest.find();
+		List<DoctorsFreeSlots> actual = underTest.find();
 		//then
-		List<AvailableSlotsAtTheDoctor> expected = new ArrayList<>();
-		expected.add(new AvailableSlotsAtTheDoctor(neurologist, Arrays.asList(MONDAY_10, MONDAY_13)));
-		expected.add(new AvailableSlotsAtTheDoctor(cardiologist, Arrays.asList(MONDAY_11, MONDAY_12)));
+		List<DoctorsFreeSlots> expected = new ArrayList<>();
+		expected.add(new DoctorsFreeSlots(neurologist, Arrays.asList(MONDAY_10, MONDAY_13)));
+		expected.add(new DoctorsFreeSlots(cardiologist, Arrays.asList(MONDAY_11, MONDAY_12)));
 		assertEquals(expected, actual);
 	}
 

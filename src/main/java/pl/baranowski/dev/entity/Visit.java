@@ -107,11 +107,8 @@ public class Visit {
 		} else if (!patient.equals(other.patient))
 			return false;
 		if (doctor == null) {
-			if (other.doctor != null)
-				return false;
-		} else if (!doctor.equals(other.doctor))
-			return false;
-		return true;
+			return other.doctor == null;
+		} else return doctor.equals(other.doctor);
 	}
 
 	@Override

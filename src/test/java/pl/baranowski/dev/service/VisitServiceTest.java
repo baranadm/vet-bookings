@@ -10,10 +10,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import pl.baranowski.dev.builder.DoctorBuilder;
 import pl.baranowski.dev.builder.VisitBuilder;
+import pl.baranowski.dev.dto.DoctorsFreeSlotsDTO;
 import pl.baranowski.dev.dto.VisitDTO;
 import pl.baranowski.dev.entity.*;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
+import pl.baranowski.dev.exception.epoch.InvalidEpochTimeException;
 import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 import pl.baranowski.dev.mapper.VisitMapper;
 import pl.baranowski.dev.repository.*;
@@ -29,8 +31,13 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 
+// TODO repair showing free slots for weekend days
 @SpringBootTest
 class VisitServiceTest {
+    private final long MONDAY_H10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 0, 0),
+                                                          ZoneId.systemDefault())
+                                                      .toEpochSecond();
+    private final long MONDAY_H00Y2100 = MONDAY_H10Y2100 - 10 * 3600;
     @Autowired
     AnimalTypeRepository animalTypeRepository;
     @Autowired
@@ -45,9 +52,6 @@ class VisitServiceTest {
     VisitService visitService;
     @Autowired
     VisitMapper mapper;
-
-    private final long MONDAY_H10Y2100 = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 10, 0, 0), ZoneId.systemDefault())
-            .toEpochSecond();
     private AnimalType animalType;
     private MedSpecialty medSpecialty;
     private Doctor doctor;
@@ -63,11 +67,11 @@ class VisitServiceTest {
         this.medSpecialty = medSpecialtyRepository.save(newMedSpecialty);
 
         doctor = new DoctorBuilder().name("Kazik")
-                .surname("Montana")
-                .nip("1111111111")
-                .hourlyRate(new BigDecimal(220))
-                .id(3L)
-                .build();
+                                    .surname("Montana")
+                                    .nip("1111111111")
+                                    .hourlyRate(new BigDecimal(220))
+                                    .id(3L)
+                                    .build();
         doctor.addAnimalType(animalType);
         doctor.addMedSpecialty(medSpecialty);
         doctorRepository.save(doctor);
@@ -89,10 +93,11 @@ class VisitServiceTest {
     }
 
     @Test
-    void getById_whenEntity_throwsNotFoundException() {
+    void getById_whenEntityNotFound_throwsNotFoundException() {
         long noEntityId = 100L;
         assertThrows(NotFoundException.class, () -> visitService.getById(noEntityId));
     }
+
 
     @Test
     void findAll_whenValidParams_returnsPageOfDTOs() {
@@ -161,10 +166,10 @@ class VisitServiceTest {
     void addNew_whenDoctorOrPatientHasAlreadyVisitAtEpoch_throwsNewVisitNotPossibleException() {
         // given new entities
         Doctor newDoctorJohn = new DoctorBuilder().name("John")
-                .surname("Scott")
-                .nip("1111111111")
-                .hourlyRate(new BigDecimal(456))
-                .build();
+                                                  .surname("Scott")
+                                                  .nip("1111111111")
+                                                  .hourlyRate(new BigDecimal(456))
+                                                  .build();
         newDoctorJohn.addAnimalType(animalType);
         Doctor doctorJohn = doctorRepository.save(newDoctorJohn);
 
@@ -181,11 +186,11 @@ class VisitServiceTest {
     @Test
     void addNew_whenDoctorIsNotActive_throwsDoctorNotActiveException() {
         Doctor newInactiveDoctor = new DoctorBuilder().name("Mały")
-                .surname("Zenek")
-                .nip("1111111111")
-                .hourlyRate(new BigDecimal(100))
-                .active(false)
-                .build();
+                                                      .surname("Zenek")
+                                                      .nip("1111111111")
+                                                      .hourlyRate(new BigDecimal(100))
+                                                      .active(false)
+                                                      .build();
         Doctor inactiveDoctor = doctorRepository.save(newInactiveDoctor);
         Long mondayH13Y2100 = MONDAY_H10Y2100 + 3 * 3600;
 
@@ -199,10 +204,10 @@ class VisitServiceTest {
         AnimalType cats = animalTypeRepository.save(newCats);
 
         Doctor newCatsDoctor = new DoctorBuilder().name("Mały")
-                .surname("Zenek")
-                .nip("1111111111")
-                .hourlyRate(new BigDecimal(100))
-                .build();
+                                                  .surname("Zenek")
+                                                  .nip("1111111111")
+                                                  .hourlyRate(new BigDecimal(100))
+                                                  .build();
         newCatsDoctor.addAnimalType(cats);
         Doctor catsDoctor = doctorRepository.save(newCatsDoctor);
 
@@ -222,17 +227,17 @@ class VisitServiceTest {
     @Test
     void addNew_whenEpochIsOutsideDoctorsWorkingHoursOrDays_throwsNewVisitNotPossibleException() {
         long epochMondayBeforeWork = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 8, 0, 0), ZoneId.systemDefault())
-                .toEpochSecond();
+                                                  .toEpochSecond();
         assertThrows(NewVisitNotPossibleException.class,
                      () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayBeforeWork));
 
         long epochMondayAfterWork = ZonedDateTime.of(LocalDateTime.of(2100, 1, 25, 16, 0, 0), ZoneId.systemDefault())
-                .toEpochSecond();
+                                                 .toEpochSecond();
         assertThrows(NewVisitNotPossibleException.class,
                      () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayAfterWork));
 
         long epochSunday = ZonedDateTime.of(LocalDateTime.of(2100, 1, 31, 12, 0, 0), ZoneId.systemDefault())
-                .toEpochSecond();
+                                        .toEpochSecond();
         assertThrows(NewVisitNotPossibleException.class,
                      () -> visitService.addNew(doctor.getId(), patient.getId(), epochSunday));
     }
@@ -250,5 +255,125 @@ class VisitServiceTest {
                                                               ZoneId.systemDefault()).toEpochSecond();
         assertThrows(NewVisitNotPossibleException.class,
                      () -> visitService.addNew(doctor.getId(), patient.getId(), epochMondayDuringWorkPlus2min));
+    }
+
+    @Test
+    void findAvailableVisits_whenValidInput_omitsDoctorsBeforeWorkingHours() throws NotFoundException, InvalidEpochTimeException {
+        //given
+        Long oneHour = 60 * 60L;
+        Long atWorkBeginning = MONDAY_H00Y2100 + doctor.getWorksFromHour() * oneHour;
+        Long oneHourBeforeWorkBeginning = atWorkBeginning - oneHour;
+        Long oneHourAfterWorkBeginning = atWorkBeginning + oneHour;
+        //when
+        List<DoctorsFreeSlotsDTO> result = visitService.findAvailableVisits(animalType.getName(),
+                                                                            medSpecialty.getName(),
+                                                                            oneHourBeforeWorkBeginning,
+                                                                            oneHourAfterWorkBeginning);
+        //then
+        assertEquals(1, result.size());
+        assertEquals(1, result.get(0).getAvailableEpochTimes().size());
+        assertEquals(atWorkBeginning, result.get(0).getAvailableEpochTimes().get(0));
+    }
+
+    @Test
+    void findAvailableVisits_whenValidInput_omitsDoctorsAfterWorkingHours() throws NotFoundException, InvalidEpochTimeException {
+        //given
+        Long oneHour = 60 * 60L;
+        Long atWorkEnding = MONDAY_H00Y2100 + doctor.getWorksTillHour() * oneHour;
+        Long oneHourBeforeWorkEnding = atWorkEnding - oneHour;
+        Long oneHourAfterWorkEnding = atWorkEnding + oneHour;
+        //when
+        List<DoctorsFreeSlotsDTO> result = visitService.findAvailableVisits(animalType.getName(),
+                                                                            medSpecialty.getName(),
+                                                                            oneHourBeforeWorkEnding,
+                                                                            oneHourAfterWorkEnding);
+        //then
+        assertEquals(1, result.size());
+        assertEquals(1, result.get(0).getAvailableEpochTimes().size());
+        assertEquals(oneHourBeforeWorkEnding, result.get(0).getAvailableEpochTimes().get(0));
+    }
+
+    @Test
+    void findAvailableVisits_whenValidInput_omitsDoctorsNonWorkingDays() throws NotFoundException, InvalidEpochTimeException {
+        //given
+        Long oneHour = 60 * 60L;
+        Long sundayH09 = MONDAY_H00Y2100 - (24 * oneHour) + (9 * oneHour);
+        Long sundayH15 = sundayH09 + (6 * oneHour);
+        //when
+        List<DoctorsFreeSlotsDTO> result = visitService.findAvailableVisits(animalType.getName(),
+                                                                            medSpecialty.getName(),
+                                                                            sundayH09,
+                                                                            sundayH15);
+        //then
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void findAvailableVisits_whenValidInput_omitsInactiveDoctors() throws NotFoundException, InvalidEpochTimeException {
+        //given
+        Long oneHour = 60 * 60L;
+        Long atWorkBeginning = MONDAY_H00Y2100 + doctor.getWorksFromHour() * oneHour;
+        Long sixHoursAfterWorkBeginning = atWorkBeginning + 6 * oneHour;
+        doctor.setActive(false);
+        doctorRepository.save(doctor);
+        //when
+        List<DoctorsFreeSlotsDTO> result = visitService.findAvailableVisits(animalType.getName(),
+                                                                            medSpecialty.getName(),
+                                                                            atWorkBeginning,
+                                                                            sixHoursAfterWorkBeginning);
+        //then
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void findAvailableVisits_whenValidInput_omitsBusyDoctorsSlots() throws NewVisitNotPossibleException, NotFoundException, DoctorNotActiveException, InvalidEpochTimeException {
+        //given
+        Long oneHour = 60 * 60L;
+        Long atWorkBeginning = MONDAY_H00Y2100 + doctor.getWorksFromHour() * oneHour;
+        Long sixHoursAfterWorkBeginning = atWorkBeginning + 6 * oneHour;
+        visitService.addNew(doctor.getId(), patient.getId(), atWorkBeginning);
+        visitService.addNew(doctor.getId(), patient.getId(), sixHoursAfterWorkBeginning);
+        //when
+        List<DoctorsFreeSlotsDTO> result = visitService.findAvailableVisits(animalType.getName(),
+                                                                            medSpecialty.getName(),
+                                                                            atWorkBeginning,
+                                                                            sixHoursAfterWorkBeginning);
+        //then
+        assertEquals(1, result.size());
+        assertEquals(4, result.get(0).getAvailableEpochTimes().size());
+    }
+
+    @Test
+    void findAvailableVisits_whenAnimalTypeNotFound_throwsNotFoundException() {
+        assertThrows(NotFoundException.class,
+                     () -> visitService.findAvailableVisits("ęęę",
+                                                            medSpecialty.getName(),
+                                                            MONDAY_H00Y2100,
+                                                            MONDAY_H10Y2100));
+    }
+
+    @Test
+    void findAvailableVisits_whenMedSpecialtyNotFound_throwsNotFoundException() {
+        assertThrows(NotFoundException.class,
+                     () -> visitService.findAvailableVisits(animalType.getName(),
+                                                            "ąąą",
+                                                            MONDAY_H00Y2100,
+                                                            MONDAY_H10Y2100));
+    }
+
+    @Test
+    void findAvailableVisits_whenEpochStartBeforeNow_throwsInvalidEpochTimeException() {
+        assertThrows(InvalidEpochTimeException.class, () -> visitService.findAvailableVisits(animalType.getName(),
+                                                                                             medSpecialty.getName(),
+                                                                                             System.currentTimeMillis() - 3600,
+                                                                                             MONDAY_H10Y2100));
+    }
+
+    @Test
+    void findAvailableVisits_whenEpochStartAfterEpochEnd_throwsInvalidEpochTimeException() {
+        assertThrows(InvalidEpochTimeException.class, () -> visitService.findAvailableVisits(animalType.getName(),
+                                                                                             medSpecialty.getName(),
+                                                                                             MONDAY_H10Y2100,
+                                                                                             MONDAY_H00Y2100));
     }
 }

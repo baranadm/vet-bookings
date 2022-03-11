@@ -75,7 +75,7 @@ class VisitControllerTest {
         // mocks service return value
         given(visitService.getById(expectedDTO.getId())).willReturn(expectedDTO);
 
-        MvcResult result = mockMvc.perform(get("/visit/{id}", expectedDTO.getId())
+        MvcResult result = mockMvc.perform(get("/visits/{id}", expectedDTO.getId())
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isOk())
@@ -101,7 +101,7 @@ class VisitControllerTest {
         // mocks service return value
         given(visitService.getById(notExisting.getId())).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(get("/visit/{id}", notExisting.getId())
+        MvcResult result = mockMvc.perform(get("/visits/{id}", notExisting.getId())
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isNotFound())
@@ -116,7 +116,7 @@ class VisitControllerTest {
     @Test
     void getById_whenInvalidId_returnsError_and400() throws Exception {
         String invalidId = "a";
-        MvcResult result = mockMvc.perform(get("/visit/{id}", invalidId)
+        MvcResult result = mockMvc.perform(get("/visits/{id}", invalidId)
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isBadRequest())
@@ -140,7 +140,7 @@ class VisitControllerTest {
         Page<VisitDTO> expectedPage = new PageImpl<>(visits, pageable, visits.size());
         // mocks service
         given(visitService.findAll(pageable)).willReturn(expectedPage);
-        MvcResult result = mockMvc.perform(get("/visit/")
+        MvcResult result = mockMvc.perform(get("/visits/")
                                                    .param("page", "0")
                                                    .param("size", "3"))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ class VisitControllerTest {
     void findAll_whenNoPaginationAttr_callsServiceWithDefaultPagination() throws Exception {
         Pageable defaultPaginable = VisitController.DEFAULT_PAGEABLE;
 
-        mockMvc.perform(get("/visit/")
+        mockMvc.perform(get("/visits/")
                                 .param("page", "" + defaultPaginable.getPageNumber())
                                 .param("size", "" + defaultPaginable.getPageSize()))
                 .andExpect(status().isOk());
@@ -177,7 +177,7 @@ class VisitControllerTest {
 
     @Test
     void findAll_paramsInvalid_returnsErrors_and400() throws Exception {
-        MvcResult result = mockMvc.perform(get("/visit/")
+        MvcResult result = mockMvc.perform(get("/visits/")
                                                    .param("page", "-1.1")
                                                    .param("size", ""))
                 .andExpect(status().isBadRequest())
@@ -201,7 +201,7 @@ class VisitControllerTest {
         // mocking visitService.addNew()
         given(visitService.addNew(doctor.getId(), patient.getId(), epoch)).willReturn(expectedDTO);
 
-        MvcResult result = mockMvc.perform(post("/visit/")
+        MvcResult result = mockMvc.perform(post("/visits/")
                                                    .content(objectMapper.writeValueAsString(newVisitDTO))
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isCreated())
@@ -270,7 +270,7 @@ class VisitControllerTest {
 
         // null params
         incorrect = new NewVisitDTO(null, null, null);
-        mockMvc.perform(post("/visit/")
+        mockMvc.perform(post("/visits/")
                                 .content(objectMapper.writeValueAsString(incorrect))
                                 .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isBadRequest())
@@ -282,14 +282,14 @@ class VisitControllerTest {
     }
 
     @Test
-    void addNew_handlesEntityNotFoundException() throws Exception {
+    void addNew_handlesNotFoundException() throws Exception {
         Long now = System.currentTimeMillis();
         NewVisitDTO newVisit = new NewVisitDTO("1", "2", now.toString());
         NotFoundException exception = new NotFoundException("Doctor with id=" + newVisit.getDoctorId() + " has not been found.");
 
         given(visitService.addNew(1L, 2L, now)).willThrow(exception);
 
-        MvcResult result = mockMvc.perform(post("/visit/")
+        MvcResult result = mockMvc.perform(post("/visits/")
                                                    .content(objectMapper.writeValueAsString(newVisit))
                                                    .contentType("application/json;charset=UTF-8"))
                 .andExpect(status().isNotFound())
@@ -336,22 +336,21 @@ class VisitControllerTest {
                 .medSpecialties(Collections.singleton(medSpecialtyDTO))
                 .build();
 
-        List<AvailableSlotsAtTheDoctorDTO> expectedResult = new ArrayList<>();
+        List<DoctorsFreeSlotsDTO> expectedResult = new ArrayList<>();
         List<Long> doctor1FreeSlots = Arrays.asList(MONDAY_H10Y2100, MONDAY_H12Y2100, MONDAY_H13Y2100);
-        expectedResult.add(new AvailableSlotsAtTheDoctorDTO(doctor1dto, doctor1FreeSlots));
+        expectedResult.add(new DoctorsFreeSlotsDTO(doctor1dto, doctor1FreeSlots));
         List<Long> doctor2FreeSlots = Arrays.asList(MONDAY_H11Y2100, MONDAY_H14Y2100, MONDAY_H15Y2100);
-        expectedResult.add(new AvailableSlotsAtTheDoctorDTO(doctor2dto, doctor2FreeSlots));
+        expectedResult.add(new DoctorsFreeSlotsDTO(doctor2dto, doctor2FreeSlots));
 
+
+        given(visitService.findAvailableVisits(animalTypeDTO.getName(),
+                                               medSpecialtyDTO.getName(),
+                                               MONDAY_H10Y2100,
+                                               MONDAY_H15Y2100)).willReturn(expectedResult);
         // times: start and end
         String start = MONDAY_H10Y2100.toString();
         String end = MONDAY_H15Y2100.toString();
-
-        given(visitService.findAvailableSlotsAtTheDoctorsWithParams(animalTypeDTO.getName(),
-                                                                    medSpecialtyDTO.getName(),
-                                                                    start,
-                                                                    end)).willReturn(expectedResult);
-
-        MvcResult result = mockMvc.perform(get("/visit/check")
+        MvcResult result = mockMvc.perform(get("/visits/check")
                                                    .param("animalTypeName", animalTypeDTO.getName())
                                                    .param("medSpecialtyName", medSpecialtyDTO.getName())
                                                    .param("epochStart", start)
@@ -362,15 +361,15 @@ class VisitControllerTest {
                 .andReturn();
 
         String resultAsString = result.getResponse().getContentAsString();
-        List<AvailableSlotsAtTheDoctorDTO> actualResult = objectMapper.readValue(resultAsString,
-                                                                                 new TypeReference<>() {
+        List<DoctorsFreeSlotsDTO> actualResult = objectMapper.readValue(resultAsString,
+                                                                        new TypeReference<>() {
                                                                                  });
         assertEquals(expectedResult, actualResult);
     }
 
     private void mockMvcPerformAndExpect(NewVisitDTO requestDTO, ResultMatcher httpStatusMatcher, String field)
             throws Exception {
-        mockMvc.perform(post("/visit/")
+        mockMvc.perform(post("/visits/")
                                 .content(objectMapper.writeValueAsString(requestDTO))
                                 .contentType("application/json;charset=UTF-8"))
                 .andExpect(httpStatusMatcher)

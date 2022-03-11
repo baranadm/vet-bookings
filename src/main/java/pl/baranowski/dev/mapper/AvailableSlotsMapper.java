@@ -2,8 +2,8 @@ package pl.baranowski.dev.mapper;
 
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
-import pl.baranowski.dev.dto.AvailableSlotsAtTheDoctorDTO;
-import pl.baranowski.dev.model.AvailableSlotsAtTheDoctor;
+import pl.baranowski.dev.dto.DoctorsFreeSlotsDTO;
+import pl.baranowski.dev.model.DoctorsFreeSlots;
 
 @Mapper(config = MapperCentralConfig.class,
         uses = DoctorMapper.class)
@@ -12,8 +12,8 @@ public interface AvailableSlotsMapper {
 
     @Mapping(source = "epochFreeTimes", target = "availableEpochTimes")
     @Mapping(source = "doctor", target = "doctorDTO")
-    AvailableSlotsAtTheDoctorDTO toDto(AvailableSlotsAtTheDoctor entity);
+    DoctorsFreeSlotsDTO toDto(DoctorsFreeSlots entity);
 
     @InheritInverseConfiguration
-    AvailableSlotsAtTheDoctor toEntity(AvailableSlotsAtTheDoctorDTO dto);
+    DoctorsFreeSlots toEntity(DoctorsFreeSlotsDTO dto);
 }

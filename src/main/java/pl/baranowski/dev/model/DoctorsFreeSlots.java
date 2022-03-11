@@ -4,11 +4,11 @@ import java.util.List;
 
 import pl.baranowski.dev.entity.Doctor;
 
-public class AvailableSlotsAtTheDoctor {
+public class DoctorsFreeSlots {
 	private final Doctor doctor;
 	private final List<Long> availableEpochTimes;
 	
-	public AvailableSlotsAtTheDoctor(Doctor doctor, List<Long> epochFreeTimes) {
+	public DoctorsFreeSlots(Doctor doctor, List<Long> epochFreeTimes) {
 		this.doctor = doctor;
 		this.availableEpochTimes = epochFreeTimes;
 	}
@@ -38,7 +38,7 @@ public class AvailableSlotsAtTheDoctor {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		AvailableSlotsAtTheDoctor other = (AvailableSlotsAtTheDoctor) obj;
+		DoctorsFreeSlots other = (DoctorsFreeSlots) obj;
 		if (availableEpochTimes == null) {
 			if (other.availableEpochTimes != null)
 				return false;

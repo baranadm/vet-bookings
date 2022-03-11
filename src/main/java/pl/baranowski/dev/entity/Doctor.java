@@ -226,7 +226,7 @@ public class Doctor {
 
     private boolean worksAtTime(ZonedDateTime zonedStart) {
         boolean afterStartOfWorkingHours = zonedStart.getHour() >= worksFromHour;
-        boolean beforeEndOfWorkingHours = zonedStart.getHour() <= worksTillHour;
+        boolean beforeEndOfWorkingHours = zonedStart.getHour() < worksTillHour;
         return afterStartOfWorkingHours && beforeEndOfWorkingHours;
     }
 

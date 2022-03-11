@@ -2,11 +2,11 @@ package pl.baranowski.dev.dto;
 
 import java.util.List;
 
-public class AvailableSlotsAtTheDoctorDTO {
+public class DoctorsFreeSlotsDTO {
 	private final DoctorDTO doctorDTO;
 	private final List<Long> availableEpochTimes;
 	
-	public AvailableSlotsAtTheDoctorDTO(DoctorDTO doctorDTO, List<Long> availableEpochTimes) {
+	public DoctorsFreeSlotsDTO(DoctorDTO doctorDTO, List<Long> availableEpochTimes) {
 		super();
 		this.doctorDTO = doctorDTO;
 		this.availableEpochTimes = availableEpochTimes;
@@ -37,7 +37,7 @@ public class AvailableSlotsAtTheDoctorDTO {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		AvailableSlotsAtTheDoctorDTO other = (AvailableSlotsAtTheDoctorDTO) obj;
+		DoctorsFreeSlotsDTO other = (DoctorsFreeSlotsDTO) obj;
 		if (availableEpochTimes == null) {
 			if (other.availableEpochTimes != null)
 				return false;

@@ -6,6 +6,7 @@ import pl.baranowski.dev.builder.VisitBuilder;
 import pl.baranowski.dev.entity.Doctor;
 import pl.baranowski.dev.entity.Patient;
 import pl.baranowski.dev.entity.Visit;
+import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.doctor.DoctorNotActiveException;
 import pl.baranowski.dev.exception.visit.NewVisitNotPossibleException;
 import pl.baranowski.dev.service.DoctorService;
@@ -22,7 +23,9 @@ public class Reception {
         this.patientService = patientService;
     }
 
-    public Visit createNewVisitIfPossible(Long doctorId, Long patientId, Long epochInSeconds) throws Exception {
+    public Visit createNewVisitIfPossible(Long doctorId,
+                                          Long patientId,
+                                          Long epochInSeconds) throws NotFoundException, NewVisitNotPossibleException, DoctorNotActiveException {
         LOGGER.info(
                 "Received createNewVisitIfPossible() with params: doctorId='{}', patientId='{}', epochInSeconds='{}'",
                 doctorId,
@@ -101,7 +104,8 @@ public class Reception {
 
     private void throwIfDoctorEndsWorkBeforeVisitEnds(Visit visit) throws NewVisitNotPossibleException {
         Doctor doctor = visit.getDoctor();
-        if (!doctor.worksAt(visit.getEpoch() + visit.getDuration())) {
+        long endOfVisit = visit.getEpoch() + visit.getDuration() - 1;
+        if (!doctor.worksAt(endOfVisit)) {
             throw new NewVisitNotPossibleException("Doctor with id " + doctor.getId() + " ends work before visit ends.");
         }
     }
