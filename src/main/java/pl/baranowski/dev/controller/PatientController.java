@@ -31,7 +31,7 @@ import pl.baranowski.dev.service.PatientService;
 
 @Validated
 @RestController
-@RequestMapping("/patient")
+@RequestMapping("/patients")
 public class PatientController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PatientController.class);
     @Autowired

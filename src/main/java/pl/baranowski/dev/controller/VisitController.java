@@ -33,7 +33,7 @@ import pl.baranowski.dev.service.VisitService;
 // TODO repair showing free slots for weekend days
 @CrossOrigin
 @RestController
-@RequestMapping("/visit")
+@RequestMapping("/visits")
 @Validated
 public class VisitController {
 
