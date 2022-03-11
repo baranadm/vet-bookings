@@ -32,7 +32,7 @@ public class Reception {
         Doctor doctor = doctorService.getEntity(doctorId);
         LOGGER.info("Doctor found: {}", doctor);
 
-        Patient patient = patientService.get(patientId);
+        Patient patient = patientService.getEntity(patientId);
         LOGGER.info("Patient found: {}", patient);
 
         Visit visit = new VisitBuilder().doctor(doctor).patient(patient).epoch(epochInSeconds).build();

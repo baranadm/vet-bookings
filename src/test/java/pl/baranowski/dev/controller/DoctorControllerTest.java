@@ -115,7 +115,7 @@ public class DoctorControllerTest {
     void getById_whenValidId_returnsCorrectValue_andStatus200() throws Exception {
         //given
         DoctorDTO expected = this.mostowiak;
-        given(doctorService.get(expected.getId())).willReturn(expected);
+        given(doctorService.getDTO(expected.getId())).willReturn(expected);
 
         //when
         MvcResult result = mockMvc.perform(get("/doctors/{id}", expected.getId()))
@@ -146,7 +146,7 @@ public class DoctorControllerTest {
     void getById_whenValidIdAndNoEntry_returns404AndError() throws Exception {
         NotFoundException exception = new NotFoundException("Doctor with id=" + 1L + " has not been found.");
         ErrorDTO expectedError = new ErrorDTO(exception);
-        given(doctorService.get(1L)).willThrow(exception);
+        given(doctorService.getDTO(1L)).willThrow(exception);
 
         MvcResult result = mockMvc.perform(get("/doctors/{id}", 1)).andExpect(status().isNotFound()).andReturn();
 

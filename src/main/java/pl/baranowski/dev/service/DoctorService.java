@@ -41,7 +41,7 @@ public class DoctorService {
         this.doctorMapper = doctorMapper;
     }
 
-    public DoctorDTO get(long doctorId) throws NotFoundException {
+    public DoctorDTO getDTO(long doctorId) throws NotFoundException {
         LOGGER.info("Received get() request with params: doctorId='{}'", doctorId);
         Doctor doctor = getEntity(doctorId);
         DoctorDTO result = doctorMapper.toDto(doctor);

@@ -39,7 +39,7 @@ public class DoctorController {
     DoctorDTO getById(@PathVariable String id) throws NotFoundException, InvalidParamException {
         LOGGER.info("Received GET request - /id with 'id'='{}'", id);
 
-        DoctorDTO doctorDTO = doctorService.get(getIdFromString(id));
+        DoctorDTO doctorDTO = doctorService.getDTO(getIdFromString(id));
 
         LOGGER.info("Returning response: {}", doctorDTO);
         return doctorDTO;

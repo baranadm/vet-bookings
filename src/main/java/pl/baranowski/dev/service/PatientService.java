@@ -1,15 +1,9 @@
 package pl.baranowski.dev.service;
 
-import java.util.Arrays;
 import java.util.Optional;
 
-import javax.persistence.EntityNotFoundException;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import pl.baranowski.dev.dto.NewPatientDTO;
@@ -24,25 +18,29 @@ import pl.baranowski.dev.repository.PatientRepository;
 
 @Service
 public class PatientService {
-	
+	public static final Pageable DEFAULT_PAGEABLE = PageRequest.of(0, 10);
 	@Autowired
 	PatientRepository patientRepo;
 	@Autowired
 	AnimalTypeRepository animalTypeRepo;
 	@Autowired
 	PatientMapper mapper;
-	
+
+	public Page<PatientDTO> findAll() {
+		return findAll(DEFAULT_PAGEABLE);
+	}
+
 	public Page<PatientDTO> findAll(Pageable pageable) {
 		Page<Patient> result = patientRepo.findAll(pageable);
 		return result.map(entity -> mapper.toDto(entity));
 	}
 	
 	public PatientDTO getDto(Long patientId) throws NotFoundException {
-		Patient result = get(patientId);
+		Patient result = getEntity(patientId);
 		return mapper.toDto(result);
 	}
 
-	public Patient get(Long patientId) throws NotFoundException {
+	public Patient getEntity(Long patientId) throws NotFoundException {
 		Patient result = patientRepo.findById(patientId).orElseThrow(() -> new NotFoundException("Patient with id " + patientId + " has not been found."));
 		return result;
 	}

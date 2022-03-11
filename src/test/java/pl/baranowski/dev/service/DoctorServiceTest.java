@@ -101,13 +101,13 @@ class DoctorServiceTest {
 
     @Test
     void get_whenValidId_returnsDTO() throws NotFoundException {
-        DoctorDTO result = doctorService.get(mostowiak.getId());
+        DoctorDTO result = doctorService.getDTO(mostowiak.getId());
         assertEquals(doctorMapper.toDto(mostowiak), result);
     }
 
     @Test
     void get_whenNoEntityWithGivenId_throwsNotFoundException() {
-        assertThrows(NotFoundException.class, () -> doctorService.get(1234L));
+        assertThrows(NotFoundException.class, () -> doctorService.getDTO(1234L));
     }
 
     @Test

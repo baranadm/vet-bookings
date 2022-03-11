@@ -4,8 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import pl.baranowski.dev.dto.NewPatientDTO;
 import pl.baranowski.dev.dto.PatientDTO;
 import pl.baranowski.dev.entity.AnimalType;
@@ -18,103 +20,128 @@ import pl.baranowski.dev.repository.PatientRepository;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.BDDMockito.given;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class PatientServiceTest {
-
-    @MockBean
+    @Autowired
     PatientRepository patientRepository;
-
-    @MockBean
+    @Autowired
     AnimalTypeRepository animalTypeRepository;
-
     @Autowired
     PatientMapper mapper;
-
     @Autowired
     PatientService patientService;
-
-    Patient patient = new Patient("Rex", new AnimalType(1L, "Dog"), 12, "Juzio Kałuża", "kaluza@duza.pl");
-    NewPatientDTO newPatient = new NewPatientDTO(patient.getName(),
-                                                 patient.getAge().toString(),
-                                                 patient.getAnimalType().getName(),
-                                                 patient.getOwnerName(),
-                                                 patient.getOwnerEmail());
+    private AnimalType animalType;
+    private Patient patient;
 
     @BeforeEach
     void setUp() {
+        patientRepository.deleteAll();
+        animalTypeRepository.deleteAll();
+        animalType = animalTypeRepository.save(new AnimalType(1L, "Dog"));
+        patient = patientRepository.save(new Patient("Rex", animalType, 12, "Juzio Kałuża", "kaluza@duza.pl"));
     }
 
     @Test
     void getById_whenEntityFound_returnsDTO() throws NotFoundException {
-        given(patientRepository.findById(patient.getId())).willReturn(Optional.of(patient));
-        assertEquals(mapper.toDto(patient), patientService.getDto(patient.getId()));
+        PatientDTO expectedDTO = mapper.toDto(patient);
+        PatientDTO resultDTO = patientService.getDto(patient.getId());
+        assertEquals(expectedDTO, resultDTO);
     }
 
     @Test
     void getById_whenEntityNotFound_throwsNotFoundException() {
-        given(patientRepository.findById(patient.getId())).willReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> patientService.getDto(patient.getId()));
+        assertThrows(NotFoundException.class, () -> patientService.getDto(444L));
     }
 
     @Test
-    void findAll_returnsDTOsPage() {
-        //whenEntitiesExist - returnsDTOsPage
-        Pageable pageable = PageRequest.of(2, 2);
-        List<Patient> threePatients = Collections.nCopies(3, patient);
-        Page<Patient> page = new PageImpl<>(threePatients, pageable, threePatients.size());
-        given(patientRepository.findAll(pageable)).willReturn(page);
-        Page<PatientDTO> expected = new PageImpl<>(
-                threePatients.stream().map(mapper::toDto).collect(Collectors.toList()),
-                pageable, threePatients.size());
+    void findAll_whenEntitiesExist_andPageableProvided_returnsDTOsPage() {
+        patientRepository.save(new Patient("Hulk", animalType, 1, "Someone", "So@me.one"));
+        patientRepository.save(new Patient("Piggy", animalType, 11, "Chuck", "no@rr.is"));
+        List<Patient> patients = patientRepository.findAll();
 
-        assertEquals(expected, patientService.findAll(pageable));
+        Pageable pageable = PageRequest.of(0, 2);
+        Page<PatientDTO> expectedPage = new PageImpl<>(patients.subList(0, 2)
+                                                               .stream()
+                                                               .map(mapper::toDto)
+                                                               .collect(Collectors.toList()),
+                                                       pageable,
+                                                       patients.size());
 
-        //whenEntitiesDoNotExist - returnsEmptyPage
-        Page<Patient> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
-        given(patientRepository.findAll(pageable)).willReturn(emptyPage);
-        assertEquals(emptyPage.map(mapper::toDto), patientService.findAll(pageable));
+        Page<PatientDTO> resultPage = patientService.findAll(pageable);
+
+        assertEquals(expectedPage.getPageable(), resultPage.getPageable());
+        assertEquals(expectedPage.getContent(), resultPage.getContent());
+    }
+
+    @Test
+    void findAll_whenEntitiesExist_andPageableNotProvided_returnsDTOsPage_withDefaultPageable() {
+        patientRepository.save(new Patient("Hulk", animalType, 1, "Someone", "So@me.one"));
+        patientRepository.save(new Patient("Piggy", animalType, 11, "Chuck", "no@rr.is"));
+        List<Patient> patients = patientRepository.findAll();
+
+        Pageable pageable = PatientService.DEFAULT_PAGEABLE;
+        int fromElement = pageable.getPageNumber() * pageable.getPageSize();
+        int toElement = fromElement + pageable.getPageSize();
+        Page<PatientDTO> expectedPage = new PageImpl<>(patients.subList(fromElement,
+                                                                        Math.min(toElement, patients.size()))
+                                                               .stream()
+                                                               .map(mapper::toDto)
+                                                               .collect(Collectors.toList()),
+                                                       pageable,
+                                                       patients.size());
+
+        Page<PatientDTO> resultPage = patientService.findAll();
+
+        assertEquals(expectedPage.getPageable(), resultPage.getPageable());
+        assertEquals(expectedPage.getContent(), resultPage.getContent());
+    }
+
+    @Test
+    void findAll_whenEntitiesDoNotExist_returnsEmptyPage() {
+        patientRepository.deleteAll();
+        Pageable pageable = PageRequest.of(0, 2);
+        Page<PatientDTO> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+        Page<PatientDTO> resultPage = patientService.findAll(pageable);
+
+        assertEquals(emptyPage.getPageable(), resultPage.getPageable());
+        assertEquals(emptyPage.getContent(), resultPage.getContent());
+
     }
 
     @Test
     void addNew_whenAnimalTypeDoesNotExists_throwsNotFoundException() {
-        given(animalTypeRepository.findById(patient.getAnimalType().getId())).willReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> patientService.addNew(newPatient));
+        NewPatientDTO newPatientDTO = new NewPatientDTO("Ron", "4", "Camel", "Harry P.", "harry.potter@hogwart.com");
+        assertThrows(NotFoundException.class, () -> patientService.addNew(newPatientDTO));
     }
 
     @Test
     void addNew_whenAnimalTypeExistsAndPatientIsDuplicated_throwsPatientAlreadyExistsException() {
-        given(animalTypeRepository.findOneByName(patient.getAnimalType()
-                                                         .getName())).willReturn(Optional.of(patient.getAnimalType()));
-
-        ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
-        Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
-        given(patientRepository.findOne(patientExample)).willReturn(Optional.of(patient));
-
-        assertThrows(PatientAlreadyExistsException.class, () -> patientService.addNew(newPatient));
+        NewPatientDTO newPatientDTO = new NewPatientDTO(patient.getName(),
+                                                        patient.getAge().toString(),
+                                                        patient.getAnimalType().getName(),
+                                                        patient.getOwnerName(),
+                                                        patient.getOwnerEmail());
+        assertThrows(PatientAlreadyExistsException.class, () -> patientService.addNew(newPatientDTO));
     }
 
     @Test
     void addNew_whenNotDuplicatedAndAnimalTypeExists_correctlyCallsBusinessAndReturnsDTO() throws PatientAlreadyExistsException, NotFoundException {
-        // service will find appropriate AnimalType
-        given(animalTypeRepository.findOneByName(patient.getAnimalType()
-                                                         .getName())).willReturn(Optional.of(patient.getAnimalType()));
-
-        // service will not find doubled Patient
-        ExampleMatcher caseInsensitiveMatcher = ExampleMatcher.matchingAll().withIgnoreCase();
-        Example<Patient> patientExample = Example.of(patient, caseInsensitiveMatcher);
-        given(patientRepository.findOne(patientExample)).willReturn(Optional.empty());
-
-        // repository will return new Patient with new id
-        Patient expected = patient.withId(1L);
-        given(patientRepository.saveAndFlush(patient)).willReturn(expected);
-        assertEquals(mapper.toDto(expected), patientService.addNew(newPatient));
+        NewPatientDTO newPatientDTO = new NewPatientDTO("Ron",
+                                                        "4",
+                                                        animalType.getName(),
+                                                        "Harry P.",
+                                                        "harry.potter@hogwart.com");
+        PatientDTO resultDTO = patientService.addNew(newPatientDTO);
+        assertNotNull(resultDTO.getId());
+        assertEquals(newPatientDTO.getName(), resultDTO.getName());
+        assertEquals(newPatientDTO.getAge(), resultDTO.getAge().toString());
+        assertEquals(newPatientDTO.getAnimalTypeName(), resultDTO.getAnimalType().getName());
+        assertEquals(newPatientDTO.getOwnerName(), resultDTO.getOwnerName());
+        assertEquals(newPatientDTO.getOwnerEmail(), resultDTO.getOwnerEmail());
     }
-
 }
