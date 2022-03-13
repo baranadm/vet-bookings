@@ -60,7 +60,7 @@ public class AnimalTypeService {
         LOGGER.debug("findAll()");
         List<AnimalTypeDTO> result = animalTypeRepo.findAll()
                                                    .stream()
-                                                   .map(r -> mapper.toDto(r))
+                                                   .map(mapper::toDto)
                                                    .collect(Collectors.toList());
         LOGGER.debug("Animal Types found: {}, returning result.", result.size());
         return result;
@@ -70,14 +70,14 @@ public class AnimalTypeService {
         LOGGER.debug("addNew(name='{}')", name);
         try {
             AnimalType result = animalTypeRepo.save(new AnimalType(name));
-            LOGGER.debug("New Animal Type saved, result: ", result);
+            LOGGER.debug("New Animal Type saved, result: {}", result);
             AnimalTypeDTO resultDTO = mapper.toDto(result);
-            LOGGER.debug("Mapping and returning DTO: ", resultDTO);
+            LOGGER.debug("Mapping and returning DTO: {}", resultDTO);
             return resultDTO;
         } catch (DataIntegrityViolationException e) {
             LOGGER.error(e.getMessage(), e);
             AnimalTypeAlreadyExistsException animalTypeException = new AnimalTypeAlreadyExistsException(name);
-            LOGGER.error("Throwing ApiException: {}", e.getMessage(), e);
+            LOGGER.error("Throwing ApiException: {}", animalTypeException.getMessage(), animalTypeException);
             throw animalTypeException;
         }
     }
