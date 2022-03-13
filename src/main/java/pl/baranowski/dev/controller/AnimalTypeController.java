@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pl.baranowski.dev.dto.AnimalTypeDTO;
-import pl.baranowski.dev.exception.EmptyFieldException;
 import pl.baranowski.dev.exception.InvalidParamException;
 import pl.baranowski.dev.exception.NotFoundException;
 import pl.baranowski.dev.exception.animalType.AnimalTypeAlreadyExistsException;
@@ -31,22 +30,22 @@ public class AnimalTypeController {
     @GetMapping(value = "/", produces = "application/json;charset=UTF-8")
     public @ResponseBody
     List<AnimalTypeDTO> findAll() {
-        LOGGER.info("Received GET request - / (findAll)");
+        LOGGER.debug("Received request: @GET '/animalTypes/', method: findAll()");
 
         List<AnimalTypeDTO> animalTypeDTOs = animalTypeService.findAll();
 
-        LOGGER.info("Returning response: animalTypeDTOs - size: {}", animalTypeDTOs.size());
+        LOGGER.debug("Returning response: animalTypeDTOs - size: {}", animalTypeDTOs.size());
         return animalTypeDTOs;
     }
 
     @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
     public @ResponseBody
     AnimalTypeDTO findById(@PathVariable String id) throws NotFoundException, InvalidParamException {
-        LOGGER.info("Received GET request - /id with 'id'='{}'", id);
+        LOGGER.debug("Received request: @GET '/animalTypes/{id}', method: findById(id='{}')", id);
 
         AnimalTypeDTO animalTypeDTO = animalTypeService.findById(getIdFromString(id));
 
-        LOGGER.info("Returning response: {}", animalTypeDTO);
+        LOGGER.debug("Returning response: {}", animalTypeDTO);
         return animalTypeDTO;
     }
 
@@ -61,9 +60,9 @@ public class AnimalTypeController {
     @GetMapping(value = "/find", produces = "application/json;charset=UTF-8")
     public @ResponseBody
     AnimalTypeDTO findByName(@NotBlank(message = "name must not be null or empty") @RequestParam("name") String name) throws NotFoundException {
-        LOGGER.info("Received GET request - /find with 'name'='{}'", name);
+        LOGGER.debug("Received request: @GET '/animalTypes/find', method: findByName(name`='{}')", name);
         AnimalTypeDTO animalTypeDTO = animalTypeService.findByName(name);
-        LOGGER.info("Returning response: {}", animalTypeDTO);
+        LOGGER.debug("Returning response: {}", animalTypeDTO);
         return animalTypeDTO;
     }
 
@@ -71,9 +70,9 @@ public class AnimalTypeController {
     @ResponseStatus(HttpStatus.CREATED)
     public @ResponseBody
     AnimalTypeDTO addNew(@NotBlank(message = "name must not be null or empty") @RequestParam("name") String name) throws AnimalTypeAlreadyExistsException {
-        LOGGER.info("Received POST request - /new with name: {}", name);
+        LOGGER.debug("Received request: @POST '/animalTypes/new', method: addNew(name='{}')", name);
         AnimalTypeDTO animalTypeDTO = animalTypeService.addNew(name);
-        LOGGER.info("Creating new animalType success. Object created: {}", animalTypeDTO);
+        LOGGER.debug("Creating new animalType success. Object created: {}", animalTypeDTO);
         return animalTypeDTO;
     }
 }
