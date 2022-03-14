@@ -34,23 +34,34 @@ import pl.baranowski.dev.service.PatientService;
 @RequestMapping("/patients")
 public class PatientController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PatientController.class);
-    @Autowired
-    PatientService patientService;
+    private final PatientService patientService;
+
+    public PatientController(PatientService patientService) {
+        this.patientService = patientService;
+    }
 
     @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
     public @ResponseBody
     PatientDTO getById(@PathVariable("id") @NotEmpty @Min(1) String id) throws NotFoundException {
-        return patientService.getDto(Long.decode(id));
+        LOGGER.debug("Received request: @GET '/patients/{id}, id='{}'", id);
+
+        PatientDTO resultDTO = patientService.getDto(Long.decode(id));
+        LOGGER.debug("Returning DTO result: {}", resultDTO);
+        return resultDTO;
     }
 
     @GetMapping(value = "/", produces = "application/json;charset=UTF-8")
     public @ResponseBody
     Page<PatientDTO> findAll(@NotBlank @Min(0) @RequestParam("page") String page,
                              @NotBlank @Min(1) @RequestParam("size") String size) throws InvalidParamException {
-        LOGGER.info("Received @GET findAll request with params: page={}, size={}", page, size);
+        LOGGER.debug("Received request: @GET '/patients/, page='{}', size='{}'", page, size);
+
         Pageable requestedPageable = PageRequest.of(getIntFromString(page), getIntFromString(size));
-        LOGGER.info("Pageable created, calling patientService...");
-        return patientService.findAll(requestedPageable);
+        LOGGER.debug("Pageable created: {}", requestedPageable);
+
+        Page<PatientDTO> result = patientService.findAll(requestedPageable);
+        LOGGER.debug("Returning Page with {} elements.", result.getSize());
+        return result;
     }
 
     private int getIntFromString(String intValue) throws InvalidParamException {
@@ -65,6 +76,10 @@ public class PatientController {
     @ResponseStatus(HttpStatus.CREATED)
     public @ResponseBody
     PatientDTO addNew(@Valid @RequestBody NewPatientDTO newPatient) throws PatientAlreadyExistsException, NotFoundException {
-        return patientService.addNew(newPatient);
+        LOGGER.debug("Received request: @POST '/patients/, newPatient={}", newPatient);
+
+        PatientDTO patientDTO = patientService.addNew(newPatient);
+        LOGGER.debug("Patient created, returning DTO result: {}", patientDTO);
+        return patientDTO;
     }
 }
