@@ -14,11 +14,13 @@ import java.util.Set;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pl.baranowski.dev.builder.DoctorBuilder;
 
-// TODO pytanie: czy wszystkie pola nie powinny być final? JPA wymaga domyślnego konstruktora - jak to rozwiązać?
 @Entity
 public class Doctor {
+    private final static Logger LOGGER = LoggerFactory.getLogger(Doctor.class);
     private final static List<DayOfWeek> DEFAULT_WORKING_DAYS = Arrays.asList(DayOfWeek.MONDAY,
                                                                               DayOfWeek.TUESDAY,
                                                                               DayOfWeek.WEDNESDAY,
@@ -54,8 +56,6 @@ public class Doctor {
     )
     private Set<MedSpecialty> medSpecialties = new HashSet<>();
 
-    // TODO co z tym JsonIgnore?
-    @JsonIgnore
     @OneToMany(fetch = FetchType.EAGER,
             mappedBy = "doctor")
     private Set<Visit> visits = new HashSet<>();
@@ -80,13 +80,14 @@ public class Doctor {
         this.surname = surname;
         this.hourlyRate = hourlyRate == null ? null : hourlyRate.setScale(2, RoundingMode.UP);
         this.nip = nip;
-        this.active = active;
+        this.active = active == null ? true : active;
         this.workingDays = (workingDays != null) ? workingDays : DEFAULT_WORKING_DAYS;
         this.worksFromHour = (worksFromHour != null) ? worksFromHour : DEFAULT_WORKS_FROM_HOUR;
         this.worksTillHour = (worksTillHour != null) ? worksTillHour : DEFAULT_WORKS_TILL_HOUR;
         this.animalTypes = animalTypes;
         this.medSpecialties = medSpecialties;
         this.visits = visits;
+        LOGGER.debug("New Doctor has been created: {}", this);
     }
 
     public static DoctorBuilder builder() {

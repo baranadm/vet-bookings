@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// TODO check, if repo is not considering "Cat" and "Cats" are equal (contains != equals!!). If so, findByName should be repaired
 @SpringBootTest
 class AnimalTypeServiceTest {
     @Autowired

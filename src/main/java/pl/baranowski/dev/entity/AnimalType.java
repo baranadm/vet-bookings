@@ -1,21 +1,16 @@
 package pl.baranowski.dev.entity;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Objects;
 
 @Entity
 public class AnimalType {
 
 	// TODO - poczytać o Seq Generator
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+//	@GeneratedValue(strategy = GenerationType.AUTO)
 //	@SequenceGenerator()
-//	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	private Long id;
 
 	@Column(unique = true)

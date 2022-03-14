@@ -62,7 +62,7 @@ public class MedSpecialtyController {
         return result;
     }
 
-    @PostMapping(value = "/new", consumes = "application/json;charset=UTF-8", produces = "application/json;charset=UTF-8")
+    @PostMapping(value = "/new", produces = "application/json;charset=UTF-8")
     @ResponseStatus(HttpStatus.CREATED)
     public @ResponseBody
     MedSpecialtyDTO addNew(@NotBlank(message = "specialty must not be null or empty") @RequestParam("specialty") String specialtyName) throws MedSpecialtyAlreadyExistsException {
