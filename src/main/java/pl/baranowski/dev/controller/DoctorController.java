@@ -37,11 +37,11 @@ public class DoctorController {
     @ResponseStatus(HttpStatus.OK)
     public @ResponseBody
     DoctorDTO getById(@PathVariable String id) throws NotFoundException, InvalidParamException {
-        LOGGER.info("Received GET request - /id with 'id'='{}'", id);
+        LOGGER.debug("Received request: @GET '/doctors/', method: getById(id='{}')", id);
 
         DoctorDTO doctorDTO = doctorService.getDTO(getIdFromString(id));
 
-        LOGGER.info("Returning response: {}", doctorDTO);
+        LOGGER.debug("Returning response: {}", doctorDTO);
         return doctorDTO;
     }
 
@@ -58,12 +58,13 @@ public class DoctorController {
     public @ResponseBody
     Page<DoctorDTO> findAll(@Min(0) @NotBlank @RequestParam("page") String page,
                             @Min(1) @NotBlank @RequestParam("size") String size) throws InvalidParamException, EmptyFieldException {
-        LOGGER.info("Received GET request - / (findAll) with params: page='{}', size='{}'", page, size);
+        LOGGER.debug("Received request: @GET '/doctors/', method: findAll(page='{}', size ='{}')", page, size);
 
         Pageable requestedPageable = PageRequest.of(getIntegerFromString(page), getIntegerFromString(size));
-        Page<DoctorDTO> result = doctorService.findAll(requestedPageable);
+        LOGGER.debug("Created pageable: {}", requestedPageable);
 
-        LOGGER.info("Returning response: Page of DoctorDTOs - size: {}", result.getContent().size());
+        Page<DoctorDTO> result = doctorService.findAll(requestedPageable);
+        LOGGER.debug("Returning response: Page of DoctorDTOs - size: {}", result.getContent().size());
         return result;
     }
 
@@ -79,11 +80,10 @@ public class DoctorController {
     @ResponseStatus(HttpStatus.CREATED)
     public @ResponseBody
     DoctorDTO addNew(@Valid @RequestBody DoctorDTO doctorDTO) throws DoctorAlreadyExistsException {
-        LOGGER.info("Received POST request - / (addNew) with request body: {}", doctorDTO);
+        LOGGER.debug("Received request: @POST '/doctors/', method: addNew(doctorDTO): {}", doctorDTO);
 
         DoctorDTO createdDoctorDTO = doctorService.addNew(doctorDTO);
-
-        LOGGER.info("Creating new animalType success. Object created: {}", createdDoctorDTO);
+        LOGGER.debug("Created new Doctor. Returning result: {}", createdDoctorDTO);
         return createdDoctorDTO;
     }
 
@@ -91,11 +91,10 @@ public class DoctorController {
     @ResponseStatus(HttpStatus.OK)
     public @ResponseBody
     DoctorDTO fire(@PathVariable("id") String id) throws NotFoundException, DoctorNotActiveException, InvalidParamException {
-        LOGGER.info("Received PUT request - /fire/id with id='{}'", id);
+        LOGGER.debug("Received request: @PUT '/doctors/', method: fire(id='{}')", id);
 
         DoctorDTO firedDoctorDTO = doctorService.fire(getIdFromString(id));
-
-        LOGGER.info("Doctor has been fired. Fired Doctor: {}", firedDoctorDTO);
+        LOGGER.info("Doctor has been fired. Returning result: {}", firedDoctorDTO);
         return firedDoctorDTO;
     }
 
@@ -104,13 +103,15 @@ public class DoctorController {
     public @ResponseBody
     DoctorDTO addAnimalType(@PathVariable String doctorId,
                             @PathVariable String atId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
-        LOGGER.info("Received PUT request - /doctorId/addAnimalType/animalTypeId with doctorId='{}', animalTypeId='{}'",
-                    doctorId,
-                    atId);
+        LOGGER.debug(
+                "Received request: @PUT 'doctors/{doctorId}/addAnimalType/{animalTypeId} with doctorId='{}', animalTypeId='{}'",
+                doctorId,
+                atId);
 
         DoctorDTO updatedDoctorDTO = doctorService.addAnimalType(getIdFromString(doctorId), getIdFromString(atId));
-
-        LOGGER.info("AnimalType with id='{}' has been added to Doctor: {}", atId, updatedDoctorDTO);
+        LOGGER.debug("AnimalType with id='{}' has been added to Doctor: {}. Returning DoctorDTO as a result.",
+                     atId,
+                     updatedDoctorDTO);
         return updatedDoctorDTO;
     }
 
@@ -119,14 +120,14 @@ public class DoctorController {
     public @ResponseBody
     DoctorDTO addMedSpecialty(@PathVariable String doctorId,
                               @PathVariable String msId) throws NotFoundException, DoctorDoubledSpecialtyException, DoctorNotActiveException, InvalidParamException {
-        LOGGER.info(
-                "Received PUT request - /doctorId/addMedSpecialty/medSpecialtyId with doctorId='{}', medSpecialtyId='{}'",
-                doctorId,
-                msId);
+        LOGGER.debug("Received request: @PUT 'doctors/{doctorId}/addMedSpecialty/{msId} with doctorId='{}', msId='{}'",
+                     doctorId,
+                     msId);
 
         DoctorDTO updatedDoctorDTO = doctorService.addMedSpecialty(getIdFromString(doctorId), getIdFromString(msId));
-
-        LOGGER.info("MedSpecialty with id='{}' has been added to Doctor: {}", msId, updatedDoctorDTO);
+        LOGGER.debug("MedSpecialty with id='{}' has been added to Doctor: {}. Returning DoctorDTO as a result.",
+                     msId,
+                     updatedDoctorDTO);
         return updatedDoctorDTO;
     }
 

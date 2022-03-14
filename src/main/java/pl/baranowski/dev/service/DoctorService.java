@@ -42,144 +42,191 @@ public class DoctorService {
     }
 
     public DoctorDTO getDTO(long doctorId) throws NotFoundException {
-        LOGGER.info("Received get() request with params: doctorId='{}'", doctorId);
+        LOGGER.debug("get(doctorId='{}')", doctorId);
+
         Doctor doctor = getEntity(doctorId);
+        LOGGER.debug("Found: {}", doctor);
+
         DoctorDTO result = doctorMapper.toDto(doctor);
-        LOGGER.info("Doctor has been found and mapped: {}", result);
+        LOGGER.debug("Doctor returning mapped: {}", result);
         return result;
     }
 
     public Doctor getEntity(long doctorId) throws NotFoundException {
-        LOGGER.info("Received getEntity() request with params: doctorId='{}'", doctorId);
+        LOGGER.debug("getEntity(doctorId='{}')", doctorId);
         Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new NotFoundException("Doctor with id=" + doctorId + " has not been found."));
-        LOGGER.info("Doctor has been found! {}", doctor);
+                                        .orElseThrow(() -> {
+                                            NotFoundException e = new NotFoundException("Doctor with id=" + doctorId + " has not been found.");
+                                            LOGGER.error(e.getMessage(), e);
+                                            return e;
+                                        });
+        LOGGER.debug("Returning found doctor: {}", doctor);
         return doctor;
     }
 
     // TODO tests for below method
-    public List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName,
-                                                                String medSpecialtyName) throws NotFoundException {
+    protected List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName,
+                                                                   String medSpecialtyName) throws NotFoundException {
+        LOGGER.debug("findByAnimalTypeNameAndMedSpecialtyName(animalTypeName='{}', medSpecialtyName='{}')",
+                     animalTypeName,
+                     medSpecialtyName);
+
         AnimalType animalType = findAnimalType(animalTypeName);
+        LOGGER.debug("AnimalType received: {}", animalType);
+
         MedSpecialty medSpecialty = findMedSpecialty(medSpecialtyName);
+        LOGGER.debug("MedSpecialty received: {}", medSpecialty);
 
         List<Doctor> result = doctorRepository.findByAnimalTypesAndMedSpecialties(animalType, medSpecialty);
+        LOGGER.debug("Returning Doctor list with size: {}", result.size());
         return result;
     }
 
     private AnimalType findAnimalType(String animalTypeName) throws NotFoundException {
         Optional<AnimalType> result = animalTypeRepository.findOneByName(animalTypeName);
-        return result.orElseThrow(() -> new NotFoundException("Animal type with name '" + animalTypeName + "'has not been found."));
+        return result.orElseThrow(() -> {
+            NotFoundException e = new NotFoundException("Animal type with name '" + animalTypeName + "'has not been found.");
+            LOGGER.error(e.getMessage(), e);
+            return e;
+        });
     }
 
     private MedSpecialty findMedSpecialty(String medSpecialtyName) throws NotFoundException {
         Optional<MedSpecialty> result = medSpecialtyRepository.findOneByName(medSpecialtyName);
-        return result.orElseThrow(() -> new NotFoundException("Med specialty with name '" + medSpecialtyName + "' has not been found."));
+        return result.orElseThrow(() -> {
+            NotFoundException e = new NotFoundException("Med specialty with name '" + medSpecialtyName + "' has not been found.");
+            LOGGER.error(e.getMessage(), e);
+            return e;
+        });
     }
 
-    public Page<DoctorDTO> findAll(Pageable validatedPageable) {
-        Page<Doctor> doctors = doctorRepository.findAll(validatedPageable);
+    public Page<DoctorDTO> findAll(Pageable pageable) {
+        LOGGER.debug("findAll(pageable='{}')", pageable);
+        Page<Doctor> doctors = doctorRepository.findAll(pageable);
+        LOGGER.debug("Found '{}' doctors.", doctors.getSize());
+
         Page<DoctorDTO> doctorsDTO = new PageImpl<>(
                 doctors.toList().stream()
-                        .map(doctorMapper::toDto)
-                        .collect(Collectors.toList()),
+                       .map(doctorMapper::toDto)
+                       .collect(Collectors.toList()),
                 doctors.getPageable(),
                 doctors.getSize());
+        LOGGER.debug("Returning Page with mapped DoctorDTOs. Size: '{}'", doctorsDTO.getSize());
         return doctorsDTO;
-
     }
 
     public DoctorDTO addNew(DoctorDTO doctorDTO) throws DoctorAlreadyExistsException {
+        LOGGER.debug("addNew(doctorDTO): {}", doctorDTO);
         if (!doctorRepository.findByNip(doctorDTO.getNip()).isEmpty()) {
-            throw new DoctorAlreadyExistsException(doctorDTO.getNip());
+            DoctorAlreadyExistsException e = new DoctorAlreadyExistsException(doctorDTO.getNip());
+            LOGGER.debug(e.getMessage(), e);
+            throw e;
         }
         Doctor doctor = doctorMapper.toEntity(doctorDTO);
+        LOGGER.debug("Mapped DoctorDTO to Doctor: {}", doctor);
+
         Doctor result = doctorRepository.saveAndFlush(doctor);
+        LOGGER.debug("Saved new Doctor, result: {}", result);
+
         DoctorDTO resultDTO = doctorMapper.toDto(result);
+        LOGGER.debug("Returning result mapped to DTO: {}", resultDTO);
         return resultDTO;
     }
 
     public DoctorDTO fire(Long id) throws DoctorNotActiveException, NotFoundException {
-        LOGGER.info("/fire id={}", id);
+        LOGGER.debug("fire(id='{}')", id);
 
         Optional<Doctor> doctorOpt = doctorRepository.findById(id);
-        LOGGER.debug("repo returned: {}", doctorOpt);
+        LOGGER.debug("Received Optional of Doctor: {}", doctorOpt);
 
         if (doctorOpt.isPresent()) {
             Doctor doctor = doctorOpt.get();
+            LOGGER.debug("Doctor has been found: {}", doctor);
             if (doctor.getActive()) { // if Doctor is active, sets active to false
                 doctor.setActive(false);
-                LOGGER.debug("Doctor set to inactive: {}", doctor);
+                LOGGER.debug("Doctor has been set to inactive: {}", doctor);
+
                 DoctorDTO firedDoctor = doctorMapper.toDto(doctorRepository.save(doctor));
+                LOGGER.debug("Returning fired Doctor result: {}", firedDoctor);
                 return firedDoctor;
             } else { // if Doctor is inactive, throws exception
-                throw new DoctorNotActiveException(doctor.getId());
+                DoctorNotActiveException e = new DoctorNotActiveException(doctor.getId());
+                LOGGER.error(e.getMessage(), e);
+                throw e;
             }
         } else {
-            throw new NotFoundException("Doctor has not ben found");
+            NotFoundException e = new NotFoundException("Doctor has not ben found");
+            LOGGER.error(e.getMessage(), e);
+            throw e;
         }
     }
-
-    // should throw EntityNotFoundException if no Doctor
-    // should throw EntityNotFoundException if no animalType
-    // should throw DoubledSpecialtyException if Doctor already has animalType
-    // should throw DoctorIsNotActiveException if Doctor is not active
 
     public DoctorDTO addAnimalType(Long doctorId,
                                    Long animalTypeId) throws NotFoundException, DoctorNotActiveException, DoctorDoubledSpecialtyException {
+        LOGGER.debug("addAnimalType(doctorId='{}', animalTypeId='{}')", doctorId, animalTypeId);
 
-        // if Doctor not found, throw
         Doctor doctor = getEntity(doctorId);
+        LOGGER.debug("Found Doctor: {}", doctor);
 
-        // if Doctor is not active, throw
         if (!doctor.getActive()) {
-            throw new DoctorNotActiveException(doctor.getId());
+            DoctorNotActiveException e = new DoctorNotActiveException(doctor.getId());
+            LOGGER.error(e.getMessage(), e);
+            throw e;
         }
 
-        // if animal type not found, throw
         AnimalType animalType = animalTypeRepository.findById(animalTypeId)
-                .orElseThrow(() -> new NotFoundException("animal type with id: " + animalTypeId + " has not been found"));
+                                                    .orElseThrow(() -> {
+                                                        NotFoundException e = new NotFoundException(
+                                                                "animal type with id: " + animalTypeId + " has not been found");
+                                                        LOGGER.error(e.getMessage(), e);
+                                                        return e;
+                                                    });
+        LOGGER.debug("Found AnimalType: {}", animalType);
 
-        // if Doctor has already that animal type specialty, throw
         if (doctor.getAnimalTypes().contains(animalType)) {
-            throw new DoctorDoubledSpecialtyException("Animal Type");
+            DoctorDoubledSpecialtyException e = new DoctorDoubledSpecialtyException("Animal Type");
+            LOGGER.error(e.getMessage(), e);
+            throw e;
         }
 
-        // if everything is ok, update
         doctor.addAnimalType(animalType);
-        DoctorDTO result = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));
-        return result;
-    }
+        LOGGER.debug("Animal Type has been added to Doctor. Doctor after changes: {}", doctor);
 
-    // should throw EntityNotFoundException if no Doctor
-    // should throw EntityNotFoundException if no medSpecialty
-    // should throw DoubledSpecialtyException if Doctor already has medSpecialty
-    // should throw DoctorIsNotActiveException if Doctor is not active
+        DoctorDTO resultDTO = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));
+        LOGGER.debug("Returning Doctor DTO: {}", resultDTO);
+        return resultDTO;
+    }
 
     public DoctorDTO addMedSpecialty(Long doctorId,
                                      Long msId) throws NotFoundException, DoctorNotActiveException, DoctorDoubledSpecialtyException {
-        // if no Doctor found, throw
+        LOGGER.debug("addMedSpecialty(doctorId='{}', msId='{}')", doctorId, msId);
+
         Doctor doctor = getEntity(doctorId);
-        // if Doctor is not active, throw
+        LOGGER.debug("Found Doctor: {}", doctor);
         if (!doctor.getActive()) {
-            throw new DoctorNotActiveException(doctor.getId());
+            DoctorNotActiveException e = new DoctorNotActiveException(doctor.getId());
+            LOGGER.error(e.getMessage(), e);
+            throw e;
         }
-        // if no medSpecialty found, throw
+
         MedSpecialty medSpecialty = medSpecialtyRepository.findById(msId)
-                .orElseThrow(() -> new NotFoundException("Medical specialty with id " + msId + " has not been found."));
+                                                          .orElseThrow(() -> {
+                                                              NotFoundException e = new NotFoundException(
+                                                                      "Medical specialty with id " + msId + " has not been found.");
+                                                              LOGGER.error(e.getMessage(), e);
+                                                              return e;
+                                                          });
 
-        // if Doctor already has this med specialty
-        // since there can't be two medSpecialties with same name, we can check it with .equals()
         if (doctor.getMedSpecialties().contains(medSpecialty)) {
-            throw new DoctorDoubledSpecialtyException("Medical Specialty");
+            DoctorDoubledSpecialtyException e = new DoctorDoubledSpecialtyException("Medical Specialty");
+            LOGGER.error(e.getMessage(), e);
+            throw e;
         }
 
-        // if everything is ok, then add medSpecialty to Doctor
         doctor.addMedSpecialty(medSpecialty);
 
-        // save (update) to DB
-        DoctorDTO result = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));
-        return result;
+        DoctorDTO resultDTO = doctorMapper.toDto(doctorRepository.saveAndFlush(doctor));
+        LOGGER.debug("MedSpecialty has been added to Doctor. Returning result: {}", resultDTO);
+        return resultDTO;
     }
-
 }
