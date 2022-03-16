@@ -29,7 +29,7 @@ public class Doctor {
     private final static Integer DEFAULT_WORKS_FROM_HOUR = 9;
     private final static Integer DEFAULT_WORKS_TILL_HOUR = 16;
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy=GenerationType.SEQUENCE)
     private Long id;
     private String name;
     private String surname;

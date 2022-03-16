@@ -6,10 +6,7 @@ import java.util.Objects;
 @Entity
 public class AnimalType {
 
-	// TODO - poczytać o Seq Generator
 	@Id
-//	@GeneratedValue(strategy = GenerationType.AUTO)
-//	@SequenceGenerator()
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	private Long id;
 

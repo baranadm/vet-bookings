@@ -13,7 +13,7 @@ import javax.persistence.ManyToOne;
 public class Visit {
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	private Long id;
 	@ManyToOne
 	@JoinColumn(name = "doctor_id")

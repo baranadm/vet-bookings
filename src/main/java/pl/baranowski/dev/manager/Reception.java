@@ -18,29 +18,29 @@ public class Reception {
     private final PatientService patientService;
 
     public Reception(DoctorService doctorService, PatientService patientService) {
-        LOGGER.info("Created new Reception with: doctorService={}, patientService={}", doctorService, patientService);
         this.doctorService = doctorService;
         this.patientService = patientService;
+        LOGGER.debug("Created new Reception with: doctorService={}, patientService={}", doctorService, patientService);
     }
 
     public Visit createNewVisitIfPossible(Long doctorId,
                                           Long patientId,
                                           Long epochInSeconds) throws NotFoundException, NewVisitNotPossibleException, DoctorNotActiveException {
-        LOGGER.info(
+        LOGGER.debug(
                 "Received createNewVisitIfPossible() with params: doctorId='{}', patientId='{}', epochInSeconds='{}'",
                 doctorId,
                 patientId,
                 epochInSeconds);
 
         Doctor doctor = doctorService.getEntity(doctorId);
-        LOGGER.info("Doctor found: {}", doctor);
+        LOGGER.debug("Doctor found: {}", doctor);
 
         Patient patient = patientService.getEntity(patientId);
-        LOGGER.info("Patient found: {}", patient);
+        LOGGER.debug("Patient found: {}", patient);
 
         Visit visit = new VisitBuilder().doctor(doctor).patient(patient).epoch(epochInSeconds).build();
         validateVisit(visit);
-        LOGGER.info("New visit has been validated - OK. {}", visit);
+        LOGGER.debug("New visit has been validated - OK. {}", visit);
 
         return visit;
     }

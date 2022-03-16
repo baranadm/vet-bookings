@@ -24,6 +24,7 @@ import pl.baranowski.dev.repository.AnimalTypeRepository;
 import pl.baranowski.dev.repository.DoctorRepository;
 import pl.baranowski.dev.repository.MedSpecialtyRepository;
 
+import javax.print.Doc;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -269,5 +270,57 @@ class DoctorServiceTest {
         assertThrows(DoctorNotActiveException.class,
                      () -> doctorService.addMedSpecialty(mostowiak.getId(), medSpecialty.getId()));
 
+    }
+
+    @Test
+    void findByAnimalTypeNameAndMedSpecialtyName_whenEntitiesExist_returnListOfDoctors() throws NotFoundException {
+        //given
+        AnimalType cats = animalTypeRepository.save(new AnimalType("Cats"));
+
+        MedSpecialty urologist = medSpecialtyRepository.save(new MedSpecialty("Urologist"));
+
+        Doctor catsUro1 = doctorRepository.save(new DoctorBuilder().name("Jack")
+                                                                   .surname("Sparrow")
+                                                                   .animalTypes(Collections.singleton(cats))
+                                                                   .medSpecialties(Collections.singleton(urologist))
+                                                                   .build());
+        Doctor catsUro2 = doctorRepository.save(new DoctorBuilder().name("Charles")
+                                                                   .surname("Leclerc")
+                                                                   .animalTypes(Collections.singleton(cats))
+                                                                   .medSpecialties(Collections.singleton(urologist))
+                                                                   .build());
+        //when
+        List<Doctor> result = doctorService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), urologist.getName());
+        //then
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findByAnimalTypeNameAndMedSpecialtyName_whenAnimalTypeDoesNotExists_throws() throws NotFoundException {
+        //given
+        MedSpecialty urologist = medSpecialtyRepository.save(new MedSpecialty("Urologist"));
+        //when
+        //then
+        assertThrows(NotFoundException.class, () -> doctorService.findByAnimalTypeNameAndMedSpecialtyName("Dogs", urologist.getName()));
+    }
+
+    @Test
+    void findByAnimalTypeNameAndMedSpecialtyName_whenMedSpecialtyDoesNotExists_throws() throws NotFoundException {
+        //given
+        AnimalType cats = animalTypeRepository.save(new AnimalType("Cats"));
+        //when
+        //then
+        assertThrows(NotFoundException.class, () -> doctorService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), "Neurologist"));
+    }
+
+    @Test
+    void findByAnimalTypeNameAndMedSpecialtyName_whenNoMatchingDoctors_returnEmptyList() throws NotFoundException {
+        //given
+        AnimalType cats = animalTypeRepository.save(new AnimalType("Cats"));
+        MedSpecialty urologist = medSpecialtyRepository.save(new MedSpecialty("Urologist"));
+        //when
+        List<Doctor> result = doctorService.findByAnimalTypeNameAndMedSpecialtyName(cats.getName(), urologist.getName());
+        //then
+        assertEquals(0, result.size());
     }
 }

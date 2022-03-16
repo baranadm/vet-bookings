@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 public class DoctorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DoctorService.class);
+
     private final DoctorRepository doctorRepository;
     private final AnimalTypeRepository animalTypeRepository;
     private final MedSpecialtyRepository medSpecialtyRepository;
