@@ -6,7 +6,7 @@ public class AnimalTypeDTO {
 
 	private Long id;
 	
-	@NotBlank(message = "name must not be null or empty")
+	@NotBlank(message = "Name should not be empty.")
 	private String name;
 	
 	public AnimalTypeDTO() {

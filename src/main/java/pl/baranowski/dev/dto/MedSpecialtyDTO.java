@@ -6,7 +6,7 @@ public class MedSpecialtyDTO {
 
 	private Long id;
 	
-	@NotBlank(message = "specialty must not be null or empty")
+	@NotBlank(message = "Specialty should not be empty.")
 	private String name;
 
 	public MedSpecialtyDTO() {

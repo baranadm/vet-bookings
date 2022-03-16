@@ -10,13 +10,13 @@ import java.util.Set;
 public class DoctorDTO {
 
     private Long id;
-    @NotBlank
+    @NotBlank(message = "Name should not be empty.")
     private String name;
-    @NotBlank
+    @NotBlank(message = "Surname should not be empty.")
     private String surname;
-    @HourlyRateConstraint
+    @HourlyRateConstraint(message = "Hourly rate should be positive number and should not be empty.")
     private String hourlyRate;
-    @NipConstraint
+    @NipConstraint(message = "Invalid NIP. Should not be empty.")
     private String nip;
     private Boolean active; // default = true
     private Set<AnimalTypeDTO> animalTypes;
@@ -37,6 +37,7 @@ public class DoctorDTO {
         this.surname = surname;
         this.hourlyRate = hourlyRate;
         this.nip = nip;
+        //TODO pytanie: jak to działa po zamianie?
         this.active = active == null ? true : active;
         this.animalTypes = animalTypes;
         this.medSpecialties = medSpecialties;

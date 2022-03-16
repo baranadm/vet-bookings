@@ -8,21 +8,21 @@ import javax.validation.constraints.NotNull;
 
 public class NewPatientDTO {
 
-	@NotBlank
+	@NotBlank(message = "Name should not be empty.")
 	private String name;
 	
-	@Digits(fraction = 0, integer = 2)
-	@Min(1)
+	@Digits(fraction = 0, integer = 2, message = "Age should be a number within range: 0-99.")
+	@Min(value = 0, message = "Age should be 0 or greater.")
 	private String age;
 	
-	@NotBlank
+	@NotBlank(message = "Animal type name should not be empty.")
 	private String animalTypeName;
 	
-	@NotBlank
+	@NotBlank(message = "Owner name should not be empty.")
 	private String ownerName;
 	
-	@NotNull
-	@Email
+	@NotNull(message = "Owner e-mail should not be empty.")
+	@Email(message = "Invalid e-mail format.")
 	private String ownerEmail;
 
 	public NewPatientDTO() {

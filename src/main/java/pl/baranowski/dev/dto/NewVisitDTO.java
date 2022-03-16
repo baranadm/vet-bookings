@@ -5,16 +5,16 @@ import javax.validation.constraints.Pattern;
 
 public class NewVisitDTO {
 	
-	@NotNull(message = "Please provide doctorId")
-	@Pattern(regexp = "[0-9]+", message="Invalid doctorId - should contain digits only")
+	@NotNull(message = "Please provide doctorId.")
+	@Pattern(regexp = "[0-9]+", message="Invalid doctorId - should contain digits only.")
 	private String doctorId;
 
-	@NotNull(message = "Please provide patientId")
-	@Pattern(regexp = "[0-9]+", message="Invalid patientId - should contain digits only")
+	@NotNull(message = "Please provide patientId.")
+	@Pattern(regexp = "[0-9]+", message="Invalid patientId - should contain digits only.")
 	private String patientId;
 
-	@NotNull(message = "Please provide epoch")
-	@Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed")
+	@NotNull(message = "Please provide epoch time.")
+	@Pattern(regexp = "[0-9]+", message = "Invalid epoch format - only digits allowed.")
 	private String epoch;
 
 	public NewVisitDTO() {
