@@ -37,7 +37,7 @@ public class DoctorDTO {
         this.surname = surname;
         this.hourlyRate = hourlyRate;
         this.nip = nip;
-        //TODO pytanie: jak to działa po zamianie?
+        //TODO pytanie: jak to działa po zamianie? tzn. w jaki sposób (gdzie jest true)
         this.active = active == null ? true : active;
         this.animalTypes = animalTypes;
         this.medSpecialties = medSpecialties;

@@ -65,7 +65,6 @@ public class DoctorService {
         return doctor;
     }
 
-    // TODO tests for below method
     protected List<Doctor> findByAnimalTypeNameAndMedSpecialtyName(String animalTypeName,
                                                                    String medSpecialtyName) throws NotFoundException {
         LOGGER.debug("findByAnimalTypeNameAndMedSpecialtyName(animalTypeName='{}', medSpecialtyName='{}')",
